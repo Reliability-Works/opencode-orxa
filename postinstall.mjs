@@ -1,0 +1,172 @@
+#!/usr/bin/env node
+
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+import os from "os";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const CONFIG_DIR = path.join(os.homedir(), ".config", "opencode", "orxa");
+const OPENCODE_CONFIG_PATH = path.join(os.homedir(), ".config", "opencode", "opencode.json");
+
+const isGlobalInstall = () => {
+  // Check if we're in a global npm/bun directory or being run via npm install/link
+  const execPath = process.argv[1] || "";
+  const isNpmLifecycle = process.env.npm_lifecycle_event === "postinstall";
+  return execPath.includes("npm") || execPath.includes("global") || execPath.includes(".bun") || isNpmLifecycle;
+};
+
+const ensureDirectories = () => {
+  fs.mkdirSync(CONFIG_DIR, { recursive: true });
+  fs.mkdirSync(path.join(CONFIG_DIR, "agents", "custom"), { recursive: true });
+  fs.mkdirSync(path.join(CONFIG_DIR, "agents", "overrides"), { recursive: true });
+  fs.mkdirSync(path.join(CONFIG_DIR, "agents", "subagents"), { recursive: true });
+};
+
+const createDefaultConfig = () => {
+  const configPath = path.join(CONFIG_DIR, "orxa.json");
+
+  // Check if we should skip config creation (for testing init wizard)
+  if (process.env.ORXA_SKIP_CONFIG === "true") {
+    console.log("ℹ Skipping config creation (ORXA_SKIP_CONFIG=true)");
+    console.log("  Run 'orxa init' to create config manually");
+    return;
+  }
+
+  if (fs.existsSync(configPath)) {
+    console.log("✓ Orxa config already exists");
+    return;
+  }
+
+  const defaultConfig = {
+    enabled_agents: [
+      "orxa",
+      "plan",
+      "strategist",
+      "reviewer",
+      "build",
+      "coder",
+      "frontend",
+      "architect",
+      "git",
+      "explorer",
+      "librarian",
+      "navigator",
+      "writer",
+      "multimodal",
+      "mobile-simulator"
+    ],
+    disabled_agents: [],
+    agent_overrides: {},
+    custom_agents: [],
+    orxa: {
+      model: "opencode/kimi-k2.5",
+      enforcement: {
+        delegation: "strict",
+        todoCompletion: "strict",
+        qualityGates: "strict",
+        memoryAutomation: "strict"
+      },
+      maxManualEditsPerSession: 0,
+      requireTodoList: true,
+      autoUpdateTodos: false
+    },
+    plan: {
+      model: "opencode/gpt-5.2-codex"
+    }
+  };
+
+  fs.writeFileSync(configPath, JSON.stringify(defaultConfig, null, 2));
+  console.log("✓ Created default orxa.json");
+};
+
+const registerPlugin = () => {
+  if (!fs.existsSync(OPENCODE_CONFIG_PATH)) {
+    console.log("⚠ opencode.json not found. Skipping plugin registration.");
+    console.log("  Please add 'opencode-orxa' to your plugins manually.");
+    return;
+  }
+  
+  try {
+    const config = JSON.parse(fs.readFileSync(OPENCODE_CONFIG_PATH, "utf-8"));
+    
+    if (!config.plugin) {
+      config.plugin = [];
+    }
+    
+    if (config.plugin.includes("opencode-orxa")) {
+      console.log("✓ Plugin already registered in opencode.json");
+      return;
+    }
+    
+    config.plugin.push("opencode-orxa");
+    fs.writeFileSync(OPENCODE_CONFIG_PATH, JSON.stringify(config, null, 2));
+    console.log("✓ Registered plugin in opencode.json");
+  } catch (error) {
+    console.error("⚠ Failed to register plugin:", error.message);
+  }
+};
+
+const copySubagentFiles = () => {
+  const sourceSubagentsDir = path.join(__dirname, "agents", "subagents");
+  const targetSubagentsDir = path.join(CONFIG_DIR, "agents", "subagents");
+
+  if (!fs.existsSync(sourceSubagentsDir)) {
+    console.log("⚠ Source subagents directory not found, skipping subagent file copy");
+    return;
+  }
+
+  let copiedCount = 0;
+  let skippedCount = 0;
+
+  try {
+    const subagentFiles = fs.readdirSync(sourceSubagentsDir).filter(f => f.endsWith(".yaml") || f.endsWith(".yml"));
+
+    for (const filename of subagentFiles) {
+      const sourcePath = path.join(sourceSubagentsDir, filename);
+      const targetPath = path.join(targetSubagentsDir, filename);
+
+      if (fs.existsSync(targetPath)) {
+        skippedCount++;
+        continue;
+      }
+
+      fs.copyFileSync(sourcePath, targetPath);
+      copiedCount++;
+      console.log(`  ✓ Copied subagents/${filename}`);
+    }
+
+    console.log(`✓ Subagent files: ${copiedCount} copied, ${skippedCount} skipped (already exist)`);
+  } catch (error) {
+    console.error("⚠ Failed to copy subagent files:", error.message);
+  }
+};
+
+const main = () => {
+  console.log("🎼 OpenCode Orxa - Post Install\n");
+
+  if (!isGlobalInstall()) {
+    console.log("ℹ Local install detected. Skipping automatic setup.");
+    console.log("  Run 'orxa init' to set up manually.\n");
+    return;
+  }
+
+  console.log("Setting up OpenCode Orxa...\n");
+
+  ensureDirectories();
+  console.log("✓ Created config directories");
+
+  copySubagentFiles();
+  createDefaultConfig();
+  registerPlugin();
+
+  console.log("\n🎉 Setup complete!");
+  console.log("\nNext steps:");
+  console.log("  1. Start using: opencode");
+  console.log("  2. Run 'orxa install' to customize enabled agents");
+  console.log("  3. Run 'orxa config' to edit configuration\n");
+};
+
+main();

@@ -1,0 +1,173 @@
+import { OrxaConfig } from "./schema";
+
+export const PRIMARY_AGENTS = ["orxa", "plan"] as const;
+export const SUBAGENTS = [
+  "strategist",
+  "reviewer",
+  "build",
+  "coder",
+  "frontend",
+  "architect",
+  "git",
+  "explorer",
+  "librarian",
+  "navigator",
+  "writer",
+  "multimodal",
+  "mobile-simulator",
+] as const;
+
+/**
+ * Get the default memory automation setting based on supermemory availability.
+ * Returns "strict" if supermemory is available, "off" otherwise.
+ * This is determined at runtime by the wizard or can be overridden by the user.
+ */
+export const getDefaultMemoryAutomation = (): "strict" | "warn" | "off" => {
+  // Default to "strict" - the wizard will adjust this based on actual supermemory status
+  return "strict";
+};
+
+export const defaultConfig: OrxaConfig = {
+  enabled_agents: [...PRIMARY_AGENTS, ...SUBAGENTS],
+  disabled_agents: [],
+  agent_overrides: {
+    build: {
+      model: "opencode/gpt-5.2-codex",
+    },
+    architect: {
+      model: "opencode/gpt-5.2-codex",
+    },
+    frontend: {
+      model: "opencode/gemini-3-pro",
+    },
+    multimodal: {
+      model: "opencode/gemini-3-pro",
+    },
+  },
+  custom_agents: [],
+  mcp: {},
+  toolAliases: {
+    resolve: {
+      apply_patch: "edit",
+      write_to_file: "write",
+      replace_file_content: "write",
+      multi_replace_file_content: "write",
+      task: "delegate_task",
+    },
+  },
+  orxa: {
+    model: "opencode/kimi-k2.5",
+    allowedTools: [
+      "read",
+      "delegate_task",
+      "todowrite",
+      "todoread",
+      "supermemory",
+      "edit",
+      "write",
+    ],
+    blockedTools: ["grep", "glob", "bash", "skill"],
+    enforcement: {
+      delegation: "strict",
+      todoCompletion: "strict",
+      qualityGates: "strict",
+      // memoryAutomation defaults to "strict" but the init wizard will
+      // automatically set this to "off" if supermemory is not installed.
+      // Users can also manually disable memory features by setting this to "off".
+      memoryAutomation: "strict",
+    },
+    maxManualEditsPerSession: 0,
+    requireTodoList: true,
+    autoUpdateTodos: false,
+    planWriteAllowlist: [".opencode/plans/*.md"],
+    blockMobileTools: true,
+  },
+  governance: {
+    onlyOrxaCanDelegate: true,
+    blockSupermemoryAddForSubagents: true,
+    delegationTemplate: {
+      required: true,
+      requiredSections: [
+        "Task",
+        "Expected Outcome",
+        "Required Tools",
+        "Must Do",
+        "Must Not Do",
+        "Context",
+      ],
+      maxImages: 10,
+      requireSameSessionId: true,
+      contextHygiene: {
+        maxToolOutputChars: 4000,
+        summaryHeader: "Summary",
+        requireSummary: true,
+      },
+    },
+  },
+  subagents: {
+    defaults: {
+      model: "opencode/kimi-k2.5",
+      timeout: 120000,
+      maxRetries: 2,
+    },
+    overrides: {
+      build: {
+        model: "opencode/gpt-5.2-codex",
+        timeout: 300000,
+      },
+      architect: {
+        model: "opencode/gpt-5.2-codex",
+        timeout: 300000,
+      },
+      frontend: {
+        model: "opencode/gemini-3-pro",
+      },
+      multimodal: {
+        model: "opencode/gemini-3-pro",
+      },
+    },
+    custom: [],
+  },
+  memory: {
+    autoExtract: true,
+    extractPatterns: [
+      "bug.*fix",
+      "solution.*",
+      "decided.*",
+      "pattern.*",
+      "config.*",
+    ],
+    requiredTypes: [
+      "error-solution",
+      "learned-pattern",
+      "project-config",
+      "architecture",
+    ],
+    sessionCheckpointInterval: 20,
+  },
+  qualityGates: {
+    requireLint: true,
+    requireTypeCheck: true,
+    requireTests: true,
+    requireBuild: true,
+    requireLspDiagnostics: true,
+    customValidators: [],
+  },
+  escalation: {
+    enabled: true,
+    maxAttemptsPerAgent: 2,
+    escalationMatrix: {
+      coder: "build",
+      build: "architect",
+      explorer: "librarian",
+    },
+    requireExplicitHandoff: true,
+  },
+  ui: {
+    showDelegationWarnings: true,
+    showTodoReminders: true,
+    showMemoryConfirmations: true,
+    verboseLogging: true,
+  },
+  perAgentRestrictions: {},
+};

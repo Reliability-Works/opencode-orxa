@@ -1,0 +1,70 @@
+{
+  "name": "opencode-orxa",
+  "version": "1.0.0",
+  "description": "Enforces strict Orxa/Manager patterns for AI-assisted software development",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "orxa": "dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "agents",
+    "postinstall.mjs"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "jest",
+    "lint": "eslint src/**/*.ts",
+    "typecheck": "tsc --noEmit",
+    "postinstall": "node postinstall.mjs",
+    "prepublishOnly": "npm run build && npm test",
+    "orxa:init": "node dist/cli.js init",
+    "orxa:install": "node dist/cli.js install"
+  },
+  "keywords": [
+    "opencode",
+    "plugin",
+    "orxa",
+    "manager",
+    "delegation",
+    "ai",
+    "llm",
+    "agents"
+  ],
+  "author": "OpenCode",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yourusername/opencode-orxa.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/opencode-orxa/issues"
+  },
+  "homepage": "https://github.com/yourusername/opencode-orxa#readme",
+  "devDependencies": {
+    "@types/jest": "^29.5.0",
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^20.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.54.0",
+    "@typescript-eslint/parser": "^8.54.0",
+    "eslint": "^9.39.2",
+    "jest": "^29.5.0",
+    "ts-jest": "^29.1.0",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "js-yaml": "^4.1.1",
+    "minimatch": "^9.0.0",
+    "zod": "^3.22.0"
+  },
+  "peerDependencies": {
+    "opencode": ">=1.0.0"
+  },
+  "peerDependenciesMeta": {
+    "opencode": {
+      "optional": true
+    }
+  }
+}
