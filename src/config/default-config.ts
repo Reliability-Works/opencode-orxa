@@ -67,8 +67,6 @@ export const defaultConfig: OrxaConfig = {
       "todowrite",
       "todoread",
       "supermemory",
-      "edit",
-      "write",
     ],
     blockedTools: ["grep", "glob", "bash", "skill"],
     enforcement: {

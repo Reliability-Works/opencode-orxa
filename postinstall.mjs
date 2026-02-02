@@ -111,7 +111,7 @@ const createDefaultConfig = () => {
     },
     orxa: {
       model: "opencode/kimi-k2.5",
-      allowedTools: ["read", "delegate_task", "todowrite", "todoread", "supermemory", "edit", "write"],
+      allowedTools: ["read", "delegate_task", "todowrite", "todoread", "supermemory"],
       blockedTools: ["grep", "glob", "bash", "skill"],
       enforcement: {
         delegation: "strict",

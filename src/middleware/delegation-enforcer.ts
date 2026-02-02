@@ -251,31 +251,8 @@ export const enforceDelegation = (context: HookContext): EnforcementResult => {
     };
   }
 
-  if (agentName === "orxa") {
-    if (config.orxa.blockedTools.includes(normalizedTool)) {
-      return {
-        ...decide(config, `Tool ${normalizedTool} is blocked for the orxa.`),
-        recommendedAgent: getRecommendedAgent(normalizedTool),
-      };
-    }
-
-    if (!config.orxa.allowedTools.includes(normalizedTool)) {
-      return {
-        ...decide(config, `Tool ${normalizedTool} is not allowed for the orxa.`),
-        recommendedAgent: getRecommendedAgent(normalizedTool),
-      };
-    }
-  }
-
-  if (config.orxa.blockMobileTools && agentName === "orxa") {
-    if (MOBILE_TOOL_PREFIXES.some((prefix) => normalizedTool.startsWith(prefix))) {
-      return {
-        ...decide(config, "Mobile tooling is blocked for the orxa."),
-        recommendedAgent: getRecommendedAgent(normalizedTool),
-      };
-    }
-  }
-
+  // Check write tool allowlist BEFORE checking allowedTools
+  // This allows orxa to write to plan files even if write isn't in allowedTools
   if (isWriteTool(normalizedTool)) {
     const targets = extractWriteTargets(normalizedTool, context.args);
     const allowlist = config.orxa.planWriteAllowlist;
@@ -298,11 +275,38 @@ export const enforceDelegation = (context: HookContext): EnforcementResult => {
           metadata: { targets },
         };
       }
+      // Orxa can write to allowlist paths - allow and skip further checks
+      return { allow: true };
     } else {
       return {
         ...decide(config, "Write tools are reserved for the plan agent."),
         recommendedAgent: "plan",
         metadata: { targets },
+      };
+    }
+  }
+
+  if (agentName === "orxa") {
+    if (config.orxa.blockedTools.includes(normalizedTool)) {
+      return {
+        ...decide(config, `Tool ${normalizedTool} is blocked for the orxa.`),
+        recommendedAgent: getRecommendedAgent(normalizedTool),
+      };
+    }
+
+    if (!config.orxa.allowedTools.includes(normalizedTool)) {
+      return {
+        ...decide(config, `Tool ${normalizedTool} is not allowed for the orxa.`),
+        recommendedAgent: getRecommendedAgent(normalizedTool),
+      };
+    }
+  }
+
+  if (config.orxa.blockMobileTools && agentName === "orxa") {
+    if (MOBILE_TOOL_PREFIXES.some((prefix) => normalizedTool.startsWith(prefix))) {
+      return {
+        ...decide(config, "Mobile tooling is blocked for the orxa."),
+        recommendedAgent: getRecommendedAgent(normalizedTool),
       };
     }
   }
