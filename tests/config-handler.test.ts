@@ -42,7 +42,8 @@ describe("Config Handler", () => {
       expect(orxa.model).toBe("opencode/kimi-k2.5");
       // Temperature may be parsed as string from YAML
       expect(Number(orxa.temperature)).toBe(0.1);
-      expect(orxa.system_prompt).toContain("Engineering Manager");
+      // Prompt is now extracted from markdown body after frontmatter
+      expect(orxa.prompt).toContain("You are the Engineering Manager");
       expect(orxa.tools?.allowed).toContain("read");
       expect(orxa.tools?.allowed).toContain("delegate_task");
       expect(orxa.tools?.blocked).toContain("grep");
@@ -157,7 +158,7 @@ describe("Config Handler", () => {
       expect(agents).toEqual({});
     });
 
-    it("warns and returns null when YAML parses to non-object", () => {
+    it("warns and returns null when agent file has invalid frontmatter", () => {
       // Set up mocks to simulate finding one agent file
       mockExistsSync.mockImplementation((filepath: fs.PathLike) => {
         const pathStr = filepath.toString();
@@ -167,20 +168,24 @@ describe("Config Handler", () => {
         return false;
       });
 
-      mockReaddirSync.mockReturnValue(["test-agent.yaml"] as any);
+      mockReaddirSync.mockReturnValue([".yaml"] as any);
       mockStatSync.mockReturnValue({ isFile: () => true, isDirectory: () => false } as fs.Stats);
-      mockReadFileSync.mockReturnValue("not an object");
-      mockYamlLoad.mockReturnValue("string value"); // Non-object parse result
+      // File with frontmatter but invalid YAML inside
+      mockReadFileSync.mockReturnValue("---\ninvalid: yaml: content: [\n---\n");
+      mockYamlLoad.mockImplementation(() => {
+        throw new Error("Invalid YAML");
+      });
 
       const agents = loadOrxaAgents();
 
       expect(consoleWarnSpy).toHaveBeenCalledWith(
-        expect.stringContaining("Invalid YAML in agent file")
+        expect.stringContaining("Failed to parse agent file"),
+        expect.any(Error)
       );
       expect(agents).toEqual({});
     });
 
-    it("warns and returns null when agent file is missing 'name' field", () => {
+    it("uses filename as name when agent file is missing 'name' field in frontmatter", () => {
       mockExistsSync.mockImplementation((filepath: fs.PathLike) => {
         const pathStr = filepath.toString();
         if (pathStr.includes("agents")) {
@@ -191,15 +196,17 @@ describe("Config Handler", () => {
 
       mockReaddirSync.mockReturnValue(["test-agent.yaml"] as any);
       mockStatSync.mockReturnValue({ isFile: () => true, isDirectory: () => false } as fs.Stats);
-      mockReadFileSync.mockReturnValue("description: Test agent without name");
-      mockYamlLoad.mockReturnValue({ description: "Test agent without name" }); // Missing 'name' field
+      // File with frontmatter but no name field - should use filename
+      mockReadFileSync.mockReturnValue("---\ndescription: Test agent without name\n---\n# Prompt");
+      mockYamlLoad.mockReturnValue({ description: "Test agent without name" });
 
       const agents = loadOrxaAgents();
 
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
-        expect.stringContaining("Agent file missing 'name' field")
-      );
-      expect(agents).toEqual({});
+      // Should use filename (test-agent) as name since not in frontmatter
+      expect(agents).toHaveProperty("test-agent");
+      expect(agents["test-agent"].name).toBe("test-agent");
+      expect(agents["test-agent"].description).toBe("Test agent without name");
+      expect(agents["test-agent"].prompt).toBe("# Prompt");
     });
 
     it("warns and returns null when file read/parse throws an exception", () => {
@@ -226,7 +233,7 @@ describe("Config Handler", () => {
       expect(agents).toEqual({});
     });
 
-    it("handles YAML returning null", () => {
+    it("handles file with no frontmatter (treats entire content as prompt)", () => {
       mockExistsSync.mockImplementation((filepath: fs.PathLike) => {
         const pathStr = filepath.toString();
         if (pathStr.includes("agents")) {
@@ -237,18 +244,19 @@ describe("Config Handler", () => {
 
       mockReaddirSync.mockReturnValue(["test-agent.yaml"] as any);
       mockStatSync.mockReturnValue({ isFile: () => true, isDirectory: () => false } as fs.Stats);
-      mockReadFileSync.mockReturnValue("");
-      mockYamlLoad.mockReturnValue(null); // YAML returns null for empty content
+      // File without frontmatter - entire content is prompt
+      mockReadFileSync.mockReturnValue("# Just a prompt\nNo frontmatter here.");
 
       const agents = loadOrxaAgents();
 
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
-        expect.stringContaining("Invalid YAML in agent file")
-      );
-      expect(agents).toEqual({});
+      // Should use filename as name and entire content as prompt
+      expect(agents).toHaveProperty("test-agent");
+      expect(agents["test-agent"].name).toBe("test-agent");
+      expect(agents["test-agent"].prompt).toBe("# Just a prompt\nNo frontmatter here.");
+      expect(agents["test-agent"].description).toBe("");
     });
 
-    it("handles YAML returning an array instead of object", () => {
+    it("handles file with only frontmatter (empty prompt)", () => {
       mockExistsSync.mockImplementation((filepath: fs.PathLike) => {
         const pathStr = filepath.toString();
         if (pathStr.includes("agents")) {
@@ -259,17 +267,16 @@ describe("Config Handler", () => {
 
       mockReaddirSync.mockReturnValue(["test-agent.yaml"] as any);
       mockStatSync.mockReturnValue({ isFile: () => true, isDirectory: () => false } as fs.Stats);
-      mockReadFileSync.mockReturnValue("- item1\n- item2");
-      mockYamlLoad.mockReturnValue(["item1", "item2"]); // YAML returns array
+      // File with only frontmatter - empty prompt
+      mockReadFileSync.mockReturnValue("---\nname: test-agent\ndescription: Test\n---\n");
+      mockYamlLoad.mockReturnValue({ name: "test-agent", description: "Test" });
 
       const agents = loadOrxaAgents();
 
-      // Arrays are objects in JavaScript, so it passes the object check
-      // but fails the 'name' field check
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
-        expect.stringContaining("Agent file missing 'name' field")
-      );
-      expect(agents).toEqual({});
+      expect(agents).toHaveProperty("test-agent");
+      expect(agents["test-agent"].name).toBe("test-agent");
+      expect(agents["test-agent"].prompt).toBe("");
+      expect(agents["test-agent"].description).toBe("Test");
     });
 
     it("handles findAgentFile when file exists in root directory", () => {

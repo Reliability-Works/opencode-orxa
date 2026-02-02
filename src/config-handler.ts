@@ -15,7 +15,14 @@ export interface OpenCodeAgent {
   model?: string;
   mode?: "primary" | "subagent" | "all";
   temperature?: number;
+  prompt?: string;
   system_prompt?: string;
+  permission?: {
+    edit?: "allow" | "block";
+    bash?: "allow" | "block";
+    webfetch?: "allow" | "block";
+    question?: "allow" | "block";
+  };
   tools?: {
     allowed?: string[];
     blocked?: string[];
@@ -26,12 +33,18 @@ export interface OpenCodeAgent {
  * YAML Agent Definition (as stored in agent YAML files)
  */
 interface YamlAgentDefinition {
-  name: string;
-  description: string;
+  name?: string;
+  description?: string;
   mode?: "primary" | "subagent" | "all";
   model?: string;
   temperature?: number;
   system_prompt?: string;
+  permission?: {
+    edit?: "allow" | "block";
+    bash?: "allow" | "block";
+    webfetch?: "allow" | "block";
+    question?: "allow" | "block";
+  };
   tools?: {
     allowed?: string[];
     blocked?: string[];
@@ -122,30 +135,60 @@ const getAllBuiltinAgentNames = (): string[] => {
 
 /**
  * Parse a YAML agent file into OpenCode agent format
+ * Extracts YAML frontmatter and markdown body (prompt)
  */
 const parseAgentYaml = (filePath: string): OpenCodeAgent | null => {
   try {
     const content = fs.readFileSync(filePath, "utf-8");
-    const parsed = yaml.load(content) as YamlAgentDefinition;
 
-    if (!parsed || typeof parsed !== "object") {
-      console.warn(`Invalid YAML in agent file: ${filePath}`);
-      return null;
+    // Extract agent name from filename
+    const fileName = path.basename(filePath, path.extname(filePath));
+
+    // Check if file has YAML frontmatter (starts with ---)
+    const trimmedContent = content.trim();
+    let frontmatter: YamlAgentDefinition = {};
+    let prompt = "";
+
+    if (trimmedContent.startsWith("---")) {
+      // Find the end of frontmatter (second ---)
+      const frontmatterEnd = trimmedContent.indexOf("---", 3);
+
+      if (frontmatterEnd !== -1) {
+        // Extract YAML frontmatter (between first and second ---)
+        const yamlContent = trimmedContent.slice(3, frontmatterEnd).trim();
+        // Extract markdown body (everything after second ---)
+        prompt = trimmedContent.slice(frontmatterEnd + 3).trim();
+
+        // Parse YAML frontmatter
+        if (yamlContent) {
+          frontmatter = yaml.load(yamlContent) as YamlAgentDefinition;
+        }
+      } else {
+        // No closing ---, treat entire content as prompt
+        prompt = trimmedContent;
+      }
+    } else {
+      // No frontmatter, treat entire content as prompt
+      prompt = trimmedContent;
     }
 
-    if (!parsed.name) {
+    // Use name from YAML if available, otherwise use filename
+    const name = frontmatter.name || fileName;
+
+    if (!name) {
       console.warn(`Agent file missing 'name' field: ${filePath}`);
       return null;
     }
 
     return {
-      name: parsed.name,
-      description: parsed.description || "",
-      model: parsed.model,
-      mode: parsed.mode,
-      temperature: parsed.temperature,
-      system_prompt: parsed.system_prompt,
-      tools: parsed.tools,
+      name,
+      description: frontmatter.description || "",
+      model: frontmatter.model,
+      mode: frontmatter.mode,
+      temperature: frontmatter.temperature,
+      prompt,
+      permission: frontmatter.permission,
+      tools: frontmatter.tools,
     };
   } catch (error) {
     console.warn(`Failed to parse agent file ${filePath}:`, error);
@@ -243,7 +286,7 @@ export const createConfigHandler = () => {
             orxaAgents[agentName].temperature = subagentOverride.temperature;
           }
           if (subagentOverride.system_prompt !== undefined) {
-            orxaAgents[agentName].system_prompt = subagentOverride.system_prompt;
+            orxaAgents[agentName].prompt = subagentOverride.system_prompt;
           }
           if (subagentOverride.tools !== undefined) {
             orxaAgents[agentName].tools = subagentOverride.tools;

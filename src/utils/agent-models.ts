@@ -59,42 +59,89 @@ export const PROVIDER_DISPLAY_NAMES: Record<string, string> = {
 
 /**
  * Parse a single YAML file to extract agent info
+ * Handles both old format (name: at start) and new frontmatter format (---
  */
 const parseAgentYaml = (filePath: string): AgentModelInfo | null => {
   try {
     const content = fs.readFileSync(filePath, "utf-8");
+    const fileName = path.basename(filePath, path.extname(filePath));
     
-    // Simple YAML parsing for our specific format
-    const lines = content.split("\n");
+    // Check if file has YAML frontmatter (starts with ---)
+    const trimmedContent = content.trim();
     let name = "";
     let model = "";
     let mode: "primary" | "subagent" = "subagent";
     let description = "";
     
-    for (const line of lines) {
-      const trimmed = line.trim();
+    if (trimmedContent.startsWith("---")) {
+      // New frontmatter format
+      const frontmatterEnd = trimmedContent.indexOf("---", 3);
       
-      // Parse name
-      if (trimmed.startsWith("name:")) {
-        name = trimmed.replace("name:", "").trim();
-      }
-      
-      // Parse model
-      if (trimmed.startsWith("model:")) {
-        model = trimmed.replace("model:", "").trim();
-      }
-      
-      // Parse mode
-      if (trimmed.startsWith("mode:")) {
-        const modeValue = trimmed.replace("mode:", "").trim();
-        if (modeValue === "primary" || modeValue === "subagent") {
-          mode = modeValue;
+      if (frontmatterEnd !== -1) {
+        const frontmatter = trimmedContent.slice(3, frontmatterEnd).trim();
+        const lines = frontmatter.split("\n");
+        
+        for (const line of lines) {
+          const trimmed = line.trim();
+          
+          // Parse name (optional in frontmatter, fallback to filename)
+          if (trimmed.startsWith("name:")) {
+            name = trimmed.replace("name:", "").trim();
+          }
+          
+          // Parse model
+          if (trimmed.startsWith("model:")) {
+            model = trimmed.replace("model:", "").trim();
+          }
+          
+          // Parse mode
+          if (trimmed.startsWith("mode:")) {
+            const modeValue = trimmed.replace("mode:", "").trim();
+            if (modeValue === "primary" || modeValue === "subagent") {
+              mode = modeValue;
+            }
+          }
+          
+          // Parse description
+          if (trimmed.startsWith("description:")) {
+            description = trimmed.replace("description:", "").trim();
+          }
         }
       }
       
-      // Parse description
-      if (trimmed.startsWith("description:")) {
-        description = trimmed.replace("description:", "").trim();
+      // Use filename as name if not specified in frontmatter
+      if (!name) {
+        name = fileName;
+      }
+    } else {
+      // Old format - parse entire file line by line
+      const lines = content.split("\n");
+      
+      for (const line of lines) {
+        const trimmed = line.trim();
+        
+        // Parse name
+        if (trimmed.startsWith("name:")) {
+          name = trimmed.replace("name:", "").trim();
+        }
+        
+        // Parse model
+        if (trimmed.startsWith("model:")) {
+          model = trimmed.replace("model:", "").trim();
+        }
+        
+        // Parse mode
+        if (trimmed.startsWith("mode:")) {
+          const modeValue = trimmed.replace("mode:", "").trim();
+          if (modeValue === "primary" || modeValue === "subagent") {
+            mode = modeValue;
+          }
+        }
+        
+        // Parse description
+        if (trimmed.startsWith("description:")) {
+          description = trimmed.replace("description:", "").trim();
+        }
       }
     }
     
