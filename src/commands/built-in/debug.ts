@@ -1,4 +1,4 @@
-import type { SlashCommand, CommandContext, CommandResult } from "../types";
+import type { SlashCommand, CommandContext, CommandResult } from "../types.js";
 
 export const debugCommand: SlashCommand = {
   name: "debug",

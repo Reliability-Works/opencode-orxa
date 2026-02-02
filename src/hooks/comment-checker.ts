@@ -1,4 +1,4 @@
-import type { HookContext } from "../types";
+import type { HookContext } from "../types.js";
 
 // Patterns that indicate "stopping" questions vs requirement questions
 const STOPPING_PATTERNS = [

@@ -1,5 +1,5 @@
-import type { OrxaConfig } from "../config/schema";
-import type { Session, Todo, ValidationResult, WarningResult } from "../types";
+import type { OrxaConfig } from "../config/schema.js";
+import type { Session, Todo, ValidationResult, WarningResult } from "../types.js";
 
 const STOPPING_PATTERNS = [
   /what (?:would|do) you (?:like|want) me to do next/i,

@@ -1,4 +1,4 @@
-import { OrxaConfig } from "./schema";
+import { OrxaConfig } from "./schema.js";
 
 export const PRIMARY_AGENTS = ["orxa", "plan"] as const;
 export const SUBAGENTS = [

@@ -7,16 +7,16 @@ import {
   getOverridesAgentsDir,
   getUserConfigPath,
   loadOrxaConfig,
-} from "./config/loader";
-import { orxaConfigSchema, type OrxaConfig } from "./config/schema";
-import { runInitWizard, runInstallWizard } from "./wizard";
+} from "./config/loader.js";
+import { orxaConfigSchema, type OrxaConfig } from "./config/schema.js";
+import { runInitWizard, runInstallWizard } from "./wizard.js";
 import {
   detectProviders,
   getAuthenticatedProviders,
   getUnauthenticatedProviders,
   formatProviderName,
   getAuthInstructions,
-} from "./utils/provider-detector";
+} from "./utils/provider-detector.js";
 
 const printHelp = (): void => {
   console.log(`

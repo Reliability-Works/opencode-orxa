@@ -1,9 +1,9 @@
-import { HookContext, TodoContinuationResult } from "../types";
+import { HookContext, TodoContinuationResult } from "../types.js";
 import {
   buildTodoContinuationMessage,
   getPendingTodos,
   isStoppingResponse,
-} from "../middleware/todo-guardian";
+} from "../middleware/todo-guardian.js";
 
 export const todoContinuationEnforcer = async (
   context: HookContext

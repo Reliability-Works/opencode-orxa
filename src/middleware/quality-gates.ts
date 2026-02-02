@@ -1,7 +1,7 @@
 import { exec } from "child_process";
 import { promisify } from "util";
-import type { OrxaConfig } from "../config/schema";
-import type { GateResult, GateResults } from "../types";
+import type { OrxaConfig } from "../config/schema.js";
+import type { GateResult, GateResults } from "../types.js";
 
 const execAsync = promisify(exec);
 

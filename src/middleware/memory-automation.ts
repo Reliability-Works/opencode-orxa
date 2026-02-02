@@ -1,4 +1,4 @@
-import type { Memory } from "../types";
+import type { Memory } from "../types.js";
 
 const memoryQueue: Memory[] = [];
 

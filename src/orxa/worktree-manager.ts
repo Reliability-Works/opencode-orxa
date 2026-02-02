@@ -8,7 +8,7 @@
 import { execSync, spawn } from 'child_process';
 import fs from 'fs';
 import path from 'path';
-import type { WorktreeResult, OrxaState } from './types';
+import type { WorktreeResult, OrxaState } from './types.js';
 
 /**
  * Error thrown when worktree operations fail.

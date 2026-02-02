@@ -5,8 +5,8 @@
  * Shows status updates, completion notifications, and error alerts.
  */
 
-import type { HookContext } from '../types';
-import type { OrxaProgress, OrxaToast, OrxaIndicatorState } from '../orxa/types';
+import type { HookContext } from '../types.js';
+import type { OrxaProgress, OrxaToast, OrxaIndicatorState } from '../orxa/types.js';
 
 /**
  * Toast notification durations.

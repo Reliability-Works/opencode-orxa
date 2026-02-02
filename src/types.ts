@@ -1,4 +1,4 @@
-import type { OrxaConfig } from "./config/schema";
+import type { OrxaConfig } from "./config/schema.js";
 
 export interface Message {
   role: string;

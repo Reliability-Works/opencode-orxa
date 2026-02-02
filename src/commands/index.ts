@@ -1,11 +1,11 @@
-import type { SlashCommand, CommandContext, CommandResult } from "../types";
-import { validateCommand } from "./built-in/validate";
-import { refactorCommand } from "./built-in/refactor";
-import { explainCommand } from "./built-in/explain";
-import { testCommand } from "./built-in/test";
-import { debugCommand } from "./built-in/debug";
-import { commitCommand } from "./built-in/commit";
-import { searchCommand } from "./built-in/search";
+import type { SlashCommand, CommandContext, CommandResult } from "../types.js";
+import { validateCommand } from "./built-in/validate.js";
+import { refactorCommand } from "./built-in/refactor.js";
+import { explainCommand } from "./built-in/explain.js";
+import { testCommand } from "./built-in/test.js";
+import { debugCommand } from "./built-in/debug.js";
+import { commitCommand } from "./built-in/commit.js";
+import { searchCommand } from "./built-in/search.js";
 
 export const builtInCommands: SlashCommand[] = [
   validateCommand,

@@ -1,4 +1,4 @@
-import type { Message, Session, SessionContext } from "../types";
+import type { Message, Session, SessionContext } from "../types.js";
 
 const sessionContextStore = new Map<string, SessionContext>();
 

@@ -4,13 +4,13 @@ import { stdin as input, stdout as output } from "process";
 import {
   ensureUserConfigDirectories,
   getUserConfigPath,
-} from "./config/loader";
-import { defaultConfig } from "./config/default-config";
-import type { OrxaConfig } from "./config/schema";
+} from "./config/loader.js";
+import { defaultConfig } from "./config/default-config.js";
+import type { OrxaConfig } from "./config/schema.js";
 import {
   checkSupermemoryStatus,
   type SupermemoryStatus,
-} from "./utils/supermemory-check";
+} from "./utils/supermemory-check.js";
 import {
   detectProviders,
   getAuthenticatedProviders,
@@ -21,7 +21,7 @@ import {
   canProviderAccessModel,
   type ProviderInfo,
   type DetectedConfig,
-} from "./utils/provider-detector";
+} from "./utils/provider-detector.js";
 import {
   parseAgentModels,
   formatModelName,
@@ -31,7 +31,7 @@ import {
   PROVIDER_DISPLAY_NAMES,
   type ParsedAgentConfig,
   type ModelGroup,
-} from "./utils/agent-models";
+} from "./utils/agent-models.js";
 
 const BUILTIN_AGENTS = [
   "orxa",

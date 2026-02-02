@@ -3,16 +3,16 @@ import path from "path";
 import {
   getCustomAgentsDir,
   getOverridesAgentsDir,
-} from "./config/loader";
-import { configHandler } from "./config-handler";
-import { preToolExecution } from "./hooks/pre-tool-execution";
-import { postSubagentResponse } from "./hooks/post-subagent-response";
-import { preTodoCompletion } from "./hooks/pre-todo-completion";
-import { sessionCheckpoint } from "./hooks/session-checkpoint";
-import { todoContinuationEnforcer } from "./hooks/todo-continuation-enforcer";
-import { welcomeToastHandler } from "./hooks/welcome-toast";
-import { orxaDetector } from "./hooks/orxa-detector";
-import { orxaIndicator } from "./hooks/orxa-indicator";
+} from "./config/loader.js";
+import { configHandler } from "./config-handler.js";
+import { preToolExecution } from "./hooks/pre-tool-execution.js";
+import { postSubagentResponse } from "./hooks/post-subagent-response.js";
+import { preTodoCompletion } from "./hooks/pre-todo-completion.js";
+import { sessionCheckpoint } from "./hooks/session-checkpoint.js";
+import { todoContinuationEnforcer } from "./hooks/todo-continuation-enforcer.js";
+import { welcomeToastHandler } from "./hooks/welcome-toast.js";
+import { orxaDetector } from "./hooks/orxa-detector.js";
+import { orxaIndicator } from "./hooks/orxa-indicator.js";
 import type {
   EnforcementResult,
   HookContext,
@@ -20,14 +20,14 @@ import type {
   SubagentResponseResult,
   TodoCompletionGateResult,
   TodoContinuationResult,
-} from "./types";
+} from "./types.js";
 
 // Orxa Orchestration exports
-export * from "./orxa/types";
-export { WorktreeManager, createWorktreeManager } from "./orxa/worktree-manager";
-export { SpecGenerator, createSpecGenerator } from "./orxa/spec-generator";
-export { MergeQueue, createMergeQueue } from "./orxa/merge-queue";
-export { OrxaOrchestrator, createOrchestrator } from "./orxa/orchestrator";
+export * from "./orxa/types.js";
+export { WorktreeManager, createWorktreeManager } from "./orxa/worktree-manager.js";
+export { SpecGenerator, createSpecGenerator } from "./orxa/spec-generator.js";
+export { MergeQueue, createMergeQueue } from "./orxa/merge-queue.js";
+export { OrxaOrchestrator, createOrchestrator } from "./orxa/orchestrator.js";
 
 // Bundled skills - internal constant, not exported to avoid plugin loader issues
 const BUNDLED_SKILLS = [

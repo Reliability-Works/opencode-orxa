@@ -5,7 +5,7 @@
  * Models are discovered from user's opencode.json providers, not hardcoded.
  */
 
-import type { ProviderInfo } from "./provider-detector";
+import type { ProviderInfo } from "./provider-detector.js";
 
 export interface RoleDescription {
   /** Role identifier */

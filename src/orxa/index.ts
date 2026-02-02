@@ -5,7 +5,7 @@
  * 
  * @example
  * ```typescript
- * import { createOrchestrator } from './orxa';
+ * import { createOrchestrator } from './orxa.js';
  * 
  * const orchestrator = createOrchestrator('/path/to/repo', {
  *   max_parallel_workstreams: 5,
@@ -17,29 +17,29 @@
  */
 
 // Types
-export * from './types';
+export * from './types.js';
 
 // Core components
-export { WorktreeManager, createWorktreeManager } from './worktree-manager';
-export { SpecGenerator, createSpecGenerator } from './spec-generator';
-export { MergeQueue, createMergeQueue } from './merge-queue';
-export { OrxaOrchestrator, createOrchestrator } from './orchestrator';
+export { WorktreeManager, createWorktreeManager } from './worktree-manager.js';
+export { SpecGenerator, createSpecGenerator } from './spec-generator.js';
+export { MergeQueue, createMergeQueue } from './merge-queue.js';
+export { OrxaOrchestrator, createOrchestrator } from './orchestrator.js';
 
 // Utilities
 export {
   isGitRepository,
   getDefaultQueueDirectory,
   ensureQueueDirectory,
-} from './worktree-manager';
+} from './worktree-manager.js';
 
 export {
   EXAMPLE_WORKSTREAM_SPECS,
-} from './spec-generator';
+} from './spec-generator.js';
 
 export {
   getDefaultQueuePath,
-} from './merge-queue';
+} from './merge-queue.js';
 
 export {
   isOrxaAvailable,
-} from './orchestrator';
+} from './orchestrator.js';

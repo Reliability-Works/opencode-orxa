@@ -1,4 +1,4 @@
-import { HookContext } from "../types";
+import { HookContext } from "../types.js";
 
 let hasShownWelcome = false;
 

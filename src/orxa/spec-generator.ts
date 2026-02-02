@@ -11,7 +11,7 @@ import type {
   WorkstreamSpec, 
   SpecGenerationResult, 
   DependencyGraph 
-} from './types';
+} from './types.js';
 
 /**
  * Default system prompt for the strategist agent when generating specs.

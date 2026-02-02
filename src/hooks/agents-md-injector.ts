@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import type { HookContext } from "../types";
+import type { HookContext } from "../types.js";
 
 export const findAgentsMdFiles = (filePath: string): string[] => {
   const agentsMdFiles: string[] = [];

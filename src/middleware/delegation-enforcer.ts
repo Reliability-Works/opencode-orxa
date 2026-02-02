@@ -1,6 +1,6 @@
 import { minimatch } from "minimatch";
-import type { OrxaConfig } from "../config/schema";
-import type { EnforcementResult, HookContext } from "../types";
+import type { OrxaConfig } from "../config/schema.js";
+import type { EnforcementResult, HookContext } from "../types.js";
 
 const WRITE_TOOLS = new Set([
   "write",

@@ -1,5 +1,5 @@
-import { HookContext, SessionCheckpointResult } from "../types";
-import { summarizeSession } from "../utils/session-memory";
+import { HookContext, SessionCheckpointResult } from "../types.js";
+import { summarizeSession } from "../utils/session-memory.js";
 
 /**
  * Check if memory features are enabled and supermemory is available

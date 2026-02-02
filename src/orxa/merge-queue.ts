@@ -13,7 +13,7 @@ import type {
   MergeResult, 
   ConflictResolutionResult,
   QueueFileEntry 
-} from './types';
+} from './types.js';
 
 /**
  * Error thrown when merge operations fail.

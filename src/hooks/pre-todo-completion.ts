@@ -1,5 +1,5 @@
-import { HookContext, TodoCompletionGateResult } from "../types";
-import { runAllQualityGates } from "../middleware/quality-gates";
+import { HookContext, TodoCompletionGateResult } from "../types.js";
+import { runAllQualityGates } from "../middleware/quality-gates.js";
 
 export const preTodoCompletion = async (
   context: HookContext

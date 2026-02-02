@@ -1,4 +1,4 @@
-import type { Session } from "../types";
+import type { Session } from "../types.js";
 
 export const trackManualEdit = (session: Session): void => {
   session.manualEdits += 1;

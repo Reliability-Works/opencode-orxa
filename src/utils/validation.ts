@@ -1,5 +1,5 @@
-import { orxaConfigSchema } from "../config/schema";
-import type { ConfigValidationResult, ToolPayload } from "../types";
+import { orxaConfigSchema } from "../config/schema.js";
+import type { ConfigValidationResult, ToolPayload } from "../types.js";
 
 export interface ValidationError {
   field: string;

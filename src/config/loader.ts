@@ -1,8 +1,8 @@
 import fs from "fs";
 import os from "os";
 import path from "path";
-import { orxaConfigSchema, OrxaConfig } from "./schema";
-import { defaultConfig, PRIMARY_AGENTS } from "./default-config";
+import { orxaConfigSchema, OrxaConfig } from "./schema.js";
+import { defaultConfig, PRIMARY_AGENTS } from "./default-config.js";
 
 const CONFIG_ROOT_DIR = path.join(os.homedir(), ".config", "opencode", "orxa");
 const CONFIG_FILE_NAME = "orxa.json";

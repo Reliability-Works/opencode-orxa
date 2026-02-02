@@ -1,6 +1,7 @@
 {
   "name": "@reliabilityworks/opencode-orxa",
   "version": "1.0.4",
+  "type": "module",
   "description": "Enforces strict Orxa/Manager patterns for AI-assisted software development",
   "main": "dist/plugin.js",
   "types": "dist/index.d.ts",
@@ -57,6 +58,7 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "@opencode-ai/plugin": "^1.1.48",
     "js-yaml": "^4.1.1",
     "minimatch": "^9.0.0",
     "zod": "^3.22.0"

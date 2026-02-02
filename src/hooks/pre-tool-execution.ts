@@ -1,14 +1,14 @@
-import { HookContext, EnforcementResult } from "../types";
-import { enforceDelegation, resolveToolAlias } from "../middleware/delegation-enforcer";
+import { HookContext, EnforcementResult } from "../types.js";
+import { enforceDelegation, resolveToolAlias } from "../middleware/delegation-enforcer.js";
 import {
   buildTodoContinuationMessage,
   checkPendingTodos,
   extractQuestionText,
   getPendingTodos,
   isStoppingResponse,
-} from "../middleware/todo-guardian";
-import { commentChecker } from "./comment-checker";
-import { agentsMdInjector } from "./agents-md-injector";
+} from "../middleware/todo-guardian.js";
+import { commentChecker } from "./comment-checker.js";
+import { agentsMdInjector } from "./agents-md-injector.js";
 
 export const preToolExecution = async (context: HookContext): Promise<EnforcementResult> => {
   const { args, config, session } = context;

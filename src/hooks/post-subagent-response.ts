@@ -1,11 +1,11 @@
-import { HookContext, SubagentResponseResult } from "../types";
-import { extractMemories } from "../middleware/memory-automation";
+import { HookContext, SubagentResponseResult } from "../types.js";
+import { extractMemories } from "../middleware/memory-automation.js";
 import {
   buildTodoContinuationMessage,
   getPendingTodos,
   isCompletionSignal,
   isStoppingResponse,
-} from "../middleware/todo-guardian";
+} from "../middleware/todo-guardian.js";
 
 export const postSubagentResponse = async (
   context: HookContext

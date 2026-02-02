@@ -5,8 +5,8 @@
  * Strips the keyword and injects the Orxa system prompt.
  */
 
-import type { HookContext, EnforcementResult } from '../types';
-import type { OrxaDetectionResult } from '../orxa/types';
+import type { HookContext, EnforcementResult } from '../types.js';
+import type { OrxaDetectionResult } from '../orxa/types.js';
 
 /**
  * Pattern to detect "orxa" keyword (case insensitive, word boundary).

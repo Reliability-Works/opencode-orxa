@@ -16,10 +16,10 @@ import type {
   WorkstreamSpec,
   WorkstreamExecutionResult,
   OrxaQueueItem,
-} from './types';
-import { WorktreeManager, getDefaultQueueDirectory } from './worktree-manager';
-import { SpecGenerator } from './spec-generator';
-import { MergeQueue } from './merge-queue';
+} from './types.js';
+import { WorktreeManager, getDefaultQueueDirectory } from './worktree-manager.js';
+import { SpecGenerator } from './spec-generator.js';
+import { MergeQueue } from './merge-queue.js';
 
 /**
  * Default configuration for Orxa sessions.
