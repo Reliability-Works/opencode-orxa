@@ -2,7 +2,8 @@ import fs from "fs";
 import path from "path";
 import yaml from "js-yaml";
 import { getCustomAgentsDir, getOverridesAgentsDir } from "./config/loader.js";
-import type { OrxaConfig } from "./config/schema.js";
+import { PRIMARY_AGENTS } from "./config/default-config.js";
+import type { OrxaConfig, AgentConfig } from "./config/schema.js";
 
 /**
  * OpenCode Agent Definition
@@ -212,6 +213,39 @@ export const createConfigHandler = () => {
       enabledAgents: orxaConfig.enabled_agents,
       disabledAgents: orxaConfig.disabled_agents,
     });
+
+    // Apply agent_overrides from orxaConfig
+    const agentOverrides = orxaConfig.agent_overrides ?? {};
+    const primaryAgentSet = new Set<string>(PRIMARY_AGENTS);
+
+    for (const [agentName, override] of Object.entries(agentOverrides)) {
+      if (orxaAgents[agentName]) {
+        const isPrimaryAgent = primaryAgentSet.has(agentName);
+
+        if (isPrimaryAgent) {
+          // Primary agents: only allow model override
+          if (override.model !== undefined) {
+            orxaAgents[agentName].model = override.model;
+          }
+        } else {
+          // Subagents: allow model and other fields
+          // Cast to Partial<AgentConfig> since we know it's not a primary agent
+          const subagentOverride = override as Partial<AgentConfig>;
+          if (subagentOverride.model !== undefined) {
+            orxaAgents[agentName].model = subagentOverride.model;
+          }
+          if (subagentOverride.temperature !== undefined) {
+            orxaAgents[agentName].temperature = subagentOverride.temperature;
+          }
+          if (subagentOverride.system_prompt !== undefined) {
+            orxaAgents[agentName].system_prompt = subagentOverride.system_prompt;
+          }
+          if (subagentOverride.tools !== undefined) {
+            orxaAgents[agentName].tools = subagentOverride.tools;
+          }
+        }
+      }
+    }
 
     // REPLACE config.agent entirely with ONLY orxa agents
     // This completely ignores user's opencode.json agent array
