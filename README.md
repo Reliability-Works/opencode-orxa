@@ -104,7 +104,8 @@ When you run `npm install -g opencode-orxa`, the postinstall script automaticall
    ├── orxa.json          # Main configuration
    ├── agents/
    │   ├── custom/            # Your custom agents
-   │   └── overrides/         # Override built-in subagents
+   │   ├── overrides/         # Override built-in subagents
+   │   └── subagents/         # Built-in subagents (copied from plugin)
    └── schemas/
    ```
 
@@ -118,6 +119,14 @@ When you run `npm install -g opencode-orxa`, the postinstall script automaticall
 4. **Registers the plugin** in `~/.config/opencode/opencode.json`
 
 5. **Shows installation summary** with next steps
+
+**Agent Loading Priority:**
+When OpenCode loads agents, it checks in this order:
+1. **Custom** (`agents/custom/`) - Your entirely new agents
+2. **Overrides** (`agents/overrides/`) - Your modifications to built-in agents
+3. **Built-in** (`agents/subagents/`) - Default agents copied from the plugin
+
+**Why use overrides?** If you edit files directly in `subagents/`, your changes will be lost when you update the plugin. Instead, copy the agent file to `overrides/` and edit it there - your customizations will persist across updates.
 
 ### Verify Installation
 
