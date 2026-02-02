@@ -50,7 +50,6 @@ export const defaultConfig: OrxaConfig = {
     disabled: [],
     config: {},
   },
-  mcp: {},
   toolAliases: {
     resolve: {
       apply_patch: "edit",
