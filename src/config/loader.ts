@@ -4,6 +4,12 @@ import path from "path";
 import { orxaConfigSchema, OrxaConfig } from "./schema.js";
 import { defaultConfig, PRIMARY_AGENTS } from "./default-config.js";
 
+const debugLog = (...args: unknown[]) => {
+  if (process.env.OPENCODE_ORXA_DEBUG === '1') {
+    console.log('[orxa:loader]', ...args);
+  }
+};
+
 const CONFIG_ROOT_DIR = path.join(os.homedir(), ".config", "opencode", "orxa");
 const CONFIG_FILE_NAME = "orxa.json";
 const LEGACY_CONFIG_PATH = path.join(
@@ -37,16 +43,34 @@ const mergeDeep = <T extends object>(
 };
 
 const readConfigFile = (configPath: string): Record<string, unknown> | null => {
-  if (!fs.existsSync(configPath)) {
+  debugLog('Reading config file:', configPath);
+
+  const exists = fs.existsSync(configPath);
+  debugLog('File exists:', exists);
+
+  if (!exists) {
     return null;
   }
 
+  const stats = fs.statSync(configPath);
+  debugLog('File size:', stats.size, 'bytes');
+
   const raw = fs.readFileSync(configPath, "utf-8").trim();
+  debugLog('Raw contents (first 500 chars):', raw.slice(0, 500));
+
   if (!raw) {
     return {};
   }
 
-  const parsed = JSON.parse(raw) as unknown;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+    debugLog('JSON.parse succeeded');
+  } catch (error) {
+    debugLog('JSON.parse error:', error instanceof Error ? error.message : String(error));
+    throw error;
+  }
+
   if (!isPlainObject(parsed)) {
     throw new Error(`Config file must be a JSON object: ${configPath}`);
   }
@@ -136,7 +160,15 @@ export const ensureUserConfigDirectories = (): void => {
 export const loadOrxaConfig = (
   configPath?: string
 ): OrxaConfig => {
+  debugLog('Loading orxa config...');
+  debugLog('os.homedir():', os.homedir());
+  debugLog('process.env.HOME:', process.env.HOME);
+  debugLog('process.env.XDG_CONFIG_HOME:', process.env.XDG_CONFIG_HOME);
+
   const resolvedPath = configPath ?? getUserConfigPath();
+  debugLog('Resolved config path:', resolvedPath);
+  debugLog('Config file exists:', fs.existsSync(resolvedPath));
+
   let userConfig = readConfigFile(resolvedPath);
 
   if (!userConfig && !configPath) {
@@ -157,6 +189,21 @@ export const loadOrxaConfig = (
   }
 
   const merged = mergeDeep(defaultConfig, userConfig ?? {});
+  debugLog('Merged config keys before schema parsing:', Object.keys(merged));
+  if (isPlainObject(merged.agent_overrides)) {
+    debugLog('agent_overrides keys:', Object.keys(merged.agent_overrides));
+  } else {
+    debugLog('agent_overrides is not an object:', merged.agent_overrides);
+  }
+
   stripPrimaryAgentOverrides(merged as unknown as Record<string, unknown>);
-  return orxaConfigSchema.parse(merged);
+
+  try {
+    const parsed = orxaConfigSchema.parse(merged);
+    debugLog('Schema validation succeeded');
+    return parsed;
+  } catch (error) {
+    debugLog('Schema validation error:', error instanceof Error ? error.message : String(error));
+    throw error;
+  }
 };
