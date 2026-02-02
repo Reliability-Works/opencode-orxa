@@ -10,6 +10,8 @@ const __dirname = path.dirname(__filename);
 
 const CONFIG_DIR = path.join(os.homedir(), ".config", "opencode", "orxa");
 const OPENCODE_CONFIG_PATH = path.join(os.homedir(), ".config", "opencode", "opencode.json");
+const BUNDLED_SKILLS_DIR = path.join(__dirname, "skills");
+const USER_SKILL_DIR = path.join(os.homedir(), ".config", "opencode", "skill");
 
 const isGlobalInstall = () => {
   // Check if we're in a global npm/bun directory or being run via npm install/link
@@ -266,6 +268,44 @@ const copySubagentFiles = () => {
   }
 };
 
+const copyBundledSkills = () => {
+  if (!fs.existsSync(BUNDLED_SKILLS_DIR)) {
+    console.log("⚠ Bundled skills directory not found, skipping skill copy");
+    return;
+  }
+
+  let copiedCount = 0;
+  let skippedCount = 0;
+
+  try {
+    const skillFiles = fs
+      .readdirSync(BUNDLED_SKILLS_DIR)
+      .filter((f) => f.endsWith(".md") && f.toLowerCase() !== "readme.md");
+
+    for (const filename of skillFiles) {
+      const skillName = path.basename(filename, ".md");
+      const targetSkillDir = path.join(USER_SKILL_DIR, skillName);
+
+      if (fs.existsSync(targetSkillDir)) {
+        skippedCount++;
+        continue;
+      }
+
+      fs.mkdirSync(targetSkillDir, { recursive: true });
+      const sourcePath = path.join(BUNDLED_SKILLS_DIR, filename);
+      const targetPath = path.join(targetSkillDir, "SKILL.md");
+
+      fs.copyFileSync(sourcePath, targetPath);
+      copiedCount++;
+      console.log(`  ✓ Copied skills/${filename} -> ${skillName}/SKILL.md`);
+    }
+
+    console.log(`✓ Skills: ${copiedCount} copied, ${skippedCount} skipped (already exist)`);
+  } catch (error) {
+    console.error("⚠ Failed to copy bundled skills:", error.message);
+  }
+};
+
 const main = () => {
   console.log("🎼 OpenCode Orxa - Post Install\n");
 
@@ -281,6 +321,7 @@ const main = () => {
   console.log("✓ Created config directories");
 
   copySubagentFiles();
+  copyBundledSkills();
   createDefaultConfig();
   registerPlugin();
 
