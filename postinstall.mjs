@@ -59,15 +59,31 @@ const createDefaultConfig = () => {
       "mobile-simulator"
     ],
     disabled_agents: [],
-    agent_overrides: {},
+    agent_overrides: {
+      build: { model: "opencode/gpt-5.2-codex" },
+      architect: { model: "opencode/gpt-5.2-codex" },
+      frontend: { model: "opencode/gemini-3-pro" },
+      multimodal: { model: "opencode/gemini-3-pro" }
+    },
     custom_agents: [],
     mcps: {
       enabled: ["ios-simulator", "playwright"],
       disabled: [],
       config: {}
     },
+    toolAliases: {
+      resolve: {
+        apply_patch: "edit",
+        write_to_file: "write",
+        replace_file_content: "write",
+        multi_replace_file_content: "write",
+        task: "delegate_task"
+      }
+    },
     orxa: {
       model: "opencode/kimi-k2.5",
+      allowedTools: ["read", "delegate_task", "todowrite", "todoread", "supermemory", "edit", "write"],
+      blockedTools: ["grep", "glob", "bash", "skill"],
       enforcement: {
         delegation: "strict",
         todoCompletion: "strict",
@@ -76,10 +92,65 @@ const createDefaultConfig = () => {
       },
       maxManualEditsPerSession: 0,
       requireTodoList: true,
-      autoUpdateTodos: false
+      autoUpdateTodos: false,
+      planWriteAllowlist: [".orxa/plans/*.md"],
+      blockMobileTools: true
     },
-    plan: {
-      model: "opencode/gpt-5.2-codex"
+    governance: {
+      onlyOrxaCanDelegate: true,
+      blockSupermemoryAddForSubagents: true,
+      delegationTemplate: {
+        required: true,
+        requiredSections: ["Task", "Expected Outcome", "Required Tools", "Must Do", "Must Not Do", "Context"],
+        maxImages: 10,
+        requireSameSessionId: true,
+        contextHygiene: {
+          maxToolOutputChars: 4000,
+          summaryHeader: "Summary",
+          requireSummary: true
+        }
+      }
+    },
+    subagents: {
+      defaults: {
+        model: "opencode/kimi-k2.5",
+        timeout: 120000,
+        maxRetries: 2
+      },
+      overrides: {
+        build: { model: "opencode/gpt-5.2-codex", timeout: 300000 },
+        architect: { model: "opencode/gpt-5.2-codex", timeout: 300000 },
+        frontend: { model: "opencode/gemini-3-pro" },
+        multimodal: { model: "opencode/gemini-3-pro" }
+      },
+      custom: []
+    },
+    memory: {
+      autoExtract: true,
+      extractPatterns: ["bug.*fix", "solution.*", "decided.*", "pattern.*", "config.*"],
+      requiredTypes: ["error-solution", "learned-pattern", "project-config", "architecture"],
+      sessionCheckpointInterval: 20
+    },
+    qualityGates: {
+      requireLint: true,
+      requireTypeCheck: true,
+      requireTest: true,
+      requireBuild: true,
+      lintCommand: "npm run lint",
+      typeCheckCommand: "npm run typecheck",
+      testCommand: "npm test",
+      buildCommand: "npm run build"
+    },
+    escalation: {
+      maxAgentAttempts: 3,
+      escalateToOrxa: true,
+      autoEscalationThreshold: 2
+    },
+    ui: {
+      showWelcomeToast: true,
+      showOrxaIndicator: true,
+      showDelegationSummary: true,
+      colorizeOutput: true
     }
   };
 
