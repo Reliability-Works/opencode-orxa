@@ -27,9 +27,10 @@ describe("Config Handler", () => {
       expect(agents).toHaveProperty("multimodal");
       expect(agents).toHaveProperty("mobile-simulator");
       expect(agents).toHaveProperty("orxa-worker");
+      expect(agents).toHaveProperty("orxa-planner");
 
-      // Should have 16 total agents (15 + orxa-worker)
-      expect(Object.keys(agents)).toHaveLength(16);
+      // Should have 17 total agents (15 + orxa-worker + orxa-planner)
+      expect(Object.keys(agents)).toHaveLength(17);
     });
 
     it("parses orxa agent correctly", () => {
@@ -93,8 +94,8 @@ describe("Config Handler", () => {
       expect(agents).toHaveProperty("plan");
       expect(agents).not.toHaveProperty("someUserAgent");
 
-      // Should have 16 orxa agents (15 + orxa-worker)
-      expect(Object.keys(agents)).toHaveLength(16);
+      // Should have 17 orxa agents (15 + orxa-worker + orxa-planner)
+      expect(Object.keys(agents)).toHaveLength(17);
     });
 
     it("sets default_agent to orxa", async () => {
@@ -118,7 +119,7 @@ describe("Config Handler", () => {
       expect(config.agent).toBeDefined();
       expect(config.default_agent).toBe("orxa");
       const agents = config.agent as Record<string, unknown>;
-      expect(Object.keys(agents)).toHaveLength(16);
+      expect(Object.keys(agents)).toHaveLength(17);
     });
   });
 

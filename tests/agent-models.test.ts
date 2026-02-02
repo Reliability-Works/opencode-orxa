@@ -15,8 +15,8 @@ describe("Agent Models Parser", () => {
     it("should parse all agent YAML files", () => {
       const config = parseAgentModels();
       
-      // Should have 16 agents (2 primary + 14 subagents including orxa-worker)
-      expect(config.agents.length).toBe(16);
+      // Should have 17 agents (2 primary + 15 subagents including orxa-worker and orxa-planner)
+      expect(config.agents.length).toBe(17);
       
       // Should have 4 unique models
       expect(config.uniqueModels).toHaveLength(4);
@@ -43,7 +43,7 @@ describe("Agent Models Parser", () => {
       // Find kimi-k2.5 group
       const kimiGroup = config.models.find((m) => m.model === "opencode/kimi-k2.5");
       expect(kimiGroup).toBeDefined();
-      expect(kimiGroup!.count).toBe(8); // orxa + 7 subagents
+      expect(kimiGroup!.count).toBe(9); // orxa + 8 subagents (including orxa-planner)
       
       // Find gpt-5.2-codex group
       const gptGroup = config.models.find((m) => m.model === "opencode/gpt-5.2-codex");
