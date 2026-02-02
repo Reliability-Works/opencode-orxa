@@ -104,11 +104,10 @@ When you run `npm install -g opencode-orxa`, the postinstall script automaticall
    ```
    ~/.config/opencode/orxa/
    ├── orxa.json          # Main configuration
-   ├── agents/
-   │   ├── custom/            # Your custom agents
-   │   ├── overrides/         # Override built-in subagents
-   │   └── subagents/         # Built-in subagents (copied from plugin)
-   └── schemas/
+   └── agents/
+       ├── custom/            # Your custom agents
+       ├── overrides/         # Override built-in subagents
+       └── subagents/         # Built-in subagents (copied from plugin)
    ```
 
 2. **Generates default `orxa.json`** with sensible defaults
@@ -731,10 +730,9 @@ Directory structure:
 ```
 ~/.config/opencode/orxa/
 ├── orxa.json          # Main configuration
-├── agents/
-│   ├── custom/            # Your custom agents
-│   └── overrides/         # Override built-in subagents
-└── schemas/
+└── agents/
+    ├── custom/            # Your custom agents
+    └── overrides/         # Override built-in subagents
 ```
 
 ### Quick Example

@@ -290,10 +290,9 @@ orxa config      # Open config in editor
 ```
 ~/.config/opencode/orxa/
 ├── orxa.json          # Main configuration
-├── agents/
-│   ├── custom/            # Your custom agent definitions
-│   └── overrides/         # Override built-in subagents
-└── schemas/               # JSON schemas
+└── agents/
+    ├── custom/            # Your custom agent definitions
+    └── overrides/         # Override built-in subagents
 ```
 
 ---

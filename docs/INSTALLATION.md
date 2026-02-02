@@ -60,10 +60,9 @@ When you install globally, the postinstall script automatically:
    ```
    ~/.config/opencode/orxa/
    ├── orxa.json
-   ├── agents/
-   │   ├── custom/
-   │   └── overrides/
-   └── schemas/
+   └── agents/
+       ├── custom/
+       └── overrides/
    ```
 
 2. **Generates default configuration** (`orxa.json`)

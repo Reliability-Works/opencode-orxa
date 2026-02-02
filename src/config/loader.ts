@@ -131,7 +131,6 @@ export const ensureUserConfigDirectories = (): void => {
   fs.mkdirSync(CONFIG_ROOT_DIR, { recursive: true });
   fs.mkdirSync(getCustomAgentsDir(), { recursive: true });
   fs.mkdirSync(getOverridesAgentsDir(), { recursive: true });
-  fs.mkdirSync(getSchemasDir(), { recursive: true });
 };
 
 export const loadOrxaConfig = (
