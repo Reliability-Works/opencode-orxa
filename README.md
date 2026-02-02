@@ -9,8 +9,8 @@
 [![npm version](https://img.shields.io/npm/v/@reliabilityworks/opencode-orxa?style=flat-square&color=369eff&logo=npm&logoColor=white)](https://www.npmjs.com/package/@reliabilityworks/opencode-orxa)
 [![npm downloads](https://img.shields.io/npm/dt/@reliabilityworks/opencode-orxa?style=flat-square&color=ff6b35&logo=npm&logoColor=white)](https://www.npmjs.com/package/@reliabilityworks/opencode-orxa)
 [![License](https://img.shields.io/badge/license-MIT-white?style=flat-square&labelColor=black)](https://github.com/yourusername/opencode-orxa/blob/main/LICENSE)
-[![GitHub stars](https://img.shields.io/github/stars/yourusername/opencode-orxa?style=flat-square&color=ffcb47&logo=github&logoColor=black)](https://github.com/yourusername/opencode-orxa/stargazers)
-[![GitHub issues](https://img.shields.io/github/issues/yourusername/opencode-orxa?style=flat-square&color=ff80eb&logo=github&logoColor=black)](https://github.com/yourusername/opencode-orxa/issues)
+[![GitHub stars](https://img.shields.io/github/stars/Reliability-Works/opencode-orxa?style=flat-square&color=ffcb47&logo=github&logoColor=black)](https://github.com/Reliability-Works/opencode-orxa/stargazers)
+[![GitHub issues](https://img.shields.io/github/issues/Reliability-Works/opencode-orxa?style=flat-square&color=ff80eb&logo=github&logoColor=black)](https://github.com/Reliability-Works/opencode-orxa/issues)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 
 </div>
