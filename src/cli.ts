@@ -8,7 +8,7 @@ import {
   getUserConfigPath,
   loadOrxaConfig,
 } from "./config/loader";
-import { orxaConfigSchema } from "./config/schema";
+import { orxaConfigSchema, type OrxaConfig } from "./config/schema";
 import { runInitWizard, runInstallWizard } from "./wizard";
 import {
   detectProviders,
@@ -81,17 +81,16 @@ const runDoctor = (): void => {
     return;
   }
 
-  const result = orxaConfigSchema.safeParse(parsed);
-  if (!result.success) {
+  // Load and validate the merged config (user config + defaults)
+  let config: OrxaConfig;
+  try {
+    config = loadOrxaConfig();
+  } catch (error) {
     console.error("Config validation failed:");
-    for (const issue of result.error.issues) {
-      console.error(`- ${issue.path.join(".")}: ${issue.message}`);
-    }
+    console.error(`- ${(error as Error).message}`);
     process.exitCode = 1;
     return;
   }
-
-  const config = loadOrxaConfig();
   const missingDirs: string[] = [];
   if (!fs.existsSync(getCustomAgentsDir())) {
     missingDirs.push(getCustomAgentsDir());
