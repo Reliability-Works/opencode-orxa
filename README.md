@@ -77,16 +77,13 @@ Traditional AI coding assistants are like having a brilliant but undisciplined d
 
 **⚠️ CRITICAL: OpenCode must be installed first.**
 
-The Orxa is a plugin that extends OpenCode. If you haven't installed OpenCode yet:
+The Orxa is a plugin that extends OpenCode. If you haven't installed OpenCode yet, follow the installation instructions at:
+
+👉 **[OpenCode Installation Guide](https://github.com/anomalyco/opencode)**
+
+Once OpenCode is installed, verify it's working:
 
 ```bash
-# Install OpenCode first (required)
-npm install -g opencode
-
-# Or via Homebrew
-brew install opencode
-
-# Verify installation
 opencode --version
 ```
 
