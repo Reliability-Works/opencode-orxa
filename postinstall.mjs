@@ -347,21 +347,236 @@ const readConfigFile = (configPath) => {
   }
 };
 
-const updateConfigVersion = (configPath, existingConfig, currentVersion) => {
-  if (!existingConfig) {
+/**
+ * Deep merge helper that preserves user values while adding missing fields from defaults.
+ * User's values always take precedence over defaults.
+ * Only adds fields that are completely missing (additive only).
+ * 
+ * @param {object} userConfig - The user's existing configuration
+ * @param {object} defaultConfig - The default configuration template
+ * @returns {object} - Merged configuration
+ */
+const deepMergeConfigs = (userConfig, defaultConfig) => {
+  const result = {};
+  
+  // Get all unique keys from both configs
+  const allKeys = new Set([...Object.keys(userConfig), ...Object.keys(defaultConfig)]);
+  
+  for (const key of allKeys) {
+    const userValue = userConfig[key];
+    const defaultValue = defaultConfig[key];
+    
+    // If key doesn't exist in user config, use default
+    if (!(key in userConfig)) {
+      result[key] = defaultValue;
+      continue;
+    }
+    
+    // If key doesn't exist in defaults, preserve user value
+    if (!(key in defaultConfig)) {
+      result[key] = userValue;
+      continue;
+    }
+    
+    // Both have the key - need to merge
+    const userType = Array.isArray(userValue) ? 'array' : typeof userValue;
+    const defaultType = Array.isArray(defaultValue) ? 'array' : typeof defaultValue;
+    
+    // If types differ, user value wins
+    if (userType !== defaultType) {
+      result[key] = userValue;
+      continue;
+    }
+    
+    // Handle arrays - user array wins entirely (preserves their customizations)
+    if (userType === 'array') {
+      result[key] = userValue;
+      continue;
+    }
+    
+    // Handle nested objects - recursive merge
+    if (userType === 'object' && userValue !== null && defaultValue !== null) {
+      result[key] = deepMergeConfigs(userValue, defaultValue);
+      continue;
+    }
+    
+    // For primitives, user value wins
+    result[key] = userValue;
+  }
+  
+  return result;
+};
+
+/**
+ * Migrate user config to new version by:
+ * 1. Preserving all user customizations
+ * 2. Adding any new fields from defaults that are missing
+ * 3. Updating pluginVersion to current version
+ * 
+ * @param {string} configPath - Path to the config file
+ * @param {object} userConfig - The user's existing configuration
+ * @param {string} currentVersion - The current plugin version
+ */
+const migrateConfig = (configPath, userConfig, currentVersion) => {
+  if (!userConfig) {
     return;
   }
 
-  const nextConfig = {
-    ...existingConfig,
-    pluginVersion: currentVersion || existingConfig.pluginVersion || "unknown",
-  };
-
   try {
-    fs.writeFileSync(configPath, JSON.stringify(nextConfig, null, 2));
-    console.log("✓ Updated pluginVersion in orxa.json");
+    // Build the default config template (same as createDefaultConfig)
+    const defaultConfig = {
+      pluginVersion: currentVersion || "unknown",
+      enabled_agents: [
+        "orxa",
+        "plan",
+        "strategist",
+        "reviewer",
+        "build",
+        "coder",
+        "frontend",
+        "architect",
+        "git",
+        "explorer",
+        "librarian",
+        "navigator",
+        "writer",
+        "multimodal",
+        "mobile-simulator"
+      ],
+      disabled_agents: [],
+      agent_overrides: {},
+      custom_agents: [],
+      mcps: {
+        enabled: ["ios-simulator", "playwright"],
+        disabled: [],
+        config: {}
+      },
+      toolAliases: {
+        resolve: {
+          apply_patch: "edit",
+          write_to_file: "write",
+          replace_file_content: "write",
+          multi_replace_file_content: "write",
+          task: "delegate_task"
+        }
+      },
+      orxa: {
+        model: "opencode/kimi-k2.5",
+        allowedTools: ["read", "delegate_task", "todowrite", "todoread", "supermemory"],
+        blockedTools: ["grep", "glob", "bash", "skill"],
+        enforcement: {
+          delegation: "strict",
+          todoCompletion: "strict",
+          qualityGates: "strict",
+          memoryAutomation: "strict"
+        },
+        maxManualEditsPerSession: 0,
+        requireTodoList: true,
+        autoUpdateTodos: false,
+        planWriteAllowlist: [".orxa/plans/*.md"],
+        blockMobileTools: true
+      },
+      governance: {
+        onlyOrxaCanDelegate: true,
+        blockSupermemoryAddForSubagents: true,
+        delegationTemplate: {
+          required: true,
+          requiredSections: ["Task", "Expected Outcome", "Required Tools", "Must Do", "Must Not Do", "Context"],
+          maxImages: 10,
+          requireSameSessionId: true,
+          contextHygiene: {
+            maxToolOutputChars: 4000,
+            summaryHeader: "Summary",
+            requireSummary: true
+          }
+        }
+      },
+      subagents: {
+        defaults: {
+          model: "opencode/kimi-k2.5",
+          timeout: 120000,
+          maxRetries: 2
+        },
+        overrides: {
+          build: { model: "opencode/gpt-5.2-codex", timeout: 300000 },
+          architect: { model: "opencode/gpt-5.2-codex", timeout: 300000 },
+          frontend: { model: "opencode/gemini-3-pro" },
+          multimodal: { model: "opencode/gemini-3-pro" }
+        },
+        custom: []
+      },
+      memory: {
+        autoExtract: true,
+        extractPatterns: ["bug.*fix", "solution.*", "decided.*", "pattern.*", "config.*"],
+        requiredTypes: ["error-solution", "learned-pattern", "project-config", "architecture"],
+        sessionCheckpointInterval: 20
+      },
+      qualityGates: {
+        requireLint: true,
+        requireTypeCheck: true,
+        requireTests: true,
+        requireBuild: true,
+        requireLspDiagnostics: true,
+        customValidators: []
+      },
+      escalation: {
+        enabled: true,
+        maxAttemptsPerAgent: 2,
+        escalationMatrix: {
+          coder: "build",
+          build: "architect",
+          explorer: "librarian"
+        },
+        requireExplicitHandoff: true
+      },
+      ui: {
+        showDelegationWarnings: true,
+        showTodoReminders: true,
+        showMemoryConfirmations: true,
+        verboseLogging: true
+      },
+      perAgentRestrictions: {},
+      orchestration: {
+        enabled: true,
+        max_parallel_workstreams: 5,
+        queue_directory: "~/.orxa-queue",
+        auto_merge: true,
+        conflict_resolution_agent: "architect",
+        worktree_prefix: "orxa",
+        cleanup_worktrees: true,
+        require_merge_approval: false,
+        workstream_timeout_minutes: 120,
+        retry_failed_workstreams: false,
+        max_retries: 2,
+        queue_poll_interval_ms: 5000
+      }
+    };
+
+    // Perform deep merge: user values win, missing fields added from defaults
+    const mergedConfig = deepMergeConfigs(userConfig, defaultConfig);
+    
+    // Always update pluginVersion to current version
+    mergedConfig.pluginVersion = currentVersion || "unknown";
+    
+    // Write the migrated config
+    fs.writeFileSync(configPath, JSON.stringify(mergedConfig, null, 2));
+    
+    // Report what changed
+    const userKeys = new Set(Object.keys(userConfig));
+    const defaultKeys = new Set(Object.keys(defaultConfig));
+    const newFields = [...defaultKeys].filter(k => !userKeys.has(k));
+    
+    if (newFields.length > 0) {
+      console.log(`✓ Migrated config: added ${newFields.length} new field(s)`);
+      console.log(`  New fields: ${newFields.join(", ")}`);
+    } else {
+      console.log("✓ Config is up to date (no new fields to add)");
+    }
+    console.log(`✓ Updated pluginVersion to v${currentVersion || "unknown"}`);
+    
   } catch (error) {
-    console.error("⚠ Failed to update orxa.json:", error.message);
+    console.error("⚠ Failed to migrate orxa.json:", error.message);
+    console.error("  Your existing config has been preserved.");
   }
 };
 
@@ -388,7 +603,7 @@ const main = () => {
   createDefaultConfig(currentVersion);
 
   if (userConfig && needsUpdate) {
-    updateConfigVersion(configPath, userConfig, currentVersion);
+    migrateConfig(configPath, userConfig, currentVersion);
   }
   registerPlugin();
 

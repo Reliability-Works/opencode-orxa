@@ -118,6 +118,7 @@ export interface OrxaConfig {
     showTodoReminders: boolean;
     showMemoryConfirmations: boolean;
     verboseLogging: boolean;
+    autoUpdateCheck?: boolean;
   };
   perAgentRestrictions?: Record<
     string,
@@ -336,6 +337,7 @@ export const orxaConfigSchema: z.ZodType<OrxaConfig> = z.object({
     showTodoReminders: z.boolean(),
     showMemoryConfirmations: z.boolean(),
     verboseLogging: z.boolean(),
+    autoUpdateCheck: z.boolean().optional().default(true),
   }),
   perAgentRestrictions: z.record(z.string(), perAgentRestrictionSchema).optional(),
   orchestration: z.object({

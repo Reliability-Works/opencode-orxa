@@ -170,6 +170,7 @@ export const defaultConfig: OrxaConfig = {
     showTodoReminders: true,
     showMemoryConfirmations: true,
     verboseLogging: true,
+    autoUpdateCheck: true,
   },
   perAgentRestrictions: {},
   orchestration: {
