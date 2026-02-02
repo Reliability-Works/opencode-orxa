@@ -207,31 +207,48 @@ export const loadOrxaAgents = (options?: {
  */
 export const createConfigHandler = () => {
   return async (config: Record<string, unknown>): Promise<void> => {
+    console.log('[orxa] Config handler running');
     const orxaConfig = config as unknown as OrxaConfig;
+
+    // Log the agent_overrides object
+    console.log('[orxa] agent_overrides:', JSON.stringify(orxaConfig.agent_overrides, null, 2));
+
     // Load all orxa agents from YAML files
     const orxaAgents = loadOrxaAgents({
       enabledAgents: orxaConfig.enabled_agents,
       disabledAgents: orxaConfig.disabled_agents,
     });
 
+    // Log which agents are loaded
+    console.log('[orxa] Loaded agents:', Object.keys(orxaAgents));
+
     // Apply agent_overrides from orxaConfig
     const agentOverrides = orxaConfig.agent_overrides ?? {};
     const primaryAgentSet = new Set<string>(PRIMARY_AGENTS);
 
     for (const [agentName, override] of Object.entries(agentOverrides)) {
+      console.log(`[orxa] Processing override for agent: ${agentName}`);
+      console.log(`[orxa] Agent exists in orxaAgents: ${!!orxaAgents[agentName]}`);
+
       if (orxaAgents[agentName]) {
+        console.log(`[orxa] Current model for ${agentName}:`, orxaAgents[agentName].model);
         const isPrimaryAgent = primaryAgentSet.has(agentName);
+        console.log(`[orxa] Is primary agent: ${isPrimaryAgent}`);
 
         if (isPrimaryAgent) {
           // Primary agents: only allow model override
           if (override.model !== undefined) {
+            console.log(`[orxa] Applying model override for primary agent ${agentName}: ${override.model}`);
             orxaAgents[agentName].model = override.model;
+          } else {
+            console.log(`[orxa] No model override defined for ${agentName}`);
           }
         } else {
           // Subagents: allow model and other fields
           // Cast to Partial<AgentConfig> since we know it's not a primary agent
           const subagentOverride = override as Partial<AgentConfig>;
           if (subagentOverride.model !== undefined) {
+            console.log(`[orxa] Applying model override for subagent ${agentName}: ${subagentOverride.model}`);
             orxaAgents[agentName].model = subagentOverride.model;
           }
           if (subagentOverride.temperature !== undefined) {
@@ -244,6 +261,10 @@ export const createConfigHandler = () => {
             orxaAgents[agentName].tools = subagentOverride.tools;
           }
         }
+
+        console.log(`[orxa] After override - model for ${agentName}:`, orxaAgents[agentName].model);
+      } else {
+        console.log(`[orxa] WARNING: Agent '${agentName}' not found in loaded agents, skipping override`);
       }
     }
 
@@ -251,8 +272,15 @@ export const createConfigHandler = () => {
     // This completely ignores user's opencode.json agent array
     config.agent = orxaAgents;
 
+    // Log final agent configurations
+    console.log('[orxa] Final agent configurations:');
+    for (const [name, agent] of Object.entries(orxaAgents)) {
+      console.log(`[orxa]   ${name}: model=${agent.model}`);
+    }
+
     // Set default agent to orxa
     config.default_agent = "orxa";
+    console.log('[orxa] Config handler completed');
   };
 };
 
