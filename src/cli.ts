@@ -10,6 +10,13 @@ import {
 } from "./config/loader";
 import { orxaConfigSchema } from "./config/schema";
 import { runInitWizard, runInstallWizard } from "./wizard";
+import {
+  detectProviders,
+  getAuthenticatedProviders,
+  getUnauthenticatedProviders,
+  formatProviderName,
+  getAuthInstructions,
+} from "./utils/provider-detector";
 
 const printHelp = (): void => {
   console.log(`
@@ -20,6 +27,7 @@ Usage:
   orxa install    Enable/disable agents
   orxa doctor     Verify configuration and agent setup
   orxa config     Open config in editor
+  orxa providers  Show provider and authentication status
 
 Flags:
   --non-interactive    Run with defaults (no prompts)
@@ -104,6 +112,63 @@ const runDoctor = (): void => {
   console.log(`Disabled agents: ${config.disabled_agents.join(", ") || "none"}`);
 };
 
+const runProviders = (): void => {
+  ensureUserConfigDirectories();
+  
+  const detected = detectProviders();
+  
+  console.log("\n🔍 OpenCode Configuration\n");
+  console.log(`Config: ${detected.configPath}`);
+  console.log(`Auth: ${detected.authPath}`);
+  console.log(`Config exists: ${detected.hasOpenCodeConfig ? "✅" : "❌"}`);
+  console.log(`Auth file exists: ${detected.hasAuthConfig ? "✅" : "❌"}`);
+  
+  console.log("\n📋 Providers:\n");
+  
+  const authenticated = getAuthenticatedProviders(detected);
+  const unauthenticated = getUnauthenticatedProviders(detected);
+  
+  if (authenticated.length > 0) {
+    console.log("✅ Authenticated:");
+    authenticated.forEach((provider) => {
+      console.log(`  ${formatProviderName(provider)}`);
+      console.log(`     Auth: ${provider.auth.message}`);
+      if (provider.models.length > 0) {
+        console.log(`     Models: ${provider.models.slice(0, 5).map((m) => m.name).join(", ")}${provider.models.length > 5 ? "..." : ""}`);
+      }
+    });
+    console.log();
+  }
+  
+  if (unauthenticated.length > 0) {
+    console.log("❌ Needs Authentication:\n");
+    unauthenticated.forEach((provider) => {
+      console.log(`  ${provider.name}`);
+      console.log(`     Status: ${provider.auth.message}`);
+      const instructions = getAuthInstructions(provider);
+      if (instructions) {
+        console.log(`     Instructions:`);
+        instructions.split("\n").forEach((line) => {
+          console.log(`       ${line}`);
+        });
+      }
+      console.log();
+    });
+  }
+  
+  const notConfigured = detected.providers.filter((p) => !p.available);
+  if (notConfigured.length > 0) {
+    console.log("⚠️  Not Configured (add to opencode.json to use):\n");
+    notConfigured.forEach((provider) => {
+      console.log(`  ${provider.name}`);
+      if (provider.models.length > 0) {
+        console.log(`     Available models: ${provider.models.map((m) => m.name).join(", ")}`);
+      }
+      console.log();
+    });
+  }
+};
+
 const main = async (): Promise<void> => {
   const [, , command, ...args] = process.argv;
   const nonInteractive = isNonInteractive(args);
@@ -134,6 +199,10 @@ const main = async (): Promise<void> => {
     }
     case "config": {
       openConfig(getUserConfigPath());
+      break;
+    }
+    case "providers": {
+      runProviders();
       break;
     }
     case "help":

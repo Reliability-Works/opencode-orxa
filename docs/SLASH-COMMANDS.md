@@ -380,11 +380,11 @@ Starting smart commit workflow...
 **Atomic Splitting Rules:**
 
 | Files Changed | Commits Created |
-|--------------|-----------------|
-| 1-2 files | Single commit |
-| 3-4 files | 2 commits |
-| 5-9 files | 3 commits |
-| 10+ files | 5+ commits |
+|---------------|-----------------|
+| 1-2 files     | Single commit   |
+| 3-4 files     | 2 commits       |
+| 5-9 files     | 3 commits       |
+| 10+ files     | 5+ commits      |
 
 **Commit Message Format:**
 
@@ -466,15 +466,15 @@ Orxa: ## 🔍 Search: "how authentication works"
 
 All commands support short aliases for faster typing:
 
-| Command | Short Alias | Shorter Alias |
-|---------|-------------|---------------|
-| `/validate` | `/v` | `/check` |
-| `/refactor` | `/rf` | — |
-| `/explain` | `/ex` | `/exp` |
-| `/test` | `/t` | — |
-| `/debug` | `/dbg` | `/fix` |
-| `/commit` | `/c` | `/git` |
-| `/search` | `/s` | `/find` |
+| Command     | Short Alias | Shorter Alias |
+|-------------|-------------|---------------|
+| `/validate` | `/v`        | `/check`      |
+| `/refactor` | `/rf`       | —             |
+| `/explain`  | `/ex`       | `/exp`        |
+| `/test`     | `/t`        | —             |
+| `/debug`    | `/dbg`      | `/fix`        |
+| `/commit`   | `/c`        | `/git`        |
+| `/search`   | `/s`        | `/find`       |
 
 ## How Commands Work
 
@@ -627,15 +627,15 @@ When invoked, this command will:
 
 ### When to Use Each Command
 
-| Situation | Recommended Command |
-|-----------|-------------------|
-| Starting new work | `/validate` |
-| Code cleanup | `/refactor` |
-| Learning codebase | `/explain` |
-| Adding tests | `/test` |
-| Something broken | `/debug` |
-| Ready to commit | `/commit` |
-| Finding code | `/search` |
+| Situation         | Recommended Command |
+|-------------------|---------------------|
+| Starting new work | `/validate`         |
+| Code cleanup      | `/refactor`         |
+| Learning codebase | `/explain`          |
+| Adding tests      | `/test`             |
+| Something broken  | `/debug`            |
+| Ready to commit   | `/commit`           |
+| Finding code      | `/search`           |
 
 ### Command Chains
 

@@ -33,7 +33,7 @@ agents/
 ### Orxa (`orxa.yaml`)
 
 **Role**: Engineering Manager / Workforce Orchestrator  
-**Model**: `kimi-for-coding/kimi-k2.5`  
+**Model**: `opencode/kimi-k2.5`  
 **Mode**: Primary
 
 The Orxa is the central orchestrator. It does NOT write code directly - it delegates all work to specialized subagents.
@@ -50,7 +50,7 @@ The Orxa is the central orchestrator. It does NOT write code directly - it deleg
 - `delegate_task` - Delegate work to subagents
 - `todowrite` / `todoread` - Manage TODOs
 - `supermemory` - Read/write memories
-- `edit` / `write` - **Only for `.opencode/plans/*.md` files**
+- `edit` / `write` - **Only for `.orxa/plans/*.md` files**
 
 **Blocked Tools** (must delegate):
 - `grep`, `glob` - Use `@plan` agent
@@ -74,7 +74,7 @@ The Plan agent creates comprehensive work plans before any code is written. It i
 **Key Responsibilities**:
 - Interview users to clarify requirements
 - Classify intent (Trivial, Exploratory, Ambiguous, Refactoring)
-- Generate master work plans in `.opencode/plans/*.md`
+- Generate master work plans in `.orxa/plans/*.md`
 - Include TODOs with atomic, verifiable items
 - Add Memory Recommendations for @orxa
 
@@ -179,7 +179,7 @@ Primary agents (`orxa`, `plan`) only accept `model` overrides. Subagents can be 
 {
   "agent_overrides": {
     "orxa": {
-      "model": "openai/gpt-5.2"
+      "model": "opencode/gpt-5.2-codex"
     },
     "strategist": {
       "model": "anthropic/claude-opus",
@@ -205,22 +205,22 @@ See the main [README.md](../README.md) for full configuration options.
 
 ## Agent Selection Guide
 
-| Task Type | Agent | When to Use |
-|-----------|-------|-------------|
-| Create work plan | `@plan` | Before starting any work |
-| Risk analysis | `@strategist` | For complex or ambiguous tasks |
-| Review plan | `@reviewer` | Before executing a plan |
-| Complex implementation | `@build` | Multi-file features, refactors |
-| Quick bug fix | `@coder` | Single file, localized change |
-| UI/UX work | `@frontend` | Styling, components, animations |
-| Architecture decisions | `@architect` | Design patterns, system design |
-| Git operations | `@git` | Commits, branches, merges |
-| Find code | `@explorer` | "Where is X?" questions |
-| Research docs | `@librarian` | External library questions |
-| Browse web | `@navigator` | Live web research |
-| Write docs | `@writer` | READMEs, documentation |
-| Analyze images/PDFs | `@multimodal` | Visual content analysis |
-| Mobile testing | `@mobile-simulator` | iOS/Android simulator tasks |
+| Task Type              | Agent               | When to Use                     |
+|------------------------|---------------------|---------------------------------|
+| Create work plan       | `@plan`             | Before starting any work        |
+| Risk analysis          | `@strategist`       | For complex or ambiguous tasks  |
+| Review plan            | `@reviewer`         | Before executing a plan         |
+| Complex implementation | `@build`            | Multi-file features, refactors  |
+| Quick bug fix          | `@coder`            | Single file, localized change   |
+| UI/UX work             | `@frontend`         | Styling, components, animations |
+| Architecture decisions | `@architect`        | Design patterns, system design  |
+| Git operations         | `@git`              | Commits, branches, merges       |
+| Find code              | `@explorer`         | "Where is X?" questions         |
+| Research docs          | `@librarian`        | External library questions      |
+| Browse web             | `@navigator`        | Live web research               |
+| Write docs             | `@writer`           | READMEs, documentation          |
+| Analyze images/PDFs    | `@multimodal`       | Visual content analysis         |
+| Mobile testing         | `@mobile-simulator` | iOS/Android simulator tasks     |
 
 ## See Also
 

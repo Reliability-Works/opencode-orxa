@@ -27,7 +27,7 @@ User → OpenCode → Orxa Plugin → Orxa Agent → Subagents
 
 - **Tool alias resolver**: Normalizes runtime tool names to canonical names
 - **Delegation gate**: Only Orxa can call `delegate_task` (or its aliases)
-- **Plan-write gate**: Edit/write tools allowed only for `.opencode/plans/*.md`
+- **Plan-write gate**: Edit/write tools allowed only for `.orxa/plans/*.md`
 - **Orxa tool gate**: Orxa’s allowed tool list is strictly enforced
 - **Mobile tool block**: Orxa cannot use `ios-simulator` tools directly
 - **Delegation template validator**: 6-section delegation prompt required
@@ -225,7 +225,7 @@ export const defaultConfig: OrxaConfig = {
     maxManualEditsPerSession: 0,
     requireTodoList: true,
     autoUpdateTodos: false, // Orxa must explicitly mark done
-    planWriteAllowlist: [".opencode/plans/*.md"],
+    planWriteAllowlist: [".orxa/plans/*.md"],
     blockMobileTools: true,
   },
   governance: {
@@ -345,7 +345,7 @@ toolAliases: {
 - **Only Orxa can delegate**: All `delegate_task` calls (and aliases) are blocked for subagents.
 - **Memory writes are Orxa-only**: Subagents are blocked from `supermemory add`.
 - **Memory Recommendations**: Subagents must provide a “Memory Recommendation” section instead of writing memories.
-- **Plan-only writes (Orxa)**: Orxa can only edit/write files matching `.opencode/plans/*.md`.
+- **Plan-only writes (Orxa)**: Orxa can only edit/write files matching `.orxa/plans/*.md`.
 - **No grep/glob for Orxa**: All search must be delegated to the Plan agent.
 
 ## Delegation Structure Enforcement
@@ -705,17 +705,17 @@ export const sessionCheckpoint = async (context: HookContext) => {
 name: orxa
 description: Workforce Orchestrator (Eng Manager). Manages TODOs, delegates work, verifies completion.
 mode: primary
-model: kimi-for-coding/kimi-k2.5
+model: opencode/kimi-k2.5
 system_prompt: |
   You are the Engineering Manager. You do NOT write code. You manage the execution of the Work Plan.
 
   ## Core Rules (ENFORCED BY PLUGIN)
-  1. NEVER write code or edit files outside .opencode/plans/*.md
+  1. NEVER write code or edit files outside .orxa/plans/*.md
   2. ALWAYS delegate to subagents using delegate_task
   3. Maintain TODO list obsessively - update status in real-time
   4. Run quality gates before marking any TODO complete
   5. Save important context to supermemory automatically
-  6. Only write plan files in .opencode/plans/*.md
+  6. Only write plan files in .orxa/plans/*.md
   7. Do NOT use grep/glob or ios-simulator tools
 
   ## Bias for Action
@@ -780,8 +780,8 @@ tools:
     - todowrite
     - todoread
     - supermemory
-    - edit # plan files only (.opencode/plans/*.md)
-    - write # plan files only (.opencode/plans/*.md)
+    - edit # plan files only (.orxa/plans/*.md)
+    - write # plan files only (.orxa/plans/*.md)
   blocked:
     - grep
     - glob
@@ -811,7 +811,7 @@ system_prompt: |
   - Record all technical decisions as Memory Recommendations for @orxa.
 
   ## Single Plan Mandate
-  - Everything goes into ONE plan: .opencode/plans/{name}.md
+  - Everything goes into ONE plan: .orxa/plans/{name}.md
   - You are authorized to write the plan directly using write_to_file.
 
   ## Verification Strategy
@@ -1012,7 +1012,7 @@ tools:
 name: git
 description: Git command automation. Handles commits, staging, and branch management.
 mode: subagent
-model: kimi-for-coding/kimi-k2.5
+model: opencode/kimi-k2.5
 system_prompt: |
   You automate git workflows for the team.
 
@@ -1088,7 +1088,7 @@ tools:
 name: navigator
 description: Web browsing and research specialist. Navigates sites and extracts data.
 mode: subagent
-model: kimi-for-coding/kimi-k2.5
+model: opencode/kimi-k2.5
 system_prompt: |
   You are the team's eyes and ears on the live web.
 
@@ -1293,7 +1293,7 @@ Complete override example (all new governance options):
   "orxa": {
     "allowedTools": ["read", "delegate_task", "todowrite", "todoread", "supermemory"],
     "blockedTools": ["edit", "write", "apply_patch", "grep", "glob", "bash"],
-    "allowedPlanPaths": [".opencode/plans/*.md"],
+    "allowedPlanPaths": [".orxa/plans/*.md"],
     "maxManualEditsPerSession": 0,
     "requireTodoList": true,
     "autoUpdateTodos": false

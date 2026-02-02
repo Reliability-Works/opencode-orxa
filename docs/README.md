@@ -1,6 +1,6 @@
 # OpenCode Orxa Documentation
 
-Welcome to the comprehensive documentation for the **OpenCode Orxa** plugin — a powerful governance layer that enforces strict Orxa/Manager patterns for AI-assisted software development.
+Welcome to the comprehensive documentation for the **OpenCode Orxa** plugin — a powerful orchestration layer that enforces strict Orxa/Manager patterns for AI-assisted software development.
 
 ## What is OpenCode Orxa?
 
@@ -11,7 +11,7 @@ OpenCode Orxa transforms how you work with AI coding assistants by implementing 
 The Orxa pattern treats AI assistance like engineering team management:
 
 - **The Orxa** (Engineering Manager) — Plans, delegates, and verifies
-- **The Plan Agent** (Product Manager) — Creates comprehensive work plans
+- **The Plan Agent** (Product Manager) — Creates comprehensive work plans  
 - **Specialized Subagents** — Execute specific tasks (coding, testing, documentation, etc.)
 
 This separation of concerns leads to:
@@ -20,16 +20,31 @@ This separation of concerns leads to:
 - ✅ Reduced errors through verification and quality gates
 - ✅ Consistent patterns across your codebase
 
+---
+
 ## Documentation Overview
 
-| Document | Description |
-|----------|-------------|
-| [**Installation Guide**](INSTALLATION.md) | Complete installation instructions including npm, local development, and verification |
-| [**Development Guide**](DEVELOPMENT.md) | How to set up a local development environment, build, test, and contribute |
-| [**Slash Commands Reference**](SLASH-COMMANDS.md) | Detailed documentation for all 7 built-in slash commands |
-| [**Configuration Guide**](CONFIGURATION.md) | All configuration options, examples, and customization |
-| [**Agent System**](AGENTS.md) | Complete guide to the 15 agents and how to customize them |
-| [**Architecture Overview**](ARCHITECTURE.md) | How the plugin works internally — hooks, config handler, and lifecycle |
+| Document                                        | Description                                                                           | Lines   |
+| ----------                                      | -------------                                                                         | ------- |
+| [**📥 Installation Guide**](INSTALLATION.md)     | Complete installation instructions including npm, local development, and verification | 600+    |
+| [**⚙️ Configuration Guide**](CONFIGURATION.md)  | All configuration options, JSONC support, agent overrides, and examples               | 1200+   |
+| [**👥 Agent System**](AGENTS.md)                 | Complete guide to all 15 agents with selection guide and customization                | 800+    |
+| [**🏗️ Architecture Overview**](ARCHITECTURE.md) | Deep technical documentation — hooks, config handler, enforcement mechanisms          | 900+    |
+| [**🚀 Orxa Mode**](ORXA-MODE.md)                 | Parallel multi-agent orchestration with git worktrees                                 | 700+    |
+| [**✨ Features Reference**](FEATURES.md)         | All capabilities — slash commands, hooks, quality gates, memory automation            | 600+    |
+| [**🔧 Troubleshooting**](TROUBLESHOOTING.md)     | Common issues and solutions with quick fixes                                          | 500+    |
+| [**💻 Development Guide**](DEVELOPMENT.md)       | How to set up local development, build, test, and contribute                          | 700+    |
+| [**⌨️ Slash Commands**](SLASH-COMMANDS.md)      | Detailed documentation for all 9 built-in slash commands                              | 650+    |
+
+### Getting Started Tutorials
+
+| Guide                                                                   | Description                                                   |
+| -------                                                                 | -------------                                                 |
+| [**Getting Started**](guide/overview.md)                                | Your first steps with Orxa — installation to first delegation |
+| [**Understanding Orchestration**](guide/understanding-orchestration.md) | How Orxa decides what to delegate and to whom                 |
+| [**Customizing Agents**](guide/customizing-agents.md)                   | Step-by-step guide to agent customization                     |
+
+---
 
 ## Quick Start
 
@@ -55,15 +70,6 @@ opencode
 
 You should see "🎼 OpenCode Orxa" in the welcome toast when OpenCode starts.
 
-### Basic Usage
-
-Once installed, the plugin automatically:
-
-1. **Replaces default agents** with the Orxa agent fleet
-2. **Sets Orxa as the default agent** for all sessions
-3. **Enforces delegation patterns** — only Orxa can delegate tasks
-4. **Activates quality gates** — all work must pass validation
-
 ### Your First Delegation
 
 When you ask OpenCode to do something, the Orxa will:
@@ -74,7 +80,7 @@ When you ask OpenCode to do something, the Orxa will:
 4. Update TODO status
 5. Save important context to memory
 
-Example interaction:
+**Example interaction:**
 
 ```
 You: Create a React component for a user profile card
@@ -93,6 +99,54 @@ Orxa: The component has been created. Running quality gates...
 TODO completed: Create React component for user profile card
 ```
 
+---
+
+## Feature Highlights
+
+### 🎯 15 Specialized Agents
+
+From strategists to mobile testers, each agent has a specific role and optimized model selection.
+
+[See all agents →](AGENTS.md)
+
+### ⚡ 9 Slash Commands
+
+Powerful shortcuts for common workflows:
+- `/validate` — Pre-execution validation
+- `/refactor` — Intelligent refactoring
+- `/explain` — Educational code explanations
+- `/test` — Test generation
+- `/debug` — Systematic debugging
+- `/commit` — Smart git commits
+- `/docs` — Documentation generation
+- `/search` — Codebase + web search
+- `/review` — Code review
+
+[See all commands →](SLASH-COMMANDS.md)
+
+### 🔒 Enforcement System
+
+Strict patterns ensure quality:
+- **Orxa-only delegation** — Centralized orchestration
+- **Tool restrictions** — Right tool for the right agent
+- **TODO completion guardian** — No incomplete work
+- **Quality gates** — Automated verification
+- **Memory automation** — Knowledge preservation
+
+[See enforcement details →](FEATURES.md#enforcement-features)
+
+### 🚀 Orxa Orchestration Mode
+
+Parallel execution for 3-5x faster development:
+- Break complex tasks into parallel workstreams
+- Git worktree isolation
+- Automatic dependency resolution
+- FIFO merge queue
+
+[Learn Orxa mode →](ORXA-MODE.md)
+
+---
+
 ## Core Concepts
 
 ### 1. Orxa-Only Delegation
@@ -107,13 +161,13 @@ Only the Orxa agent can use `delegate_task`. This ensures:
 
 The Orxa has limited tool access by design:
 
-| Allowed | Blocked (must delegate) |
-|---------|------------------------|
-| `read` | `grep` → delegate to `@plan` |
-| `delegate_task` | `glob` → delegate to `@plan` |
-| `todowrite`/`todoread` | `bash` → delegate to appropriate subagent |
-| `supermemory` | `ios-simulator` → delegate to `@mobile-simulator` |
-| `edit`/`write` (plans only) | `skill` → delegate to appropriate subagent |
+| Allowed                     | Blocked (must delegate)                           |
+| ---------                   | ------------------------                          |
+| `read`                      | `grep` → delegate to `@plan`                      |
+| `delegate_task`             | `glob` → delegate to `@plan`                      |
+| `todowrite`/`todoread`      | `bash` → delegate to appropriate subagent         |
+| `supermemory`               | `ios-simulator` → delegate to `@mobile-simulator` |
+| `edit`/`write` (plans only) | `skill` → delegate to appropriate subagent        |
 
 ### 3. The 6-Section Delegation Template
 
@@ -152,32 +206,38 @@ Before marking work complete, the Orxa verifies:
 
 Only the Orxa can write to supermemory. Subagents provide **Memory Recommendations** instead, which the Orxa reviews and saves.
 
+---
+
 ## The Agent Fleet
 
 ### Primary Agents
 
-| Agent | Role | Model |
-|-------|------|-------|
-| **orxa** | Engineering Manager / Orchestrator | `kimi-for-coding/kimi-k2.5` |
-| **plan** | Product Manager / Strategist | `opencode/gpt-5.2-codex` |
+| Agent    | Role                               | Model                    |
+| -------  | ------                             | -------                  |
+| **orxa** | Engineering Manager / Orchestrator | `opencode/kimi-k2.5`     |
+| **plan** | Product Manager / Strategist       | `opencode/gpt-5.2-codex` |
 
 ### Subagents (13 Specialized Agents)
 
-| Agent | Specialty | Best For |
-|-------|-----------|----------|
-| **strategist** | Risk analysis | Complex tasks, identifying edge cases |
-| **reviewer** | Plan validation | Reviewing plans before execution |
-| **build** | Complex engineering | Multi-file features, refactors |
-| **coder** | Quick fixes | Single-file changes, bug fixes |
-| **frontend** | UI/UX | Styling, components, animations |
-| **architect** | System design | Architecture decisions, debugging |
-| **git** | Version control | Commits, branches, merges |
-| **explorer** | Codebase search | Finding code, understanding structure |
-| **librarian** | Research | Documentation, external libraries |
-| **navigator** | Web browsing | Live web research |
-| **writer** | Documentation | READMEs, API docs, articles |
-| **multimodal** | Media analysis | Images, PDFs, diagrams |
-| **mobile-simulator** | Mobile testing | iOS/Android simulator automation |
+| Agent                | Specialty           | Best For                              |
+| -------              | -----------         | ----------                            |
+| **strategist**       | Risk analysis       | Complex tasks, identifying edge cases |
+| **reviewer**         | Plan validation     | Reviewing plans before execution      |
+| **build**            | Complex engineering | Multi-file features, refactors        |
+| **coder**            | Quick fixes         | Single-file changes, bug fixes        |
+| **frontend**         | UI/UX               | Styling, components, animations       |
+| **architect**        | System design       | Architecture decisions, debugging     |
+| **git**              | Version control     | Commits, branches, merges             |
+| **explorer**         | Codebase search     | Finding code, understanding structure |
+| **librarian**        | Research            | Documentation, external libraries     |
+| **navigator**        | Web browsing        | Live web research                     |
+| **writer**           | Documentation       | READMEs, API docs, articles           |
+| **multimodal**       | Media analysis      | Images, PDFs, diagrams                |
+| **mobile-simulator** | Mobile testing      | iOS/Android simulator automation      |
+
+[Full agent documentation →](AGENTS.md)
+
+---
 
 ## Configuration
 
@@ -193,7 +253,7 @@ The main configuration file is located at:
 {
   "enabled_agents": ["orxa", "plan", "build", "coder", "frontend"],
   "orxa": {
-    "model": "kimi-for-coding/kimi-k2.5",
+    "model": "opencode/kimi-k2.5",
     "enforcement": {
       "delegation": "strict",
       "todoCompletion": "strict",
@@ -208,23 +268,9 @@ The main configuration file is located at:
 }
 ```
 
-See [**Configuration Guide**](CONFIGURATION.md) for complete options.
+[Complete configuration reference →](CONFIGURATION.md)
 
-## Slash Commands
-
-Orxa provides powerful slash commands for common workflows:
-
-| Command | Description |
-|---------|-------------|
-| `/validate` | Validate plan with strategist + reviewer |
-| `/refactor` | Intelligent refactoring with architecture analysis |
-| `/explain` | Get educational explanations of code |
-| `/test` | Generate comprehensive tests |
-| `/debug` | Debug issues with systematic analysis |
-| `/commit` | Smart git commits with atomic splitting |
-| `/search` | Search codebase and web simultaneously |
-
-See [**Slash Commands Reference**](SLASH-COMMANDS.md) for detailed usage.
+---
 
 ## CLI Commands
 
@@ -237,6 +283,8 @@ orxa doctor      # Validate configuration
 orxa config      # Open config in editor
 ```
 
+---
+
 ## Directory Structure
 
 ```
@@ -248,25 +296,41 @@ orxa config      # Open config in editor
 └── schemas/               # JSON schemas
 ```
 
+---
+
+## Next Steps
+
+### New Users
+1. 📥 [Install the plugin](INSTALLATION.md)
+2. 📖 Read the [Getting Started guide](guide/overview.md)
+3. ⚙️ [Configure for your workflow](CONFIGURATION.md)
+
+### Learning Orxa
+1. 🧠 [Understand orchestration](guide/understanding-orchestration.md)
+2. 👥 [Meet the agents](AGENTS.md)
+3. 🚀 [Try Orxa mode](ORXA-MODE.md)
+
+### Power Users
+1. 🏗️ [Understand the architecture](ARCHITECTURE.md)
+2. 👤 [Customize agents](guide/customizing-agents.md)
+3. ✨ [Explore all features](FEATURES.md)
+
+---
+
 ## Troubleshooting
 
-### Plugin not activating
+### Quick Fixes
 
-1. Verify installation: `orxa doctor`
-2. Check opencode.json has plugin registered
-3. Ensure required dependencies are installed
+| Issue              | Command                     |
+| -------            | ---------                   |
+| Config errors      | `orxa init --force`         |
+| Plugin not loading | `orxa doctor`               |
+| Agent not found    | Check `enabled_agents` list |
+| Delegation issues  | Check enforcement settings  |
 
-### Agents not delegating properly
+[Full troubleshooting guide →](TROUBLESHOOTING.md)
 
-1. Check enforcement settings in config
-2. Verify agent YAML files are in place
-3. Run `orxa doctor` to validate setup
-
-### Configuration issues
-
-1. Validate JSON syntax: `orxa doctor`
-2. Check for legacy config at `.opencode/orxa.config.json`
-3. Reset to defaults: `orxa init --force`
+---
 
 ## Contributing
 
@@ -276,19 +340,12 @@ We welcome contributions! See [**Development Guide**](DEVELOPMENT.md) for:
 - Making changes
 - Submitting pull requests
 
+---
+
 ## License
 
 MIT License — see LICENSE file for details.
 
-## Support
-
-- 📖 Documentation: You're reading it!
-- 🐛 Issues: [GitHub Issues](https://github.com/yourusername/opencode-orxa/issues)
-- 💬 Discussions: [GitHub Discussions](https://github.com/yourusername/opencode-orxa/discussions)
-
 ---
 
-**Next Steps:**
-- 📥 [Install the plugin](INSTALLATION.md)
-- ⚙️ [Configure for your workflow](CONFIGURATION.md)
-- 🚀 [Try the slash commands](SLASH-COMMANDS.md)
+**Ready to get started?** → [Install the plugin](INSTALLATION.md)

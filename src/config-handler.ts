@@ -39,27 +39,6 @@ const BUILTIN_AGENTS_DIR = path.resolve(__dirname, "..", "agents");
 const AGENT_EXTENSIONS = [".yaml", ".yml"];
 
 /**
- * Find an agent file in a directory (checking both root and subagents/ subdir)
- */
-const findAgentFile = (baseDir: string, agentName: string): string | null => {
-  for (const extension of AGENT_EXTENSIONS) {
-    // Check root directory
-    const directPath = path.join(baseDir, `${agentName}${extension}`);
-    if (fs.existsSync(directPath)) {
-      return directPath;
-    }
-
-    // Check subagents subdirectory
-    const subagentPath = path.join(baseDir, "subagents", `${agentName}${extension}`);
-    if (fs.existsSync(subagentPath)) {
-      return subagentPath;
-    }
-  }
-
-  return null;
-};
-
-/**
  * Load all agent files from the builtin agents directory
  */
 const loadAllBuiltinAgentFiles = (): string[] => {

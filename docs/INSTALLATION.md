@@ -259,11 +259,11 @@ The following plugins are recommended for full functionality, but only some are 
 
 ### Core Dependencies
 
-| Plugin | Purpose | Required | Installation |
-|--------|---------|----------|--------------|
-| `opencode-supermemory` | Persistent memory | **Optional** | See [Supermemory Setup](#supermemory-setup) below |
-| `opencode-openai-codex-auth` | Authentication | Recommended | `opencode plugin install opencode-openai-codex-auth` |
-| `opencode-sync-plugin` | Session sync | Recommended | `opencode plugin install opencode-sync-plugin` |
+| Plugin                       | Purpose           | Required     | Installation                                         |
+|------------------------------|-------------------|--------------|------------------------------------------------------|
+| `opencode-supermemory`       | Persistent memory | **Optional** | See [Supermemory Setup](#supermemory-setup) below    |
+| `opencode-openai-codex-auth` | Authentication    | Recommended  | `opencode plugin install opencode-openai-codex-auth` |
+| `opencode-sync-plugin`       | Session sync      | Recommended  | `opencode plugin install opencode-sync-plugin`       |
 
 ### Checking Dependencies
 

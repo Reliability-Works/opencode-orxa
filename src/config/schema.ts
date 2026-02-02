@@ -120,6 +120,36 @@ export interface OrxaConfig {
       maxAttachments?: number;
     }
   >;
+  /**
+   * Orxa Orchestration Mode configuration.
+   * Enables parallel multi-agent execution with git worktrees.
+   */
+    orchestration?: {
+    /** Whether Orxa orchestration is enabled */
+    enabled?: boolean;
+    /** Maximum number of parallel workstreams */
+    max_parallel_workstreams?: number;
+    /** Directory for the merge queue */
+    queue_directory?: string;
+    /** Whether to automatically merge completed workstreams */
+    auto_merge?: boolean;
+    /** Agent to use for conflict resolution */
+    conflict_resolution_agent?: string;
+    /** Prefix for worktree names */
+    worktree_prefix?: string;
+    /** Whether to cleanup worktrees after successful merge */
+    cleanup_worktrees?: boolean;
+    /** Whether to require approval before merging */
+    require_merge_approval?: boolean;
+    /** Timeout for individual workstreams in minutes */
+    workstream_timeout_minutes?: number;
+    /** Whether to retry failed workstreams */
+    retry_failed_workstreams?: boolean;
+    /** Maximum retry attempts */
+    max_retries?: number;
+    /** Polling interval for queue in milliseconds */
+    queue_poll_interval_ms?: number;
+  };
 }
 
 export interface PrimaryAgentOverride {
@@ -167,7 +197,7 @@ export const subagentOverrideSchema = agentConfigSchema.partial();
 
 const primaryAgentNames = new Set(["orxa", "plan"]);
 
-const agentOverridesSchema = z
+export const agentOverridesSchema = z
   .record(z.string(), subagentOverrideSchema)
   .superRefine((overrides, ctx) => {
     for (const [agentName, override] of Object.entries(overrides)) {
@@ -294,4 +324,18 @@ export const orxaConfigSchema: z.ZodType<OrxaConfig> = z.object({
     verboseLogging: z.boolean(),
   }),
   perAgentRestrictions: z.record(z.string(), perAgentRestrictionSchema).optional(),
+  orchestration: z.object({
+    enabled: z.boolean().default(true),
+    max_parallel_workstreams: z.number().int().positive().default(5),
+    queue_directory: z.string().default("~/.orxa-queue"),
+    auto_merge: z.boolean().default(true),
+    conflict_resolution_agent: z.string().default("architect"),
+    worktree_prefix: z.string().default("orxa"),
+    cleanup_worktrees: z.boolean().default(true),
+    require_merge_approval: z.boolean().default(false),
+    workstream_timeout_minutes: z.number().int().positive().default(120),
+    retry_failed_workstreams: z.boolean().default(false),
+    max_retries: z.number().int().nonnegative().default(2),
+    queue_poll_interval_ms: z.number().int().positive().default(5000),
+  }).optional(),
 });

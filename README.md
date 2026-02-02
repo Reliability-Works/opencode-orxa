@@ -200,53 +200,58 @@ You should see something like:
 }
 ```
 
-#### 2. Ask User Which Models to Use
+#### 2. Run the Interactive Setup Wizard
 
-The orxa needs models configured for:
-
-| Role | Recommended Model | Purpose |
-|------|------------------|---------|
-| **Orxa Agent** | `kimi-for-coding/kimi-k2.5` | Primary orchestration & delegation |
-| **Plan Agent** | `opencode/gpt-5.2-codex` | Planning & architecture |
-| **Subagents** | `opencode/kimi-k2.5` | Task execution (default) |
-
-**Ask the user:**
-> "Which models would you like to use for:
-> 1. Orxa agent (recommends: opencode/kimi-k2.5)
-> 2. Plan agent (recommends: opencode/gpt-5.2-codex)
-> 3. Subagents (default: opencode/kimi-k2.5)"
-
-#### 3. Verify Providers Are Configured
-
-Ensure the chosen models' providers are in `~/.config/opencode/opencode.json`:
-
-```bash
-# Check if provider exists for chosen models
-# For kimi models: check 'kimi' or 'moonshot' provider
-# For openai models: check 'openai' provider
-# For anthropic models: check 'anthropic' provider
-```
-
-If providers are missing, guide the user to add them first:
-```bash
-opencode config provider add openai
-opencode config provider add anthropic
-```
-
-#### 4. Install Orxa
+The easiest way to configure Orxa is with the interactive setup wizard:
 
 ```bash
 npm install -g opencode-orxa
+orxa init
 ```
 
-#### 5. Configure Orxa with Chosen Models
+The wizard will:
+1. **Detect your existing OpenCode configuration** - Checks which providers are already set up
+2. **Show authentication status** - Displays which providers are authenticated (✅) and which need setup (❌)
+3. **Guide you through model selection** - Recommends optimal models for each role:
+   - **Orxa Agent** (Orchestration): Best for reasoning and delegation
+   - **Plan Agent** (Planning): Best for architecture and task breakdown
+   - **Subagents** (Execution): Best for task implementation
+4. **Configure specialized models** - Set different models for specific subagents (build, architect, frontend, multimodal)
+5. **Provide authentication instructions** - If any providers need auth, shows exact commands to run
 
-Edit `~/.config/opencode/orxa/orxa.json`:
+**Example wizard flow:**
+```
+🔍 OpenCode Configuration
+✅ Authenticated providers: opencode, anthropic
+❌ Needs authentication: openai
+
+🎯 Select Model for Orxa (Orchestration)
+1. ✅ Kimi K2.5 - Excellent reasoning, large context window
+2. ✅ Claude 3 Opus - Superior reasoning and instruction following
+3. ⚠️ GPT-4 - Strong general capabilities (requires auth)
+
+📐 Select Model for Plan Agent (Planning)
+...
+
+🔧 Select Default Model for Subagents (Execution)
+...
+
+🔐 Authentication Required:
+❌ openai - Not authenticated
+   Run: opencode auth login
+   Then select: OpenAI
+
+✅ Configuration saved to ~/.config/opencode/orxa/orxa.json
+```
+
+#### 3. Manual Configuration (Alternative)
+
+If you prefer manual setup, edit `~/.config/opencode/orxa/orxa.json`:
 
 ```json
 {
   "orxa": {
-    "model": "kimi-for-coding/kimi-k2.5"
+    "model": "opencode/kimi-k2.5"
   },
   "enabled_agents": [
     "orxa",
@@ -287,9 +292,9 @@ opencode
 # 1. Check current opencode.json providers
 cat ~/.config/opencode/opencode.json | jq '.providers'
 
-# 2. If needed, add missing providers
-opencode config provider add openai
-opencode config provider add anthropic
+# 2. If needed, authenticate missing providers
+opencode auth login
+# Then select your provider(s) from the interactive menu
 
 # 3. Install orxa
 npm install -g opencode-orxa
@@ -298,7 +303,7 @@ npm install -g opencode-orxa
 cat > ~/.config/opencode/orxa/orxa.json << 'EOF'
 {
   "orxa": {
-    "model": "kimi-for-coding/kimi-k2.5",
+    "model": "opencode/kimi-k2.5",
     "enforcement": {
       "delegation": "strict",
       "todoCompletion": "strict",
@@ -410,16 +415,16 @@ Orxa: ✅ Frontend task complete. The component is ready at src/components/UserP
 
 ### Core Governance Features
 
-| Feature | Description | Impact |
-|---------|-------------|--------|
-| **Orxa-Only Delegation** | Only orxa can use `delegate_task` | Prevents agent chaos |
-| **TODO Completion Enforcer** | Blocks orxa from stopping with pending TODOs | Ensures task completion |
-| **Memory Authority** | Only orxa writes to supermemory | Consistent context |
-| **Quality Gates** | Lint, type-check, test, build must pass | Higher code quality |
-| **Plan-Only Writes** | Orxa only edits `.opencode/plans/*.md` | Clean separation of concerns |
-| **6-Section Delegation** | Standardized delegation template | Clear task definitions |
-| **Multimodal Limits** | Max 10 images per delegation | Prevents context overload |
-| **Mobile Tool Block** | Orxa can't use simulators directly | Proper delegation chain |
+| Feature                      | Description                                  | Impact                       |
+|------------------------------|----------------------------------------------|------------------------------|
+| **Orxa-Only Delegation**     | Only orxa can use `delegate_task`            | Prevents agent chaos         |
+| **TODO Completion Enforcer** | Blocks orxa from stopping with pending TODOs | Ensures task completion      |
+| **Memory Authority**         | Only orxa writes to supermemory              | Consistent context           |
+| **Quality Gates**            | Lint, type-check, test, build must pass      | Higher code quality          |
+| **Plan-Only Writes**         | Orxa only edits `.orxa/plans/*.md`           | Clean separation of concerns |
+| **6-Section Delegation**     | Standardized delegation template             | Clear task definitions       |
+| **Multimodal Limits**        | Max 10 images per delegation                 | Prevents context overload    |
+| **Mobile Tool Block**        | Orxa can't use simulators directly           | Proper delegation chain      |
 
 ### Agent Orchestration
 
@@ -443,30 +448,30 @@ Orxa: ✅ Frontend task complete. The component is ready at src/components/UserP
 
 These agents orchestrate the workflow:
 
-| Agent | Role | Model Override Only |
-|-------|------|---------------------|
-| **orxa** | Engineering Manager — delegates all work, maintains TODOs, writes memory | ✅ Yes |
-| **plan** | Product Manager — creates work plans, does research, never writes code | ✅ Yes |
+| Agent    | Role                                                                     | Model Override Only |
+|----------|--------------------------------------------------------------------------|---------------------|
+| **orxa** | Engineering Manager — delegates all work, maintains TODOs, writes memory | ✅ Yes               |
+| **plan** | Product Manager — creates work plans, does research, never writes code   | ✅ Yes               |
 
 ### Subagents
 
 Specialized workers that can be fully customized:
 
-| Agent | Specialty | Can Override |
-|-------|-----------|--------------|
-| **strategist** | Risk analysis before planning | Model, prompt, tools, temperature |
-| **reviewer** | Ruthless plan/code reviewer | Model, prompt, tools, temperature |
-| **build** | Senior Lead Engineer — complex features | Model, prompt, tools, temperature |
-| **coder** | Quick backend/logic specialist | Model, prompt, tools, temperature |
-| **frontend** | UI/UX specialist | Model, prompt, tools, temperature |
-| **architect** | Architecture decisions & debugging | Model, prompt, tools, temperature |
-| **git** | Git operations specialist | Model, prompt, tools, temperature |
-| **explorer** | Codebase search & navigation | Model, prompt, tools, temperature |
-| **librarian** | Research & documentation | Model, prompt, tools, temperature |
-| **navigator** | Web browsing & external research | Model, prompt, tools, temperature |
-| **writer** | Documentation & prose | Model, prompt, tools, temperature |
-| **multimodal** | Image/PDF analysis | Model, prompt, tools, temperature |
-| **mobile-simulator** | iOS/Android testing | Model, prompt, tools, temperature |
+| Agent                | Specialty                               | Can Override                      |
+|----------------------|-----------------------------------------|-----------------------------------|
+| **strategist**       | Risk analysis before planning           | Model, prompt, tools, temperature |
+| **reviewer**         | Ruthless plan/code reviewer             | Model, prompt, tools, temperature |
+| **build**            | Senior Lead Engineer — complex features | Model, prompt, tools, temperature |
+| **coder**            | Quick backend/logic specialist          | Model, prompt, tools, temperature |
+| **frontend**         | UI/UX specialist                        | Model, prompt, tools, temperature |
+| **architect**        | Architecture decisions & debugging      | Model, prompt, tools, temperature |
+| **git**              | Git operations specialist               | Model, prompt, tools, temperature |
+| **explorer**         | Codebase search & navigation            | Model, prompt, tools, temperature |
+| **librarian**        | Research & documentation                | Model, prompt, tools, temperature |
+| **navigator**        | Web browsing & external research        | Model, prompt, tools, temperature |
+| **writer**           | Documentation & prose                   | Model, prompt, tools, temperature |
+| **multimodal**       | Image/PDF analysis                      | Model, prompt, tools, temperature |
+| **mobile-simulator** | iOS/Android testing                     | Model, prompt, tools, temperature |
 
 ### Customizing Subagents
 
@@ -492,17 +497,17 @@ Type `/command-name` to invoke powerful workflows:
 
 ### Built-in Commands
 
-| Command | Aliases | Description | Delegates To |
-|---------|---------|-------------|--------------|
-| `/validate` | `/v`, `/check` | Validate plan with risk analysis + review | @strategist + @reviewer |
-| `/refactor` | `/rf` | Intelligent refactoring with architecture analysis | @architect + @build |
-| `/explain` | `/ex`, `/exp` | Explain code, architecture, or concepts | @librarian |
-| `/test` | `/t` | Generate comprehensive tests | @build + @coder |
-| `/debug` | `/dbg`, `/fix` | Debug issues and trace code flow | @architect + @explorer |
-| `/commit` | `/c`, `/git` | Smart git commits with atomic splitting | @git |
-| `/docs` | `/d`, `/doc` | Generate documentation | @writer |
-| `/search` | `/s`, `/find` | Search codebase and web | @explorer + @navigator |
-| `/review` | `/r`, `/cr` | Code review with architecture analysis | @reviewer + @architect |
+| Command     | Aliases        | Description                                        | Delegates To            |
+|-------------|----------------|----------------------------------------------------|-------------------------|
+| `/validate` | `/v`, `/check` | Validate plan with risk analysis + review          | @strategist + @reviewer |
+| `/refactor` | `/rf`          | Intelligent refactoring with architecture analysis | @architect + @build     |
+| `/explain`  | `/ex`, `/exp`  | Explain code, architecture, or concepts            | @librarian              |
+| `/test`     | `/t`           | Generate comprehensive tests                       | @build + @coder         |
+| `/debug`    | `/dbg`, `/fix` | Debug issues and trace code flow                   | @architect + @explorer  |
+| `/commit`   | `/c`, `/git`   | Smart git commits with atomic splitting            | @git                    |
+| `/docs`     | `/d`, `/doc`   | Generate documentation                             | @writer                 |
+| `/search`   | `/s`, `/find`  | Search codebase and web                            | @explorer + @navigator  |
+| `/review`   | `/r`, `/cr`    | Code review with architecture analysis             | @reviewer + @architect  |
 
 ### Command Examples
 
@@ -557,6 +562,141 @@ When invoked, this command will:
 
 ---
 
+## Orxa Orchestration Mode
+
+Orxa Orchestration Mode enables **parallel multi-agent execution** for complex tasks. Similar to oh-my-opencode's ultrawork, but designed for parallel workstreams with git worktrees.
+
+### What is Orxa Orchestration?
+
+When you prefix your request with `orxa`, the conductor:
+
+1. **Analyzes** your request using the strategist agent
+2. **Breaks** it into independent workstreams with dependency graphs
+3. **Creates** git worktrees for each workstream (`orxa-1`, `orxa-2`, `orxa-3`...)
+4. **Delegates** each workstream to parallel subagents
+5. **Polls** the merge queue (`~/.orxa-queue/`)
+6. **Cherry-picks** completed work back to main
+7. **Resolves** conflicts automatically or delegates to architect
+
+### Usage Examples
+
+```bash
+# Parallel authentication implementation
+orxa implement authentication with login, signup, oauth
+
+# Parallel API development
+orxa create REST API for users, posts, and comments with full CRUD
+
+# Parallel UI components
+orxa build dashboard with sidebar, header, charts, and data tables
+
+# Parallel feature implementation
+orxa add search, filtering, and pagination to the product list
+```
+
+### How It Works
+
+```
+User Request: "orxa implement auth with login, signup, oauth"
+                    ↓
+┌─────────────────────────────────────────────────────────────┐
+│  STRATEGIST AGENT                                           │
+│  Breaks task into workstreams with dependencies             │
+│                                                             │
+│  Workstream 1: Login (no deps)                              │
+│  Workstream 2: Signup (no deps)                             │
+│  Workstream 3: OAuth (depends on Workstream 1)              │
+└─────────────────────────────────────────────────────────────┘
+                    ↓
+┌─────────────────────────────────────────────────────────────┐
+│  WORKTREE CREATION                                          │
+│  git worktree add ../orxa-1 orxa/auth-login                 │
+│  git worktree add ../orxa-2 orxa/auth-signup                │
+│  git worktree add ../orxa-3 orxa/auth-oauth                 │
+└─────────────────────────────────────────────────────────────┘
+                    ↓
+┌─────────────────────────────────────────────────────────────┐
+│  PARALLEL EXECUTION (max 5 concurrent)                      │
+│                                                             │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐      │
+│  │ orxa-worker  │  │ orxa-worker  │  │ orxa-worker  │      │
+│  │ (login)      │  │ (signup)     │  │ (oauth)      │      │
+│  │              │  │              │  │ [waiting]    │      │
+│  └──────────────┘  └──────────────┘  └──────────────┘      │
+│        ↓                  ↓                  ↓              │
+│   Commit: abc123     Commit: def456     Commit: ghi789      │
+└─────────────────────────────────────────────────────────────┘
+                    ↓
+┌─────────────────────────────────────────────────────────────┐
+│  MERGE QUEUE (~/.orxa-queue/)                               │
+│  FIFO processing with cherry-pick                           │
+│                                                             │
+│  1. Cherry-pick abc123 → main ✓                            │
+│  2. Cherry-pick def456 → main ✓                            │
+│  3. Cherry-pick ghi789 → main ⚠️ (conflict)                 │
+│     → Delegate to architect for resolution                  │
+└─────────────────────────────────────────────────────────────┘
+                    ↓
+┌─────────────────────────────────────────────────────────────┐
+│  CLEANUP                                                    │
+│  git worktree remove orxa-1                                 │
+│  git worktree remove orxa-2                                 │
+│  git worktree remove orxa-3                                 │
+└─────────────────────────────────────────────────────────────┘
+                    ↓
+         🎉 ORXA ORCHESTRATION COMPLETE!
+```
+
+### Configuration
+
+Add to your `~/.config/opencode/orxa/orxa.json`:
+
+```json
+{
+  "orchestration": {
+    "enabled": true,
+    "max_parallel_workstreams": 5,
+    "queue_directory": "~/.orxa-queue",
+    "auto_merge": true,
+    "conflict_resolution_agent": "architect",
+    "worktree_prefix": "orxa",
+    "cleanup_worktrees": true,
+    "require_merge_approval": false,
+    "workstream_timeout_minutes": 120,
+    "retry_failed_workstreams": false,
+    "max_retries": 2,
+    "queue_poll_interval_ms": 5000
+  }
+}
+```
+
+### Orchestration Options
+
+| Option                       | Description                              | Default         |
+|------------------------------|------------------------------------------|-----------------|
+| `enabled`                    | Enable Orxa orchestration mode           | `true`          |
+| `max_parallel_workstreams`   | Maximum concurrent workstreams           | `5`             |
+| `queue_directory`            | Path to merge queue directory            | `~/.orxa-queue` |
+| `auto_merge`                 | Automatically cherry-pick completed work | `true`          |
+| `conflict_resolution_agent`  | Agent to handle merge conflicts          | `architect`     |
+| `worktree_prefix`            | Prefix for worktree names                | `orxa`          |
+| `cleanup_worktrees`          | Remove worktrees after merge             | `true`          |
+| `require_merge_approval`     | Require user approval before merge       | `false`         |
+| `workstream_timeout_minutes` | Timeout per workstream                   | `120`           |
+| `retry_failed_workstreams`   | Retry failed workstreams                 | `false`         |
+| `max_retries`                | Maximum retry attempts                   | `2`             |
+| `queue_poll_interval_ms`     | Queue polling interval                   | `5000`          |
+
+### Best Practices
+
+1. **Use for complex, multi-part tasks** — Orxa shines when work can be parallelized
+2. **Ensure good test coverage** — Parallel workstreams need reliable tests
+3. **Define clear boundaries** — Workstreams should be as independent as possible
+4. **Monitor the queue** — Check `~/.orxa-queue/` for pending merges
+5. **Review conflicts** — Architect agent handles conflicts, but review its resolutions
+
+---
+
 ## Configuration
 
 Config file location:
@@ -579,10 +719,10 @@ Directory structure:
 {
   "enabled_agents": ["orxa", "plan", "build", "coder"],
   "agent_overrides": {
-    "coder": { "model": "openai/gpt-4.1" }
+    "coder": { "model": "openai/gpt-5.2-codex" }
   },
   "orxa": {
-    "model": "kimi-for-coding/kimi-k2.5",
+    "model": "opencode/kimi-k2.5",
     "enforcement": {
       "delegation": "strict",
       "todoCompletion": "strict",
@@ -631,7 +771,7 @@ Directory structure:
 
 **orxa.model** (string)
 - Which LLM the Orxa uses
-- Default: `"kimi-for-coding/kimi-k2.5"`
+- Default: `"opencode/kimi-k2.5"`
 - Impact: Affects Orxa's reasoning and delegation decisions
 
 **orxa.enforcement** (object)
@@ -689,7 +829,7 @@ Controls how strictly the plugin enforces rules:
 
 **orxa.planWriteAllowlist** (string[])
 - File globs that Orxa/Plan may write to
-- Default: `[".opencode/plans/*.md"]`
+- Default: `[".orxa/plans/*.md"]`
 
 **orxa.blockMobileTools** (boolean)
 - Block iOS/Android simulator tools for Orxa
@@ -849,6 +989,56 @@ Controls how strictly the plugin enforces rules:
 - MCP configuration passthrough
 - Default: `{}`
 
+#### Orxa Orchestration
+
+**orchestration.enabled** (boolean)
+- Enable Orxa parallel orchestration mode
+- Default: `true`
+
+**orchestration.max_parallel_workstreams** (number)
+- Maximum number of concurrent workstreams
+- Default: `5`
+
+**orchestration.queue_directory** (string)
+- Directory for the merge queue
+- Default: `"~/.orxa-queue"`
+
+**orchestration.auto_merge** (boolean)
+- Automatically cherry-pick completed workstreams
+- Default: `true`
+
+**orchestration.conflict_resolution_agent** (string)
+- Agent to delegate merge conflicts to
+- Default: `"architect"`
+
+**orchestration.worktree_prefix** (string)
+- Prefix for git worktree names
+- Default: `"orxa"`
+
+**orchestration.cleanup_worktrees** (boolean)
+- Remove worktrees after successful merge
+- Default: `true`
+
+**orchestration.require_merge_approval** (boolean)
+- Require user approval before merging
+- Default: `false`
+
+**orchestration.workstream_timeout_minutes** (number)
+- Timeout for individual workstreams
+- Default: `120`
+
+**orchestration.retry_failed_workstreams** (boolean)
+- Automatically retry failed workstreams
+- Default: `false`
+
+**orchestration.max_retries** (number)
+- Maximum retry attempts for failed workstreams
+- Default: `2`
+
+**orchestration.queue_poll_interval_ms** (number)
+- Queue polling interval in milliseconds
+- Default: `5000`
+
 #### Custom Agents (YAML)
 
 Custom agents and overrides can also be defined via YAML files:
@@ -865,7 +1055,7 @@ Primary agents (orxa, plan) can only override `model` to preserve enforcement in
 1. **Only Orxa can delegate**: All `delegate_task` calls from subagents are blocked
 2. **No grep/glob for Orxa**: Search operations must be delegated to Plan agent
 3. **Memory writes are Orxa-only**: Subagents provide Memory Recommendations instead
-4. **Plan-only writes**: Orxa can only write to `.opencode/plans/*.md`
+4. **Plan-only writes**: Orxa can only write to `.orxa/plans/*.md`
 5. **6-section delegation template**: All delegations must include Task, Expected Outcome, Required Tools, Must Do, Must Not Do, Context
 6. **Multimodal batch limit**: Max 10 images per delegation
 7. **Mobile tool block**: Orxa cannot use ios-simulator tools directly

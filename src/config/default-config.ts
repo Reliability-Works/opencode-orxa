@@ -79,7 +79,7 @@ export const defaultConfig: OrxaConfig = {
     maxManualEditsPerSession: 0,
     requireTodoList: true,
     autoUpdateTodos: false,
-    planWriteAllowlist: [".opencode/plans/*.md"],
+    planWriteAllowlist: [".orxa/plans/*.md"],
     blockMobileTools: true,
   },
   governance: {
@@ -170,4 +170,18 @@ export const defaultConfig: OrxaConfig = {
     verboseLogging: true,
   },
   perAgentRestrictions: {},
+  orchestration: {
+    enabled: true,
+    max_parallel_workstreams: 5,
+    queue_directory: "~/.orxa-queue",
+    auto_merge: true,
+    conflict_resolution_agent: "architect",
+    worktree_prefix: "orxa",
+    cleanup_worktrees: true,
+    require_merge_approval: false,
+    workstream_timeout_minutes: 120,
+    retry_failed_workstreams: false,
+    max_retries: 2,
+    queue_poll_interval_ms: 5000,
+  },
 };

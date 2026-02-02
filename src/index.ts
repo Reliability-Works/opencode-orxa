@@ -11,6 +11,8 @@ import { preTodoCompletion } from "./hooks/pre-todo-completion";
 import { sessionCheckpoint } from "./hooks/session-checkpoint";
 import { todoContinuationEnforcer } from "./hooks/todo-continuation-enforcer";
 import { welcomeToastHandler } from "./hooks/welcome-toast";
+import { orxaDetector } from "./hooks/orxa-detector";
+import { orxaIndicator } from "./hooks/orxa-indicator";
 import type {
   EnforcementResult,
   HookContext,
@@ -19,6 +21,13 @@ import type {
   TodoCompletionGateResult,
   TodoContinuationResult,
 } from "./types";
+
+// Orxa Orchestration exports
+export * from "./orxa/types";
+export { WorktreeManager, createWorktreeManager } from "./orxa/worktree-manager";
+export { SpecGenerator, createSpecGenerator } from "./orxa/spec-generator";
+export { MergeQueue, createMergeQueue } from "./orxa/merge-queue";
+export { OrxaOrchestrator, createOrchestrator } from "./orxa/orchestrator";
 
 export interface OrxaPlugin {
   name: string;
@@ -32,6 +41,8 @@ export interface OrxaPlugin {
     sessionCheckpoint: (context: HookContext) => Promise<SessionCheckpointResult>;
     todoContinuationEnforcer: (context: HookContext) => Promise<TodoContinuationResult>;
     sessionCreated?: (context: HookContext) => Promise<{ injectMessage?: string }>;
+    orxaDetector?: (context: HookContext) => Promise<EnforcementResult>;
+    orxaIndicator?: (context: HookContext) => Promise<void>;
   };
   middleware: {
     initialize: (context: unknown) => unknown;
@@ -94,6 +105,8 @@ export const orxaPlugin: OrxaPlugin = {
     sessionCheckpoint,
     todoContinuationEnforcer,
     sessionCreated: welcomeToastHandler,
+    orxaDetector,
+    orxaIndicator,
   },
   middleware: {
     initialize: (context) => context,

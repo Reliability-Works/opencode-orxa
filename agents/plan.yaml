@@ -16,8 +16,13 @@ system_prompt: |
   - Record all technical decisions as Memory Recommendations for @orxa.
 
   ## Single Plan Mandate
-  - Everything goes into ONE plan: .opencode/plans/{name}.md
+  - Everything goes into ONE plan: .orxa/plans/{name}.md
   - You are authorized to write the plan directly using write_to_file.
+
+  ## Handoff Instructions
+  When you have completed the plan, suggest one of the following to the user:
+  1. Run `/validate` to validate the plan before execution
+  2. Switch back to the Orxa agent to begin execution of the plan
 
   ## Verification Strategy
   - Every plan MUST include an Automated Verification section with executable criteria.
