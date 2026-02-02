@@ -126,10 +126,10 @@ When you run `npm install -g @reliabilityworks/opencode-orxa`, the postinstall s
 
 2. **Generates default `orxa.json`** with sensible defaults
 
-3. **Copies agent YAML files** to `~/.config/opencode/orxa/agents/`
-   - `orxa.yaml` (primary)
-   - `plan.yaml` (primary)
-   - 13 subagent YAMLs in `subagents/` subdirectory
+3. **Copies subagent YAML files** to `~/.config/opencode/orxa/agents/subagents/`
+   - 13 subagent YAMLs (strategist, reviewer, build, coder, frontend, architect, git, explorer, librarian, navigator, writer, multimodal, mobile-simulator)
+   
+   > **Note:** Primary agents (`orxa.yaml` and `plan.yaml`) are built into the plugin and loaded directly from the package. They are not copied to your config directory.
 
 4. **Registers the plugin** in `~/.config/opencode/opencode.json`
 
@@ -183,11 +183,11 @@ drwxr-xr-x  2 user  staff    64 Jan 30 10:00 custom
 drwxr-xr-x  2 user  staff    64 Jan 30 10:00 overrides
 drwxr-xr-x  2 user  staff    64 Jan 30 10:00 subagents
 
-# subagents/ directory (13+ YAML files):
+# subagents/ directory (13 YAML files):
 architect.yaml    coder.yaml        explorer.yaml     git.yaml
 librarian.yaml    mobile-simulator.yaml  multimodal.yaml
-navigator.yaml    plan.yaml         reviewer.yaml     strategist.yaml
-writer.yaml       build.yaml        frontend.yaml     orxa.yaml
+navigator.yaml    reviewer.yaml     strategist.yaml
+writer.yaml       build.yaml        frontend.yaml
 ```
 
 #### 3. Verify Plugin Registration
@@ -487,7 +487,8 @@ opencode --version
 
 **Issue: Agents not appearing**
 - Check agent files exist: `ls ~/.config/opencode/orxa/agents/`
-- Should see orxa.yaml, plan.yaml, and subagents/ directory
+- Should see `subagents/` directory with 13 YAML files
+- Note: `orxa.yaml` and `plan.yaml` are built into the plugin, not copied to your config
 
 </details>
 
@@ -531,6 +532,57 @@ opencode
 ```
 
 The welcome toast should no longer show "🎼 OpenCode Orxa" and you should see your original OpenCode agents.
+
+---
+
+## Updating the Plugin
+
+To update OpenCode Orxa to the latest version:
+
+### From the OpenCode Config Directory
+
+**⚠️ IMPORTANT:** You must run the update command from the `~/.config/opencode` directory:
+
+```bash
+# Navigate to the OpenCode config directory
+cd ~/.config/opencode
+
+# Update the plugin
+npm update -g @reliabilityworks/opencode-orxa
+```
+
+### Why This Location Matters
+
+The plugin is installed globally, but npm's update mechanism works best when run from a directory that doesn't have its own `package.json` or `node_modules`. The `~/.config/opencode` directory is the recommended location because:
+
+1. It's the plugin's configuration home
+2. It won't conflict with local project dependencies
+3. It ensures clean global package resolution
+
+### What Happens During Update
+
+When you update:
+
+1. **New subagent files** are copied to `~/.config/opencode/orxa/agents/subagents/` (only if they don't already exist)
+2. **Your existing config** (`orxa.json`) is preserved
+3. **Your custom agents** in `agents/custom/` and `agents/overrides/` are preserved
+4. **Plugin registration** in `opencode.json` is maintained
+
+### Force a Fresh Install
+
+If you encounter issues after updating:
+
+```bash
+# Uninstall completely
+npm uninstall -g @reliabilityworks/opencode-orxa
+
+# Remove config (optional - backup first if you have customizations)
+mv ~/.config/opencode/orxa ~/.config/opencode/orxa.backup
+
+# Reinstall from the config directory
+cd ~/.config/opencode
+npm install -g @reliabilityworks/opencode-orxa
+```
 
 ---
 
@@ -631,9 +683,51 @@ Specialized workers that can be fully customized:
 | **multimodal**       | Image/PDF analysis                      | Model, prompt, tools, temperature |
 | **mobile-simulator** | iOS/Android testing                     | Model, prompt, tools, temperature |
 
-### Customizing Subagents
+### Customizing Agents
 
-Create override files in `~/.config/opencode/orxa/agents/overrides/`:
+#### Primary Agents (orxa, plan)
+
+Primary agents are **built into the plugin** and loaded directly from the package. They have strict enforcement rules that ensure the governance system works correctly.
+
+**What you can customize:**
+- **Model only** — Change which LLM they use via `orxa.json`:
+
+```json
+{
+  "orxa": {
+    "model": "opencode/kimi-k2.5"
+  }
+}
+```
+
+**What you cannot customize:**
+- System prompts (would break enforcement)
+- Tool permissions (would break governance)
+- Temperature or other parameters (would affect consistency)
+
+#### Subagents (Full Customization)
+
+Subagents are **copied to your config directory** and can be fully customized via YAML files.
+
+**Two ways to customize:**
+
+**1. JSON overrides in `orxa.json`:**
+```json
+{
+  "subagents": {
+    "overrides": {
+      "build": {
+        "model": "opencode/gpt-5.2-codex",
+        "timeout": 300000
+      }
+    }
+  }
+}
+```
+
+**2. YAML override files** (recommended for complex changes):
+
+Create files in `~/.config/opencode/orxa/agents/overrides/`:
 
 ```yaml
 # ~/.config/opencode/orxa/agents/overrides/strategist.yaml
@@ -645,7 +739,12 @@ system_prompt: |
 temperature: 0.2
 ```
 
-**Note:** Primary agents (orxa, plan) can only have their `model` changed to preserve enforcement integrity.
+**Why use YAML overrides?** Changes in `overrides/` persist across plugin updates. If you edit files directly in `subagents/`, your changes will be lost when you update.
+
+**Loading Priority:**
+1. **Custom** (`agents/custom/`) — Your entirely new agents
+2. **Overrides** (`agents/overrides/`) — Your modifications to built-in agents
+3. **Built-in** (`agents/subagents/`) — Default agents copied from the plugin
 
 ---
 
@@ -867,7 +966,8 @@ Directory structure:
 ├── orxa.json          # Main configuration
 └── agents/
     ├── custom/            # Your custom agents
-    └── overrides/         # Override built-in subagents
+    ├── overrides/         # Override built-in subagents
+    └── subagents/         # Default subagents copied from plugin
 ```
 
 ### Quick Example
@@ -906,12 +1006,16 @@ Directory structure:
 
 **agent_overrides** (object)
 - Override settings for specific agents in `orxa.json`
-- Primary agents (orxa, plan): `model` only
-- Subagents: `model`, `system_prompt`, `description`, `temperature`, `tools`, etc.
-- Default: `{}` with opinionated defaults in `subagents.overrides`
+- **Primary agents (orxa, plan):** `model` only — these are built-in and cannot have their prompts/tools changed
+- **Subagents:** `model`, `system_prompt`, `description`, `temperature`, `tools`, etc. — these are copied to your config and fully customizable
+- Default: `{}` (empty — no overrides applied by default)
+- For subagent-specific overrides (model, timeout, retries), use `subagents.overrides` instead
 - Example:
 ```json
 {
+  "orxa": {
+    "model": "opencode/gpt-5.2-codex"
+  },
   "strategist": {
     "model": "anthropic/claude-opus",
     "system_prompt": "Custom prompt..."

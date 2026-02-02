@@ -91,12 +91,7 @@ const createDefaultConfig = () => {
       "mobile-simulator"
     ],
     disabled_agents: [],
-    agent_overrides: {
-      build: { model: "opencode/gpt-5.2-codex" },
-      architect: { model: "opencode/gpt-5.2-codex" },
-      frontend: { model: "opencode/gemini-3-pro" },
-      multimodal: { model: "opencode/gemini-3-pro" }
-    },
+    agent_overrides: {},
     custom_agents: [],
     mcps: {
       enabled: ["ios-simulator", "playwright"],
