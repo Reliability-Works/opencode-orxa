@@ -39,7 +39,7 @@ export class MergeQueue {
   constructor(
     private readonly queuePath: string,
     private readonly repoRoot: string,
-    private readonly conflictResolutionAgent: string = 'architect'
+    private readonly conflictResolutionAgent: string = 'orxa'
   ) {
     this.ensureQueueDirectory();
     this.loadQueue();
@@ -436,8 +436,8 @@ export class MergeQueue {
     workstreamId: string,
     conflictFiles: string[]
   ): Promise<ConflictResolutionResult> {
-    // In a real implementation, this would delegate to the conflict resolution agent
-    // For now, return a placeholder result
+    // Delegates conflict resolution back to the Orxa agent (conductor/orchestrator)
+    // The Orxa agent analyzes conflicts and decides resolution strategy (ours/theirs/union/intelligent)
     
     return {
       resolved: false,

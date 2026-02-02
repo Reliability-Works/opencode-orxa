@@ -135,7 +135,7 @@ describe('Orxa Orchestration', () => {
         config: {
           max_parallel_workstreams: 5,
           auto_merge: true,
-          conflict_resolution_agent: 'architect',
+          conflict_resolution_agent: 'orxa',
           worktree_prefix: 'orxa',
           cleanup_worktrees: true,
           queue_directory: TEST_QUEUE_PATH,
@@ -349,7 +349,7 @@ Let me know if you need anything else.
       }
       fs.mkdirSync(TEST_QUEUE_PATH, { recursive: true });
       
-      queue = createMergeQueue(TEST_QUEUE_PATH, TEST_REPO_PATH, 'architect');
+      queue = createMergeQueue(TEST_QUEUE_PATH, TEST_REPO_PATH, 'orxa');
     });
 
     afterEach(() => {
@@ -679,7 +679,7 @@ Let me know if you need anything else.
         fs.rmSync(TEST_QUEUE_PATH, { recursive: true, force: true });
       }
       fs.mkdirSync(TEST_QUEUE_PATH, { recursive: true });
-      queue = createMergeQueue(TEST_QUEUE_PATH, TEST_REPO_PATH, 'architect');
+      queue = createMergeQueue(TEST_QUEUE_PATH, TEST_REPO_PATH, 'orxa');
     });
 
     afterEach(() => {

@@ -161,7 +161,7 @@ export function createOrchestratorDelegationPrompt(cleanedMessage: string): stri
 - Task broken into parallel workstreams
 - Each workstream executed in isolated git worktree
 - Results automatically merged via cherry-pick
-- Conflicts resolved by the configured conflict resolution agent
+- Conflicts resolved by the Orxa agent (you) using intelligent merge strategies
 
 **Must Do**:
 - Call createOrchestrator() from src/orxa/orchestrator.ts
