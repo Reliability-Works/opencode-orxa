@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import yaml from "js-yaml";
-import { getCustomAgentsDir, getOverridesAgentsDir } from "./config/loader.js";
+import { getCustomAgentsDir, getOverridesAgentsDir, loadOrxaConfig } from "./config/loader.js";
 import { PRIMARY_AGENTS } from "./config/default-config.js";
 import type { OrxaConfig, AgentConfig } from "./config/schema.js";
 
@@ -208,22 +208,27 @@ export const loadOrxaAgents = (options?: {
 export const createConfigHandler = () => {
   return async (config: Record<string, unknown>): Promise<void> => {
     console.log('[orxa] Config handler running');
-    const orxaConfig = config as unknown as OrxaConfig;
+
+    // The config object passed by OpenCode contains enabled_agents and disabled_agents from orxa.json
+    const orxaConfigFromOpenCode = config as unknown as OrxaConfig;
+    
+    // Load agent_overrides separately from orxa.json (OpenCode doesn't pass this)
+    const fullOrxaConfig = loadOrxaConfig();
+    const agentOverrides = fullOrxaConfig.agent_overrides ?? {};
 
     // Log the agent_overrides object
-    console.log('[orxa] agent_overrides:', JSON.stringify(orxaConfig.agent_overrides, null, 2));
+    console.log('[orxa] agent_overrides:', JSON.stringify(agentOverrides, null, 2));
 
     // Load all orxa agents from YAML files
     const orxaAgents = loadOrxaAgents({
-      enabledAgents: orxaConfig.enabled_agents,
-      disabledAgents: orxaConfig.disabled_agents,
+      enabledAgents: orxaConfigFromOpenCode.enabled_agents,
+      disabledAgents: orxaConfigFromOpenCode.disabled_agents,
     });
 
     // Log which agents are loaded
     console.log('[orxa] Loaded agents:', Object.keys(orxaAgents));
 
-    // Apply agent_overrides from orxaConfig
-    const agentOverrides = orxaConfig.agent_overrides ?? {};
+    // Apply agent_overrides (already loaded above)
     const primaryAgentSet = new Set<string>(PRIMARY_AGENTS);
 
     for (const [agentName, override] of Object.entries(agentOverrides)) {
