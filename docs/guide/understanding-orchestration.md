@@ -53,13 +53,13 @@ When you make a request, Orxa follows this decision tree:
 User Request Received
         │
         ▼
-┌───────────────────┐
-│ 1. Classify Task  │
-│    - Trivial?     │
-│    - Exploratory? │
+┌─────────────────────┐
+│ 1. Classify Task    │
+│    - Trivial?       │
+│    - Exploratory?   │
 │    - Implementation?│
-│    - Refactoring? │
-└─────────┬─────────┘
+│    - Refactoring?   │
+└─────────┬───────────┘
           │
           ▼
 ┌───────────────────┐
@@ -87,11 +87,11 @@ User Request Received
 └─────────┬─────────┘
           │
           ▼
-┌───────────────────┐
-│ 4. Monitor & Wait │
+┌────────────────────┐
+│ 4. Monitor & Wait  │
 │    - Track progress│
 │    - Handle issues │
-└─────────┬─────────┘
+└─────────┬──────────┘
           │
           ▼
 ┌───────────────────┐
@@ -341,23 +341,23 @@ Every work product passes through:
 ┌─────────────────────────────────────────┐
 │           QUALITY GATES                 │
 ├─────────────────────────────────────────┤
-│ 1. Lint Check                          │
-│    └─▶ Code style compliance           │
+│ 1. Lint Check                           │
+│    └─▶ Code style compliance            │
 ├─────────────────────────────────────────┤
-│ 2. Type Check                          │
-│    └─▶ TypeScript type safety          │
+│ 2. Type Check                           │
+│    └─▶ TypeScript type safety           │
 ├─────────────────────────────────────────┤
-│ 3. LSP Diagnostics                     │
-│    └─▶ Real-time error detection       │
+│ 3. LSP Diagnostics                      │
+│    └─▶ Real-time error detection        │
 ├─────────────────────────────────────────┤
-│ 4. Test Check                          │
-│    └─▶ Test suite passes               │
+│ 4. Test Check                           │
+│    └─▶ Test suite passes                │
 ├─────────────────────────────────────────┤
-│ 5. Build Check                         │
-│    └─▶ Production build succeeds       │
+│ 5. Build Check                          │
+│    └─▶ Production build succeeds        │
 ├─────────────────────────────────────────┤
-│ 6. Custom Validators                   │
-│    └─▶ Project-specific checks         │
+│ 6. Custom Validators                    │
+│    └─▶ Project-specific checks          │
 └─────────────────────────────────────────┘
 ```
 

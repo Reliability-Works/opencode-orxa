@@ -72,7 +72,8 @@ export class OrxaOrchestrator extends EventEmitter {
     // Initialize components
     this.worktreeManager = new WorktreeManager(
       this.config.worktree_prefix,
-      this.repoRoot
+      this.repoRoot,
+      this.config.worktree_base_path
     );
     
     this.specGenerator = new SpecGenerator('strategist', this.repoRoot);
@@ -355,7 +356,7 @@ export class OrxaOrchestrator extends EventEmitter {
     // Start queue polling
     this.startQueuePolling();
 
-    while (pending.size > 0 || inProgress.size > 0) {
+    while ((pending.size > 0 || inProgress.size > 0) && this.processing) {
       // Find workstreams ready to execute (all dependencies met)
       const ready: string[] = [];
       for (const id of pending) {
@@ -368,7 +369,8 @@ export class OrxaOrchestrator extends EventEmitter {
       // Start ready workstreams up to max_parallel limit
       while (
         ready.length > 0 &&
-        inProgress.size < this.config.max_parallel_workstreams
+        inProgress.size < this.config.max_parallel_workstreams &&
+        this.processing
       ) {
         const id = ready.shift()!;
         pending.delete(id);

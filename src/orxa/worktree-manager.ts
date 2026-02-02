@@ -31,12 +31,15 @@ export class WorktreeManager {
   private worktrees: Map<string, string> = new Map();
   private originalBranch: string;
   private repoRoot: string;
+  private worktreeBasePath: string;
 
   constructor(
     private readonly prefix: string = 'orxa',
-    repoRoot?: string
+    repoRoot?: string,
+    worktreeBasePath?: string
   ) {
     this.repoRoot = repoRoot || this.findRepoRoot();
+    this.worktreeBasePath = worktreeBasePath || path.dirname(this.repoRoot);
     this.originalBranch = this.getCurrentBranch();
   }
 
@@ -100,7 +103,7 @@ export class WorktreeManager {
   async createWorktree(workstreamId: string, index: number): Promise<WorktreeResult> {
     const worktreeName = `${this.prefix}-${index}`;
     const branchName = `orxa/${workstreamId}`;
-    const worktreePath = path.join(path.dirname(this.repoRoot), worktreeName);
+    const worktreePath = path.join(this.worktreeBasePath, worktreeName);
 
     try {
       // Check if worktree already exists
@@ -451,9 +454,10 @@ export class WorktreeManager {
  */
 export function createWorktreeManager(
   prefix?: string,
-  repoRoot?: string
+  repoRoot?: string,
+  worktreeBasePath?: string
 ): WorktreeManager {
-  return new WorktreeManager(prefix, repoRoot);
+  return new WorktreeManager(prefix, repoRoot, worktreeBasePath);
 }
 
 /**

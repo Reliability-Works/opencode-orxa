@@ -6,8 +6,8 @@
 
 <div align="center">
 
-[![npm version](https://img.shields.io/npm/v/opencode-orxa?style=flat-square&color=369eff&logo=npm&logoColor=white)](https://www.npmjs.com/package/opencode-orxa)
-[![npm downloads](https://img.shields.io/npm/dt/opencode-orxa?style=flat-square&color=ff6b35&logo=npm&logoColor=white)](https://www.npmjs.com/package/opencode-orxa)
+[![npm version](https://img.shields.io/npm/v/@reliabilityworks/opencode-orxa?style=flat-square&color=369eff&logo=npm&logoColor=white)](https://www.npmjs.com/package/@reliabilityworks/opencode-orxa)
+[![npm downloads](https://img.shields.io/npm/dt/@reliabilityworks/opencode-orxa?style=flat-square&color=ff6b35&logo=npm&logoColor=white)](https://www.npmjs.com/package/@reliabilityworks/opencode-orxa)
 [![License](https://img.shields.io/badge/license-MIT-white?style=flat-square&labelColor=black)](https://github.com/yourusername/opencode-orxa/blob/main/LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/yourusername/opencode-orxa?style=flat-square&color=ffcb47&logo=github&logoColor=black)](https://github.com/yourusername/opencode-orxa/stargazers)
 [![GitHub issues](https://img.shields.io/github/issues/yourusername/opencode-orxa?style=flat-square&color=ff80eb&logo=github&logoColor=black)](https://github.com/yourusername/opencode-orxa/issues)
@@ -93,12 +93,12 @@ opencode --version
 
 ```bash
 # Install the plugin globally
-npm install -g opencode-orxa
+npm install -g @reliabilityworks/opencode-orxa
 ```
 
 ### What the Postinstall Script Does
 
-When you run `npm install -g opencode-orxa`, the postinstall script automatically:
+When you run `npm install -g @reliabilityworks/opencode-orxa`, the postinstall script automatically:
 
 1. **Creates the orxa directory structure:**
    ```
@@ -156,10 +156,10 @@ This confirms:
 
 ```bash
 # Using npx (no global install)
-npx opencode-orxa init
+npx @reliabilityworks/opencode-orxa init
 
 # Using Bun
-bun add -g opencode-orxa
+bun add -g @reliabilityworks/opencode-orxa
 ```
 
 ### Optional: Supermemory Plugin
@@ -220,7 +220,7 @@ You should see something like:
 The easiest way to configure Orxa is with the interactive setup wizard:
 
 ```bash
-npm install -g opencode-orxa
+npm install -g @reliabilityworks/opencode-orxa
 orxa init
 ```
 
@@ -318,7 +318,7 @@ opencode auth login
 # Then select your provider(s) from the interactive menu
 
 # 3. Install orxa
-npm install -g opencode-orxa
+npm install -g @reliabilityworks/opencode-orxa
 
 # 4. Configure orxa with available models
 cat > ~/.config/opencode/orxa/orxa.json << 'EOF'
@@ -348,7 +348,7 @@ opencode --version
 
 **Issue: Plugin not loading**
 - Check if plugin is registered: `cat ~/.config/opencode/opencode.json | jq '.plugins'`
-- Should contain `"opencode-orxa"`
+- Should contain `"@reliabilityworks/opencode-orxa"`
 
 **Issue: Agents not appearing**
 - Check agent files exist: `ls ~/.config/opencode/orxa/agents/`
@@ -366,11 +366,11 @@ To completely remove OpenCode Orxa:
 
 ```bash
 # Using jq
-jq '.plugins = [.plugins[] | select(. != "opencode-orxa")]' \
+jq '.plugins = [.plugins[] | select(. != "@reliabilityworks/opencode-orxa")]' \
     ~/.config/opencode/opencode.json > /tmp/oc.json && \
     mv /tmp/oc.json ~/.config/opencode/opencode.json
 
-# Or manually edit the file and remove "opencode-orxa" from the plugins array
+# Or manually edit the file and remove "@reliabilityworks/opencode-orxa" from the plugins array
 ```
 
 ### 2. Remove Orxa Configuration Files
@@ -386,7 +386,7 @@ rm -rf ~/.config/opencode/orxa/
 ### 3. Uninstall the NPM Package
 
 ```bash
-npm uninstall -g opencode-orxa
+npm uninstall -g @reliabilityworks/opencode-orxa
 ```
 
 ### 4. Verify Removal

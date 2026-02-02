@@ -36,3 +36,9 @@ coverage/
 # Local config (don't commit user configs)
 orxa.jsonc
 supermemory.jsonc
+
+# Test artifacts
+tests/test-repo/
+tests/orxa-*/
+tests/workstream-*/
+tests/test-queue/

@@ -105,6 +105,8 @@ export interface OrxaSessionConfig {
   queue_directory: string;
   /** Polling interval for queue in milliseconds */
   queue_poll_interval_ms: number;
+  /** Base path for worktree directories (optional, for testing) */
+  worktree_base_path?: string;
 }
 
 /**

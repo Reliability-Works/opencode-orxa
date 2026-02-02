@@ -144,7 +144,8 @@ export class MergeQueue {
 
     const item = this.queue[index];
     
-    // Mark as in_progress
+    // Remove from queue array and mark as in_progress
+    this.queue.splice(index, 1);
     item.status = 'merging';
     this.saveQueueItem(item);
 

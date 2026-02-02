@@ -14,8 +14,40 @@ const OPENCODE_CONFIG_PATH = path.join(os.homedir(), ".config", "opencode", "ope
 const isGlobalInstall = () => {
   // Check if we're in a global npm/bun directory or being run via npm install/link
   const execPath = process.argv[1] || "";
+  const scriptPath = __filename || "";
   const isNpmLifecycle = process.env.npm_lifecycle_event === "postinstall";
-  return execPath.includes("npm") || execPath.includes("global") || execPath.includes(".bun") || isNpmLifecycle;
+
+  // Check for global npm directories (various patterns across different systems)
+  const globalPaths = [
+    "/usr/local/lib/node_modules",
+    "/usr/lib/node_modules",
+    "/opt/homebrew/lib/node_modules",
+    "/.nvm/versions/", // nvm global installs
+    "/.nvm/versions/node/",
+    "/node_modules/.bin/", // global bin
+    "/AppData/Roaming/npm/node_modules", // Windows global
+    "/.bun/install/global/", // Bun global
+    "/.config/yarn/global/", // Yarn global
+  ];
+
+  const isInGlobalPath = globalPaths.some((gp) => scriptPath.includes(gp) || execPath.includes(gp));
+
+  // Check if script is NOT in a local node_modules (local installs have ./node_modules/ in path)
+  const isLocalPath = scriptPath.includes("/node_modules/") && !isInGlobalPath;
+
+  // Additional checks for npm/bun/pnpm/yarn global
+  const hasGlobalIndicator =
+    execPath.includes("npm") ||
+    execPath.includes("global") ||
+    execPath.includes(".bun") ||
+    process.env.npm_config_global === "true" ||
+    process.env.npm_config_prefix !== undefined;
+
+  // It's global if:
+  // 1. We're in a known global path, OR
+  // 2. We have global indicators AND are not in a local node_modules, OR
+  // 3. It's a postinstall lifecycle event from a global install
+  return isInGlobalPath || (hasGlobalIndicator && !isLocalPath) || isNpmLifecycle;
 };
 
 const ensureDirectories = () => {
@@ -161,7 +193,7 @@ const createDefaultConfig = () => {
 const registerPlugin = () => {
   if (!fs.existsSync(OPENCODE_CONFIG_PATH)) {
     console.log("⚠ opencode.json not found. Skipping plugin registration.");
-    console.log("  Please add 'opencode-orxa' to your plugins manually.");
+    console.log("  Please add '@reliabilityworks/opencode-orxa' to your plugins manually.");
     return;
   }
   
@@ -172,12 +204,13 @@ const registerPlugin = () => {
       config.plugin = [];
     }
     
-    if (config.plugin.includes("opencode-orxa")) {
+    const pluginName = "@reliabilityworks/opencode-orxa";
+    if (config.plugin.includes(pluginName)) {
       console.log("✓ Plugin already registered in opencode.json");
       return;
     }
-    
-    config.plugin.push("opencode-orxa");
+
+    config.plugin.push(pluginName);
     fs.writeFileSync(OPENCODE_CONFIG_PATH, JSON.stringify(config, null, 2));
     console.log("✓ Registered plugin in opencode.json");
   } catch (error) {

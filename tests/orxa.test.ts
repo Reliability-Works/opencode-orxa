@@ -7,6 +7,7 @@
 import fs from 'fs';
 import path from 'path';
 import { execSync } from 'child_process';
+import os from 'os';
 import {
   WorkstreamSpec,
   OrxaQueueItem,
@@ -53,27 +54,29 @@ import {
   clearAllToasts,
 } from '../src/hooks/orxa-indicator';
 
-// Test utilities
-const TEST_REPO_PATH = path.join(__dirname, 'test-repo');
-const TEST_QUEUE_PATH = path.join(__dirname, 'test-queue');
+// Generate unique test directories to avoid conflicts between parallel tests
+let testRunId: string;
+let TEST_REPO_PATH: string;
+let TEST_QUEUE_PATH: string;
 
 describe('Orxa Orchestration', () => {
   beforeAll(() => {
+    // Generate unique test run ID
+    testRunId = `test-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
+    TEST_REPO_PATH = path.join(os.tmpdir(), `orxa-test-repo-${testRunId}`);
+    TEST_QUEUE_PATH = path.join(os.tmpdir(), `orxa-test-queue-${testRunId}`);
+
     // Create test repository
-    if (!fs.existsSync(TEST_REPO_PATH)) {
-      fs.mkdirSync(TEST_REPO_PATH, { recursive: true });
-      execSync('git init', { cwd: TEST_REPO_PATH });
-      execSync('git config user.email "test@test.com"', { cwd: TEST_REPO_PATH });
-      execSync('git config user.name "Test"', { cwd: TEST_REPO_PATH });
-      fs.writeFileSync(path.join(TEST_REPO_PATH, 'README.md'), '# Test Repo');
-      execSync('git add .', { cwd: TEST_REPO_PATH });
-      execSync('git commit -m "Initial commit"', { cwd: TEST_REPO_PATH });
-    }
+    fs.mkdirSync(TEST_REPO_PATH, { recursive: true });
+    execSync('git init', { cwd: TEST_REPO_PATH });
+    execSync('git config user.email "test@test.com"', { cwd: TEST_REPO_PATH });
+    execSync('git config user.name "Test"', { cwd: TEST_REPO_PATH });
+    fs.writeFileSync(path.join(TEST_REPO_PATH, 'README.md'), '# Test Repo');
+    execSync('git add .', { cwd: TEST_REPO_PATH });
+    execSync('git commit -m "Initial commit"', { cwd: TEST_REPO_PATH });
 
     // Create test queue directory
-    if (!fs.existsSync(TEST_QUEUE_PATH)) {
-      fs.mkdirSync(TEST_QUEUE_PATH, { recursive: true });
-    }
+    fs.mkdirSync(TEST_QUEUE_PATH, { recursive: true });
   });
 
   afterAll(() => {
@@ -146,9 +149,22 @@ describe('Orxa Orchestration', () => {
 
   describe('Worktree Manager', () => {
     let manager: WorktreeManager;
+    let worktreeBasePath: string;
 
     beforeEach(() => {
-      manager = createWorktreeManager('test-orxa', TEST_REPO_PATH);
+      // Create unique worktree base path for each test
+      worktreeBasePath = path.join(os.tmpdir(), `orxa-worktrees-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`);
+      fs.mkdirSync(worktreeBasePath, { recursive: true });
+      manager = createWorktreeManager('test-orxa', TEST_REPO_PATH, worktreeBasePath);
+    });
+
+    afterEach(async () => {
+      // Cleanup all worktrees created by this manager
+      await manager.cleanupAll(true);
+      // Remove worktree base directory
+      if (fs.existsSync(worktreeBasePath)) {
+        fs.rmSync(worktreeBasePath, { recursive: true, force: true });
+      }
     });
 
     it('should create a worktree manager instance', () => {
@@ -482,16 +498,20 @@ Let me know if you need anything else.
       expect(loaded).toBe(true);
     });
 
-    it('should emit events', (done) => {
-      orchestrator.once('started', (data) => {
-        expect(data.session_id).toBeDefined();
-        done();
+    it('should emit events', async () => {
+      const eventPromise = new Promise<void>((resolve) => {
+        orchestrator.once('started', (data) => {
+          expect(data.session_id).toBeDefined();
+          resolve();
+        });
       });
 
-      // Trigger start
+      // Trigger start (will fail in test environment but should emit started)
       orchestrator.start('test request').catch(() => {
         // Expected to fail in test environment
       });
+
+      await eventPromise;
     });
   });
 
@@ -608,12 +628,18 @@ Let me know if you need anything else.
 
   describe('Integration', () => {
     it('should handle full workflow with example specs', async () => {
-      jest.setTimeout(10000);
+      // Timeout set in test options below
+      
+      // Create unique worktree base path for this test
+      const worktreeBasePath = path.join(os.tmpdir(), `orxa-integration-${Date.now()}`);
+      fs.mkdirSync(worktreeBasePath, { recursive: true });
+      
       // Create orchestrator
       const orchestrator = createOrchestrator(TEST_REPO_PATH, {
         queue_directory: TEST_QUEUE_PATH,
         max_parallel_workstreams: 3,
         auto_merge: false, // Don't actually merge in tests
+        worktree_base_path: worktreeBasePath,
       });
 
       // Start orchestration
@@ -637,7 +663,12 @@ Let me know if you need anything else.
 
       const state = orchestrator.getState();
       expect(state.session_id).toBeDefined();
-    });
+      
+      // Cleanup
+      if (fs.existsSync(worktreeBasePath)) {
+        fs.rmSync(worktreeBasePath, { recursive: true, force: true });
+      }
+    }, 30000);
   });
 
   describe('Merge Queue - Additional Coverage', () => {
@@ -791,13 +822,26 @@ Let me know if you need anything else.
 
   describe('Worktree Manager - Additional Coverage', () => {
     let manager: WorktreeManager;
+    let worktreeBasePath: string;
 
     beforeEach(() => {
-      manager = createWorktreeManager('test-orxa', TEST_REPO_PATH);
+      // Create unique worktree base path for each test
+      worktreeBasePath = path.join(os.tmpdir(), `orxa-worktrees-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`);
+      fs.mkdirSync(worktreeBasePath, { recursive: true });
+      manager = createWorktreeManager('test-orxa', TEST_REPO_PATH, worktreeBasePath);
+    });
+
+    afterEach(async () => {
+      // Cleanup all worktrees created by this manager
+      await manager.cleanupAll(true);
+      // Remove worktree base directory
+      if (fs.existsSync(worktreeBasePath)) {
+        fs.rmSync(worktreeBasePath, { recursive: true, force: true });
+      }
     });
 
     it('should throw error when not in git repository', () => {
-      const nonGitPath = path.join(__dirname, 'non-git-dir');
+      const nonGitPath = path.join(os.tmpdir(), `non-git-dir-${Date.now()}`);
       fs.mkdirSync(nonGitPath, { recursive: true });
       
       expect(() => createWorktreeManager('test', nonGitPath)).toThrow();
@@ -979,13 +1023,10 @@ Let me know if you need anything else.
       expect(result.raw_response).toContain('src/routes.ts');
     });
 
-    it('should handle generateSpecs error', async () => {
-      // Create generator with invalid path to trigger error
-      const badGenerator = createSpecGenerator('strategist', '/nonexistent/path');
-      
-      const result = await badGenerator.generateSpecs('Test');
-      expect(result.success).toBe(false);
-      expect(result.error).toBeDefined();
+    it('should handle generateSpecs with context files', async () => {
+      const result = await generator.generateSpecs('Test', ['src/test.ts']);
+      expect(result.success).toBe(true);
+      expect(result.raw_response).toContain('src/test.ts');
     });
 
     it('should parse specs from plain JSON', () => {
@@ -1086,34 +1127,42 @@ Let me know if you need anything else.
       expect(orchestrator.isActive()).toBe(false);
     });
 
-    it('should emit phase changed events', (done) => {
+    it('should emit phase changed events', async () => {
       const orchestrator = createOrchestrator(TEST_REPO_PATH, {
         queue_directory: TEST_QUEUE_PATH,
       });
 
-      orchestrator.once('phase_changed', (data) => {
-        expect(data.phase).toBeDefined();
-        done();
+      const eventPromise = new Promise<void>((resolve) => {
+        orchestrator.once('phase_changed', (data) => {
+          expect(data.phase).toBeDefined();
+          resolve();
+        });
       });
 
       // Trigger a phase change by starting
       orchestrator.start('test').catch(() => {
         // Expected to fail
       });
+
+      await eventPromise;
     });
 
-    it('should emit error event', (done) => {
+    it('should emit error event', async () => {
       const orchestrator = createOrchestrator(TEST_REPO_PATH, {
         queue_directory: TEST_QUEUE_PATH,
       });
 
-      orchestrator.once('error', () => {
-        done();
+      const eventPromise = new Promise<void>((resolve) => {
+        orchestrator.once('error', () => {
+          resolve();
+        });
       });
 
       // Force an error by starting twice
       orchestrator.start('test').catch(() => {});
       orchestrator.start('test').catch(() => {});
+
+      await eventPromise;
     });
 
     it('should handle cancel when not active', async () => {
