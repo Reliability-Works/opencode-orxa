@@ -37,7 +37,7 @@
     "agents"
   ],
   "author": "OpenCode",
-  "license": "MIT",
+  "license": "SUL-1.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/yourusername/opencode-orxa.git"
