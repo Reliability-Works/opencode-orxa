@@ -161,23 +161,41 @@ const createDefaultConfig = () => {
     qualityGates: {
       requireLint: true,
       requireTypeCheck: true,
-      requireTest: true,
+      requireTests: true,
       requireBuild: true,
-      lintCommand: "npm run lint",
-      typeCheckCommand: "npm run typecheck",
-      testCommand: "npm test",
-      buildCommand: "npm run build"
+      requireLspDiagnostics: true,
+      customValidators: []
     },
     escalation: {
-      maxAgentAttempts: 3,
-      escalateToOrxa: true,
-      autoEscalationThreshold: 2
+      enabled: true,
+      maxAttemptsPerAgent: 2,
+      escalationMatrix: {
+        coder: "build",
+        build: "architect",
+        explorer: "librarian"
+      },
+      requireExplicitHandoff: true
     },
     ui: {
-      showWelcomeToast: true,
-      showOrxaIndicator: true,
-      showDelegationSummary: true,
-      colorizeOutput: true
+      showDelegationWarnings: true,
+      showTodoReminders: true,
+      showMemoryConfirmations: true,
+      verboseLogging: true
+    },
+    perAgentRestrictions: {},
+    orchestration: {
+      enabled: true,
+      max_parallel_workstreams: 5,
+      queue_directory: "~/.orxa-queue",
+      auto_merge: true,
+      conflict_resolution_agent: "architect",
+      worktree_prefix: "orxa",
+      cleanup_worktrees: true,
+      require_merge_approval: false,
+      workstream_timeout_minutes: 120,
+      retry_failed_workstreams: false,
+      max_retries: 2,
+      queue_poll_interval_ms: 5000
     }
   };
 

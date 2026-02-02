@@ -71,5 +71,41 @@ export const preToolExecution = async (context: HookContext): Promise<Enforcemen
     }
   }
 
-  return result;
+  let nextResult = result;
+
+  if (toolName === "read" || toolName === "read_file") {
+    const injection = await agentsMdInjector({
+      ...context,
+      tool: { name: toolName === "read_file" ? "read" : toolName },
+      toolName,
+    });
+
+    if (injection.injectContext) {
+      nextResult = {
+        ...nextResult,
+        metadata: {
+          ...(nextResult.metadata ?? {}),
+          inject_context: injection.injectContext,
+        },
+      };
+    }
+  }
+
+  const commentCheck = await commentChecker({
+    ...context,
+    tool: { name: toolName },
+    toolName,
+  });
+
+  if (commentCheck.warning) {
+    const warnings = [...(nextResult.warnings ?? []), commentCheck.warning];
+    nextResult = {
+      ...nextResult,
+      warnings,
+      warn: true,
+      message: [nextResult.message, commentCheck.warning].filter(Boolean).join("\n"),
+    };
+  }
+
+  return nextResult;
 };

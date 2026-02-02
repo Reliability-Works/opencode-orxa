@@ -127,7 +127,7 @@ When you run `npm install -g @reliabilityworks/opencode-orxa`, the postinstall s
 2. **Generates default `orxa.json`** with sensible defaults
 
 3. **Copies subagent YAML files** to `~/.config/opencode/orxa/agents/subagents/`
-   - 13 subagent YAMLs (strategist, reviewer, build, coder, frontend, architect, git, explorer, librarian, navigator, writer, multimodal, mobile-simulator)
+   - 14 subagent YAMLs (strategist, reviewer, build, coder, frontend, architect, git, explorer, librarian, navigator, writer, multimodal, mobile-simulator, orxa-worker)
    
    > **Note:** Primary agents (`orxa.yaml` and `plan.yaml`) are built into the plugin and loaded directly from the package. They are not copied to your config directory.
 
@@ -183,23 +183,23 @@ drwxr-xr-x  2 user  staff    64 Jan 30 10:00 custom
 drwxr-xr-x  2 user  staff    64 Jan 30 10:00 overrides
 drwxr-xr-x  2 user  staff    64 Jan 30 10:00 subagents
 
-# subagents/ directory (13 YAML files):
+# subagents/ directory (14 YAML files):
 architect.yaml    coder.yaml        explorer.yaml     git.yaml
 librarian.yaml    mobile-simulator.yaml  multimodal.yaml
 navigator.yaml    reviewer.yaml     strategist.yaml
-writer.yaml       build.yaml        frontend.yaml
+writer.yaml       build.yaml        frontend.yaml     orxa-worker.yaml
 ```
 
 #### 3. Verify Plugin Registration
 
 ```bash
 # Check if plugin is registered in OpenCode config
-cat ~/.config/opencode/opencode.json | grep -A5 '"plugins"'
+cat ~/.config/opencode/opencode.json | grep -A5 '"plugin"'
 ```
 
 **Expected output:**
 ```json
-"plugins": [
+"plugin": [
   "@reliabilityworks/opencode-orxa"
 ]
 ```
@@ -242,6 +242,8 @@ echo "✓ Plugin registration:" && grep -o "@reliabilityworks/opencode-orxa" ~/.
 echo "=== Installation Verified ==="
 ```
 
+> **Note:** OpenCode uses `"plugin"` (singular) not `"plugins"` in the configuration file.
+
 **If all checks pass,** your installation is complete! Proceed to [Verify Installation (Runtime)](#verify-installation-runtime) below.
 
 **If files are missing,** try reinstalling with visible output:
@@ -263,10 +265,10 @@ opencode
 **You should see the welcome toast:**
 
 ```
-🎼 OpenCode Orxa v1.0.0
-   Orxa agents loaded: 15
-   Default agent: orxa
-   Type /help for available commands
+🎼 OpenCode Orxa Initialized
+
+Workforce orchestration enabled. Managing agents...
+Type /help for available commands or start delegating tasks.
 ```
 
 This confirms:
@@ -277,7 +279,7 @@ This confirms:
 
 **If you don't see the welcome toast:**
 1. Check that OpenCode is installed: `opencode --version`
-2. Verify the plugin is registered: `cat ~/.config/opencode/opencode.json | grep plugins`
+2. Verify the plugin is registered: `cat ~/.config/opencode/opencode.json | grep plugin`
 3. Try restarting your terminal or running `hash -r` (to refresh the command cache)
 
 ---
@@ -482,12 +484,12 @@ opencode --version
 - Solution: Check available models with `opencode models list`
 
 **Issue: Plugin not loading**
-- Check if plugin is registered: `cat ~/.config/opencode/opencode.json | jq '.plugins'`
+- Check if plugin is registered: `cat ~/.config/opencode/opencode.json | jq '.plugin'`
 - Should contain `"@reliabilityworks/opencode-orxa"`
 
 **Issue: Agents not appearing**
 - Check agent files exist: `ls ~/.config/opencode/orxa/agents/`
-- Should see `subagents/` directory with 13 YAML files
+- Should see `subagents/` directory with 14 YAML files
 - Note: `orxa.yaml` and `plan.yaml` are built into the plugin, not copied to your config
 
 </details>
@@ -502,11 +504,11 @@ To completely remove OpenCode Orxa:
 
 ```bash
 # Using jq
-jq '.plugins = [.plugins[] | select(. != "@reliabilityworks/opencode-orxa")]' \
+jq '.plugin = [.plugin[] | select(. != "@reliabilityworks/opencode-orxa")]' \
     ~/.config/opencode/opencode.json > /tmp/oc.json && \
     mv /tmp/oc.json ~/.config/opencode/opencode.json
 
-# Or manually edit the file and remove "@reliabilityworks/opencode-orxa" from the plugins array
+# Or manually edit the file and remove "@reliabilityworks/opencode-orxa" from the plugin array
 ```
 
 ### 2. Remove Orxa Configuration Files
@@ -638,14 +640,14 @@ Orxa: ✅ Frontend task complete. The component is ready at src/components/UserP
 
 ### Agent Orchestration
 
-- **15 Specialized Agents** — From frontend to architecture to mobile testing
+- **16 Specialized Agents** — From frontend to architecture to mobile testing
 - **Automatic Escalation** — Failed tasks escalate to senior agents
 - **Parallel Execution** — Multiple subagents work simultaneously
 - **Context Hygiene** — Smart summarization prevents context bloat
 
 ### Developer Experience
 
-- **Slash Commands** — 9 built-in commands for common workflows
+- **Slash Commands** — 7 built-in commands for common workflows
 - **AGENTS.md Injection** — Auto-injects context from AGENTS.md files
 - **Comment Checker** — Warns on excessive AI-generated comments
 - **Session Checkpoints** — Automatic continuity across sessions
@@ -682,6 +684,7 @@ Specialized workers that can be fully customized:
 | **writer**           | Documentation & prose                   | Model, prompt, tools, temperature |
 | **multimodal**       | Image/PDF analysis                      | Model, prompt, tools, temperature |
 | **mobile-simulator** | iOS/Android testing                     | Model, prompt, tools, temperature |
+| **orxa-worker**      | Parallel workstream execution           | Model, prompt, tools, temperature |
 
 ### Customizing Agents
 
@@ -754,17 +757,15 @@ Type `/command-name` to invoke powerful workflows:
 
 ### Built-in Commands
 
-| Command     | Aliases        | Description                                        | Delegates To            |
-|-------------|----------------|----------------------------------------------------|-------------------------|
-| `/validate` | `/v`, `/check` | Validate plan with risk analysis + review          | @strategist + @reviewer |
-| `/refactor` | `/rf`          | Intelligent refactoring with architecture analysis | @architect + @build     |
-| `/explain`  | `/ex`, `/exp`  | Explain code, architecture, or concepts            | @librarian              |
-| `/test`     | `/t`           | Generate comprehensive tests                       | @build + @coder         |
-| `/debug`    | `/dbg`, `/fix` | Debug issues and trace code flow                   | @architect + @explorer  |
-| `/commit`   | `/c`, `/git`   | Smart git commits with atomic splitting            | @git                    |
-| `/docs`     | `/d`, `/doc`   | Generate documentation                             | @writer                 |
-| `/search`   | `/s`, `/find`  | Search codebase and web                            | @explorer + @navigator  |
-| `/review`   | `/r`, `/cr`    | Code review with architecture analysis             | @reviewer + @architect  |
+| Command     | Aliases        | Description                                        | Delegates To                       |
+|-------------|----------------|----------------------------------------------------|------------------------------------|
+| `/validate` | `/v`, `/check` | Validate plan with risk analysis + review          | @strategist + @reviewer            |
+| `/refactor` | `/rf`          | Intelligent refactoring with architecture analysis | @architect, @explorer, @build, @reviewer |
+| `/explain`  | `/ex`, `/exp`  | Explain code, architecture, or concepts            | @librarian                         |
+| `/test`     | `/t`           | Generate comprehensive tests                       | @build, @reviewer                  |
+| `/debug`    | `/dbg`, `/fix` | Debug issues and trace code flow                   | @architect, @explorer, @coder      |
+| `/commit`   | `/c`, `/git`   | Smart git commits with atomic splitting            | @git                               |
+| `/search`   | `/s`, `/find`  | Search codebase and web                            | @explorer + @navigator             |
 
 ### Command Examples
 
@@ -787,39 +788,15 @@ Type `/command-name` to invoke powerful workflows:
 # Smart git commit
 /commit "Add user authentication"
 
-# Generate docs
-/docs the API module
-
 # Search everything
 /search how authentication works
-
-# Code review
-/review src/api/routes.ts
-```
-
-### Custom Commands
-
-Create custom commands in:
-```
-~/.config/opencode/orxa/commands/my-command.yaml
-```
-
-Example:
-```yaml
-name: deploy
-description: Deploy to production
-aliases: [d]
----
-When invoked, this command will:
-1. Run tests
-2. Build the project
-3. Deploy to production
-4. Verify deployment
 ```
 
 ---
 
 ## Orxa Orchestration Mode
+
+> **🚧 Coming Soon** — This feature is planned but not yet fully implemented.
 
 Orxa Orchestration Mode enables **parallel multi-agent execution** for complex tasks. Similar to oh-my-opencode's ultrawork, but designed for parallel workstreams with git worktrees.
 
@@ -1128,7 +1105,7 @@ Controls how strictly the plugin enforces rules:
 - Require TypeScript type checking to pass
 - Default: `true`
 
-**qualityGates.requireTests** (boolean)
+**qualityGates.requireTest** (boolean)
 - Require tests to pass
 - Default: `true`
 
@@ -1206,9 +1183,17 @@ Controls how strictly the plugin enforces rules:
 - Enable escalation chain between agents
 - Default: `true`
 
-**escalation.maxAttemptsPerAgent** (number)
+**escalation.maxAgentAttempts** (number)
 - Max attempts before escalating to the next agent
 - Default: `2`
+
+**escalation.escalateToOrxa** (boolean)
+- Whether to escalate to Orxa after max attempts
+- Default: `true`
+
+**escalation.autoEscalationThreshold** (number)
+- Number of failures before auto-escalation
+- Default: `3`
 
 **escalation.escalationMatrix** (object)
 - Map of agent → next agent for escalation
@@ -1219,6 +1204,22 @@ Controls how strictly the plugin enforces rules:
 - Default: `true`
 
 #### UI + Logging
+
+**ui.showWelcomeToast** (boolean)
+- Show the welcome toast on startup
+- Default: `true`
+
+**ui.showOrxaIndicator** (boolean)
+- Show Orxa indicator in the UI
+- Default: `true`
+
+**ui.showDelegationSummary** (boolean)
+- Show delegation summary after tasks
+- Default: `true`
+
+**ui.colorizeOutput** (boolean)
+- Enable colorized output in terminal
+- Default: `true`
 
 **ui.showDelegationWarnings** (boolean)
 - Show warnings when delegation rules are violated
@@ -1440,6 +1441,41 @@ orxa init        # Interactive setup wizard
 orxa install     # Enable/disable agents
 orxa doctor      # Validate configuration
 orxa config      # Open config in editor
+orxa providers   # Show provider and authentication status
+```
+
+### Provider Status Command
+
+The `orxa providers` command displays your OpenCode provider configuration and authentication status:
+
+```bash
+$ orxa providers
+
+🔍 OpenCode Configuration
+
+Config: ~/.config/opencode/opencode.json
+Auth: ~/.config/opencode/auth.json
+Config exists: ✅
+Auth file exists: ✅
+
+📋 Providers:
+
+✅ Authenticated:
+  opencode
+     Auth: Valid API key found
+     Models: kimi-k2.5, gpt-5.2-codex, gemini-3-pro...
+
+❌ Needs Authentication:
+
+  openai
+     Status: No API key configured
+     Instructions:
+       Run: opencode auth login
+       Then select: OpenAI
+
+⚠️  Not Configured (add to opencode.json to use):
+  anthropic
+     Available models: claude-opus, claude-sonnet...
 ```
 
 ---

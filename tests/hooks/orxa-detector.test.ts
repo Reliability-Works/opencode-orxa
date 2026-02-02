@@ -153,14 +153,14 @@ describe('Orxa Detector Hook', () => {
       expect(prompt).toContain('parallel');
     });
 
-    it('should contain Conductor role instructions', () => {
+    it('should contain orchestrator role instructions', () => {
       const prompt = getOrxaSystemPrompt();
-      expect(prompt).toContain('CONDUCTOR');
+      expect(prompt).toContain('ORCHESTRATOR');
     });
 
-    it('should contain delegation format instructions', () => {
+    it('should contain orchestration format instructions', () => {
       const prompt = getOrxaSystemPrompt();
-      expect(prompt).toContain('delegate_task');
+      expect(prompt).toContain('createOrchestrator');
     });
 
     it('should return consistent prompt on multiple calls', () => {
@@ -187,9 +187,9 @@ describe('Orxa Detector Hook', () => {
       expect(prompt).toContain('Expected Outcome');
     });
 
-    it('should contain Required Tools section', () => {
+    it('should contain orchestrator usage instructions', () => {
       const prompt = createOrchestratorDelegationPrompt('test task');
-      expect(prompt).toContain('Required Tools');
+      expect(prompt).toContain('createOrchestrator');
     });
 
     it('should contain Must Do section', () => {
@@ -207,9 +207,9 @@ describe('Orxa Detector Hook', () => {
       expect(prompt).toContain('Context');
     });
 
-    it('should reference orxa-orchestrator agent', () => {
+    it('should not reference orxa-orchestrator agent', () => {
       const prompt = createOrchestratorDelegationPrompt('test task');
-      expect(prompt).toContain('orxa-orchestrator');
+      expect(prompt).not.toContain('orxa-orchestrator');
     });
 
     it('should mention parallel execution', () => {

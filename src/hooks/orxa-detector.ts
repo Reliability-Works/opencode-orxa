@@ -22,31 +22,30 @@ Orxa enables parallel multi-agent execution for complex tasks. When you see this
 
 1. **Analyzed** - Break into independent workstreams
 2. **Parallelized** - Each workstream gets its own git worktree
-3. **Delegated** - Multiple agents work simultaneously
+3. **Executed** - Multiple workstreams run simultaneously
 4. **Merged** - Results are cherry-picked back to main branch
 
-YOUR ROLE AS CONDUCTOR:
+YOUR ROLE AS ORXA (ORCHESTRATOR):
 - Do NOT implement the work yourself
-- Delegate to the orchestrator using the delegate_task tool
-- The orchestrator will handle workstream generation, worktree creation, and parallel execution
-- Monitor progress and handle any conflicts that arise
+- Use the orchestration system directly from src/orxa/orchestrator.ts
+- Call createOrchestrator() and use it to run orchestration
+- Monitor progress, merge queue, and handle conflicts that arise
 
-DELEGATION FORMAT:
-When delegating to the orchestrator, use:
+ORCHESTRATION FORMAT:
+When activating orchestration, use:
 
-**Task**: Activate Orxa mode for: [original user request without "orxa" keyword]
+**Task**: Activate Orxa orchestration for: [original user request without "orxa" keyword]
 
 **Expected Outcome**: Parallel execution of workstreams with automatic merging
 
-**Required Tools**: delegate_task
-
-**Must Do**: 
-- Delegate to the "orxa-orchestrator" agent
-- Pass the cleaned user request
-- Wait for completion signal
+**Must Do**:
+- Call createOrchestrator() from src/orxa/orchestrator.ts
+- Start orchestration with the cleaned user request
+- Track progress events and completion signal
 
 **Must Not Do**:
-- Attempt to implement features directly
+- Delegate to any external orchestrator agent
+- Implement features directly
 - Skip the orchestration process
 
 **Context**: User has explicitly requested parallel execution with "orxa" keyword.`;
@@ -162,16 +161,15 @@ export function createOrchestratorDelegationPrompt(cleanedMessage: string): stri
 - Task broken into parallel workstreams
 - Each workstream executed in isolated git worktree
 - Results automatically merged via cherry-pick
-- Conflicts resolved by architect agent
-
-**Required Tools**: delegate_task
+- Conflicts resolved by the configured conflict resolution agent
 
 **Must Do**:
-- Use delegate_task with agent "orxa-orchestrator"
-- Pass the full user request
+- Call createOrchestrator() from src/orxa/orchestrator.ts
+- Start orchestration with the cleaned user request
 - Monitor progress and report completion
 
 **Must Not Do**:
+- Delegate to any external orchestrator agent
 - Implement features directly
 - Skip the orchestration workflow
 

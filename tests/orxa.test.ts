@@ -552,7 +552,7 @@ Let me know if you need anything else.
     it('should create delegation prompt', () => {
       const prompt = createOrchestratorDelegationPrompt('implement auth');
       expect(prompt).toContain('implement auth');
-      expect(prompt).toContain('delegate_task');
+      expect(prompt).toContain('createOrchestrator');
     });
   });
 

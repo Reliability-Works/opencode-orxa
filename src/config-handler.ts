@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 import yaml from "js-yaml";
 import { getCustomAgentsDir, getOverridesAgentsDir } from "./config/loader.js";
+import type { OrxaConfig } from "./config/schema.js";
 
 /**
  * OpenCode Agent Definition
@@ -156,18 +157,41 @@ const parseAgentYaml = (filePath: string): OpenCodeAgent | null => {
  * Checks for user overrides first, then falls back to builtin
  * Returns a map of agent name -> OpenCodeAgent
  */
-export const loadOrxaAgents = (): Record<string, OpenCodeAgent> => {
+export const loadOrxaAgents = (options?: {
+  enabledAgents?: string[];
+  disabledAgents?: string[];
+}): Record<string, OpenCodeAgent> => {
   const agents: Record<string, OpenCodeAgent> = {};
+  const enabledAgents = options?.enabledAgents ?? [];
+  const disabledAgents = options?.disabledAgents ?? [];
+  const enabledSet = enabledAgents.length > 0 ? new Set(enabledAgents) : null;
+  const disabledSet = new Set(disabledAgents);
 
   // Get all builtin agent names as the base list
   const agentNames = getAllBuiltinAgentNames();
 
   // For each agent, resolve the file (checking overrides first)
   for (const agentName of agentNames) {
+    if (enabledSet && !enabledSet.has(agentName)) {
+      continue;
+    }
+
+    if (disabledSet.has(agentName)) {
+      continue;
+    }
+
     const filePath = resolveAgentFile(agentName);
     if (filePath) {
       const agent = parseAgentYaml(filePath);
       if (agent) {
+        if (enabledSet && !enabledSet.has(agent.name)) {
+          continue;
+        }
+
+        if (disabledSet.has(agent.name)) {
+          continue;
+        }
+
         agents[agent.name] = agent;
       }
     }
@@ -182,8 +206,12 @@ export const loadOrxaAgents = (): Record<string, OpenCodeAgent> => {
  */
 export const createConfigHandler = () => {
   return async (config: Record<string, unknown>): Promise<void> => {
+    const orxaConfig = config as unknown as OrxaConfig;
     // Load all orxa agents from YAML files
-    const orxaAgents = loadOrxaAgents();
+    const orxaAgents = loadOrxaAgents({
+      enabledAgents: orxaConfig.enabled_agents,
+      disabledAgents: orxaConfig.disabled_agents,
+    });
 
     // REPLACE config.agent entirely with ONLY orxa agents
     // This completely ignores user's opencode.json agent array
