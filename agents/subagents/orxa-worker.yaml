@@ -1,4 +1,5 @@
 name: orxa-worker
+mode: subagent
 description: Parallel workstream execution agent for Orxa orchestration
 model: opencode/kimi-k2.5
 temperature: 0.2

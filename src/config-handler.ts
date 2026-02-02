@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import yaml from "js-yaml";
+import { getCustomAgentsDir, getOverridesAgentsDir } from "./config/loader.js";
 
 /**
  * OpenCode Agent Definition
@@ -39,23 +40,65 @@ const BUILTIN_AGENTS_DIR = path.resolve(__dirname, "..", "agents");
 const AGENT_EXTENSIONS = [".yaml", ".yml"];
 
 /**
- * Load all agent files from the builtin agents directory
+ * Find an agent file in a directory (checking both root and subagents subdir)
  */
-const loadAllBuiltinAgentFiles = (): string[] => {
-  const agentFiles: string[] = [];
+const findAgentFileInDir = (baseDir: string, agentName: string): string | null => {
+  for (const extension of AGENT_EXTENSIONS) {
+    const directPath = path.join(baseDir, `${agentName}${extension}`);
+    if (fs.existsSync(directPath)) {
+      return directPath;
+    }
 
-  // Load from root agents directory
+    const subagentPath = path.join(baseDir, "subagents", `${agentName}${extension}`);
+    if (fs.existsSync(subagentPath)) {
+      return subagentPath;
+    }
+  }
+  return null;
+};
+
+/**
+ * Resolve an agent definition from user directories or builtin
+ * Priority: custom > override > builtin
+ */
+const resolveAgentFile = (agentName: string): string | null => {
+  // Check custom agents first
+  const customPath = findAgentFileInDir(getCustomAgentsDir(), agentName);
+  if (customPath) {
+    return customPath;
+  }
+
+  // Check overrides second
+  const overridePath = findAgentFileInDir(getOverridesAgentsDir(), agentName);
+  if (overridePath) {
+    return overridePath;
+  }
+
+  // Fall back to builtin
+  return findAgentFileInDir(BUILTIN_AGENTS_DIR, agentName);
+};
+
+/**
+ * Get all agent names from builtin directory
+ */
+const getAllBuiltinAgentNames = (): string[] => {
+  const agentNames: string[] = [];
+
   if (fs.existsSync(BUILTIN_AGENTS_DIR)) {
+    // Get root agents
     const rootEntries = fs.readdirSync(BUILTIN_AGENTS_DIR);
     for (const entry of rootEntries) {
       const fullPath = path.join(BUILTIN_AGENTS_DIR, entry);
       const stat = fs.statSync(fullPath);
       if (stat.isFile() && AGENT_EXTENSIONS.some((ext) => entry.endsWith(ext))) {
-        agentFiles.push(fullPath);
+        const name = entry.replace(/\.(yaml|yml)$/, "");
+        if (!agentNames.includes(name)) {
+          agentNames.push(name);
+        }
       }
     }
 
-    // Load from subagents directory
+    // Get subagents
     const subagentsDir = path.join(BUILTIN_AGENTS_DIR, "subagents");
     if (fs.existsSync(subagentsDir)) {
       const subagentEntries = fs.readdirSync(subagentsDir);
@@ -63,13 +106,16 @@ const loadAllBuiltinAgentFiles = (): string[] => {
         const fullPath = path.join(subagentsDir, entry);
         const stat = fs.statSync(fullPath);
         if (stat.isFile() && AGENT_EXTENSIONS.some((ext) => entry.endsWith(ext))) {
-          agentFiles.push(fullPath);
+          const name = entry.replace(/\.(yaml|yml)$/, "");
+          if (!agentNames.includes(name)) {
+            agentNames.push(name);
+          }
         }
       }
     }
   }
 
-  return agentFiles;
+  return agentNames;
 };
 
 /**
@@ -107,16 +153,23 @@ const parseAgentYaml = (filePath: string): OpenCodeAgent | null => {
 
 /**
  * Load all orxa agents from YAML files
+ * Checks for user overrides first, then falls back to builtin
  * Returns a map of agent name -> OpenCodeAgent
  */
 export const loadOrxaAgents = (): Record<string, OpenCodeAgent> => {
   const agents: Record<string, OpenCodeAgent> = {};
-  const agentFiles = loadAllBuiltinAgentFiles();
 
-  for (const filePath of agentFiles) {
-    const agent = parseAgentYaml(filePath);
-    if (agent) {
-      agents[agent.name] = agent;
+  // Get all builtin agent names as the base list
+  const agentNames = getAllBuiltinAgentNames();
+
+  // For each agent, resolve the file (checking overrides first)
+  for (const agentName of agentNames) {
+    const filePath = resolveAgentFile(agentName);
+    if (filePath) {
+      const agent = parseAgentYaml(filePath);
+      if (agent) {
+        agents[agent.name] = agent;
+      }
     }
   }
 
