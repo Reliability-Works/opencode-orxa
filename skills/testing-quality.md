@@ -1,3 +1,10 @@
+---
+name: testing-quality
+description: Comprehensive testing strategy for ensuring code quality, reliability, and maintainability.
+version: 1.0.0
+license: MIT
+---
+
 # Testing & Quality Guidelines
 
 ## Overview

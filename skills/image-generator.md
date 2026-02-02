@@ -1,3 +1,10 @@
+---
+name: image-generator
+description: Guidelines for generating images with AI models including GPT-Image-1, Gemini, and DALL-E.
+version: 1.0.0
+license: MIT
+---
+
 # Image Generation Guide
 
 ## Overview

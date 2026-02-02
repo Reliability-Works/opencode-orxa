@@ -1,3 +1,10 @@
+---
+name: web-design-guidelines
+description: Guidelines for building accessible, performant, and user-friendly web interfaces.
+version: 1.0.0
+license: MIT
+---
+
 # Web Interface Guidelines
 
 ## Overview

@@ -1,3 +1,10 @@
+---
+name: humanizer
+description: Remove AI writing patterns from text to make content sound more natural and human-written.
+version: 1.0.0
+license: MIT
+---
+
 # Humanizer - Remove AI Writing Patterns
 
 ## Overview

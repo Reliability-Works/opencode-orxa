@@ -1,3 +1,10 @@
+---
+name: devops-release
+description: Best practices for managing build, deployment, and release pipelines. CI/CD pipeline structure and workflows.
+version: 1.0.0
+license: MIT
+---
+
 # DevOps Release Management
 
 ## Overview

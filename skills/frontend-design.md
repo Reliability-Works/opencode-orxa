@@ -1,3 +1,10 @@
+---
+name: frontend-design
+description: Guidelines for building high-quality, production-grade frontend interfaces with exceptional design.
+version: 1.0.0
+license: MIT
+---
+
 # Frontend Design Guidelines
 
 ## Overview

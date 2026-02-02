@@ -1,3 +1,10 @@
+---
+name: feature-flags-experiments
+description: Design patterns for feature flags, A/B testing, and safe rollouts.
+version: 1.0.0
+license: MIT
+---
+
 # Feature Flags & Experiments
 
 ## Overview
