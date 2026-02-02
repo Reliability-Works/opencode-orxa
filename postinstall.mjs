@@ -61,6 +61,11 @@ const createDefaultConfig = () => {
     disabled_agents: [],
     agent_overrides: {},
     custom_agents: [],
+    mcps: {
+      enabled: ["ios-simulator", "playwright"],
+      disabled: [],
+      config: {}
+    },
     orxa: {
       model: "opencode/kimi-k2.5",
       enforcement: {
@@ -162,11 +167,18 @@ const main = () => {
   createDefaultConfig();
   registerPlugin();
 
+  // Show MCP status
+  console.log("\n📦 Bundled MCPs:");
+  console.log("  ✓ ios-simulator (enabled by default)");
+  console.log("  ✓ playwright (enabled by default)");
+  console.log("    Disable in orxa.json mcps.disabled if not needed");
+
   console.log("\n🎉 Setup complete!");
   console.log("\nNext steps:");
   console.log("  1. Start using: opencode");
   console.log("  2. Run 'orxa install' to customize enabled agents");
-  console.log("  3. Run 'orxa config' to edit configuration\n");
+  console.log("  3. Run 'orxa config' to edit configuration");
+  console.log("  4. Edit ~/.config/opencode/orxa/orxa.json to configure MCPs\n");
 };
 
 main();

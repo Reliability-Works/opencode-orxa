@@ -19,11 +19,18 @@ export interface AgentConfig {
   extends?: string;
 }
 
+export interface McpConfig {
+  enabled: string[];
+  disabled: string[];
+  config: Record<string, Record<string, unknown>>;
+}
+
 export interface OrxaConfig {
   enabled_agents: string[];
   disabled_agents: string[];
   agent_overrides: Record<string, PrimaryAgentOverride | SubagentOverride>;
   custom_agents: AgentConfig[];
+  mcps: McpConfig;
   mcp?: Record<string, unknown>;
   toolAliases: {
     resolve: Record<string, string>;
@@ -226,11 +233,18 @@ const perAgentRestrictionSchema = z.object({
   maxAttachments: z.number().int().nonnegative().optional(),
 });
 
+const mcpConfigSchema = z.object({
+  enabled: z.array(z.string()),
+  disabled: z.array(z.string()),
+  config: z.record(z.string(), z.record(z.string(), z.unknown())),
+});
+
 export const orxaConfigSchema: z.ZodType<OrxaConfig> = z.object({
   enabled_agents: z.array(z.string()),
   disabled_agents: z.array(z.string()),
   agent_overrides: agentOverridesSchema,
   custom_agents: z.array(customAgentSchema),
+  mcps: mcpConfigSchema,
   mcp: z.record(z.string(), z.unknown()).optional(),
   toolAliases: z.object({
     resolve: z.record(z.string(), z.string()),

@@ -45,6 +45,11 @@ export const defaultConfig: OrxaConfig = {
     },
   },
   custom_agents: [],
+  mcps: {
+    enabled: ["ios-simulator", "playwright"],
+    disabled: [],
+    config: {},
+  },
   mcp: {},
   toolAliases: {
     resolve: {

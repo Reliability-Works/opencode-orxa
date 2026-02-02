@@ -10,6 +10,8 @@
   "files": [
     "dist",
     "agents",
+    "mcps",
+    "skills",
     "postinstall.mjs"
   ],
   "scripts": {

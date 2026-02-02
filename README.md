@@ -41,6 +41,8 @@ OpenCode Orxa transforms your OpenCode experience into a disciplined, manager-le
   - [Slash Commands](#slash-commands)
   - [Orxa Orchestration Mode](#orxa-orchestration-mode)
   - [Configuration](#configuration)
+  - [Bundled MCPs](#bundled-mcps)
+  - [Bundled Skills](#bundled-skills)
   - [Enforcement Rules](#enforcement-rules)
   - [CLI](#cli)
   - [Additional Features](#additional-features)
@@ -159,9 +161,6 @@ npx opencode-orxa init
 
 # Using Bun
 bun add -g opencode-orxa
-
-# Via OpenCode Plugin Manager
-opencode plugin install opencode-orxa
 ```
 
 ### Optional: Supermemory Plugin
@@ -176,6 +175,8 @@ bunx opencode-supermemory@latest install --no-tui
 # Then configure it in ~/.config/opencode/supermemory.jsonc:
 # { "apiKey": "sm_your_api_key_here" }
 ```
+
+📚 **[Supermemory Documentation](https://github.com/supermemoryai/opencode-supermemory)** - Learn more about persistent memory across sessions
 
 The init wizard will automatically detect supermemory and guide you through setup. If you choose not to install it, memory features will be gracefully disabled.
 
@@ -1070,6 +1071,116 @@ Custom agents and overrides can also be defined via YAML files:
 - Overrides: `~/.config/opencode/orxa/agents/overrides/*.yaml`
 
 Primary agents (orxa, plan) can only override `model` to preserve enforcement integrity.
+
+---
+
+## Bundled MCPs
+
+OpenCode Orxa includes two powerful MCP (Model Context Protocol) servers for extended functionality:
+
+### iOS Simulator MCP
+
+Control the iOS Simulator for mobile testing and automation:
+
+| Tool | Description |
+|------|-------------|
+| `ios_simulator_screenshot` | Take screenshots of the simulator |
+| `ios_simulator_ui_tap` | Tap on screen coordinates |
+| `ios_simulator_ui_type` | Input text into the simulator |
+| `ios_simulator_ui_swipe` | Perform swipe gestures |
+| `ios_simulator_launch_app` | Launch apps by bundle ID |
+| `ios_simulator_record_video` | Record simulator sessions |
+
+**Requirements:** macOS with Xcode installed
+
+### Playwright MCP
+
+Browser automation using Playwright:
+
+| Tool | Description |
+|------|-------------|
+| `playwright_browser_navigate` | Navigate to URLs |
+| `playwright_browser_click` | Click elements on the page |
+| `playwright_browser_type` | Type text into inputs |
+| `playwright_browser_take_screenshot` | Capture page screenshots |
+| `playwright_browser_evaluate` | Execute JavaScript |
+| `playwright_browser_fill_form` | Fill multiple form fields |
+
+**Requirements:** Node.js 18+ (browsers auto-install)
+
+### MCP Configuration
+
+MCPs are configured in your `orxa.json`:
+
+```json
+{
+  "mcps": {
+    "enabled": ["ios-simulator", "playwright"],
+    "disabled": [],
+    "config": {
+      "ios-simulator": {
+        "defaultOutputDir": "~/Downloads"
+      },
+      "playwright": {
+        "headless": true,
+        "browser": "chromium"
+      }
+    }
+  }
+}
+```
+
+To disable an MCP, add it to the `disabled` array or remove it from `enabled`.
+
+---
+
+## Bundled Skills
+
+OpenCode Orxa includes 16 skills that provide expert guidance on common development tasks. Access them via `@skill/{name}`:
+
+### General Development
+| Skill | Description |
+|-------|-------------|
+| `@skill/frontend-design` | Frontend design principles and best practices |
+| `@skill/web-design-guidelines` | Web interface guidelines and accessibility |
+| `@skill/testing-quality` | Testing strategies and quality assurance |
+| `@skill/humanizer` | Remove AI writing patterns from text |
+| `@skill/image-generator` | Image generation with AI models |
+| `@skill/devops-release` | CI/CD and release management |
+| `@skill/feature-flags-experiments` | Feature flags and A/B testing |
+
+### Expo / React Native
+| Skill | Description |
+|-------|-------------|
+| `@skill/expo-building-native-ui` | Building native UIs with Expo |
+| `@skill/expo-api-routes` | Expo API routes and backend |
+| `@skill/expo-cicd-workflows` | CI/CD workflows for Expo apps |
+| `@skill/expo-deployment` | Deploying Expo apps to stores |
+| `@skill/expo-dev-client` | Expo development client |
+| `@skill/expo-tailwind-setup` | Tailwind CSS setup in Expo |
+| `@skill/upgrading-expo` | Upgrading Expo SDK versions |
+
+### Vercel & React
+| Skill | Description |
+|-------|-------------|
+| `@skill/vercel-react-best-practices` | React best practices on Vercel |
+
+### Video
+| Skill | Description |
+|-------|-------------|
+| `@skill/remotion-best-practices` | Video creation with Remotion |
+
+### Using Skills
+
+Skills are automatically available through the plugin. Simply reference them by name:
+
+```
+You: @skill/frontend-design How should I structure this component?
+
+Orxa: [Loads the frontend-design skill and provides guidance]
+```
+
+Skills are bundled with the plugin and don't require copying to your user directory.
 
 ---
 

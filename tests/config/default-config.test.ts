@@ -78,6 +78,18 @@ describe('Default Config', () => {
       expect(Array.isArray(defaultConfig.custom_agents)).toBe(true);
     });
 
+    it('should have mcps configuration', () => {
+      expect(typeof defaultConfig.mcps).toBe('object');
+      expect(Array.isArray(defaultConfig.mcps.enabled)).toBe(true);
+      expect(Array.isArray(defaultConfig.mcps.disabled)).toBe(true);
+      expect(typeof defaultConfig.mcps.config).toBe('object');
+    });
+
+    it('should have ios-simulator and playwright enabled by default', () => {
+      expect(defaultConfig.mcps.enabled).toContain('ios-simulator');
+      expect(defaultConfig.mcps.enabled).toContain('playwright');
+    });
+
     it('should have toolAliases with resolve object', () => {
       expect(typeof defaultConfig.toolAliases).toBe('object');
       expect(typeof defaultConfig.toolAliases.resolve).toBe('object');

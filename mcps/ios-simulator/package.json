@@ -1,0 +1,35 @@
+{
+  "name": "@opencode-orxa/mcp-ios-simulator",
+  "version": "1.0.0",
+  "description": "MCP server for iOS Simulator automation - bundled with opencode-orxa",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "ios-simulator-mcp": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "ios",
+    "simulator",
+    "mobile",
+    "testing",
+    "opencode"
+  ],
+  "author": "OpenCode",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^0.5.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

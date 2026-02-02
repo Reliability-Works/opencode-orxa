@@ -29,6 +29,85 @@ export { SpecGenerator, createSpecGenerator } from "./orxa/spec-generator";
 export { MergeQueue, createMergeQueue } from "./orxa/merge-queue";
 export { OrxaOrchestrator, createOrchestrator } from "./orxa/orchestrator";
 
+// Bundled skills exports
+export const BUNDLED_SKILLS = [
+  "frontend-design",
+  "web-design-guidelines",
+  "testing-quality",
+  "humanizer",
+  "image-generator",
+  "devops-release",
+  "feature-flags-experiments",
+  // Expo skills
+  "expo-building-native-ui",
+  "expo-api-routes",
+  "expo-cicd-workflows",
+  "expo-deployment",
+  "expo-dev-client",
+  "expo-tailwind-setup",
+  "upgrading-expo",
+  // Vercel & React
+  "vercel-react-best-practices",
+  // Video
+  "remotion-best-practices",
+] as const;
+
+export type BundledSkill = (typeof BUNDLED_SKILLS)[number];
+
+const BUILTIN_SKILLS_DIR = path.resolve(__dirname, "..", "skills");
+
+export interface ResolvedSkill {
+  name: string;
+  path: string;
+  content: string;
+}
+
+/**
+ * Resolve a bundled skill by name.
+ * Returns the skill content from the plugin bundle.
+ */
+export function resolveSkill(skillName: string): ResolvedSkill | null {
+  // Normalize skill name (remove @skill/ prefix if present)
+  const normalizedName = skillName.replace(/^@skill\//, "");
+
+  // Check if it's a bundled skill
+  if (!BUNDLED_SKILLS.includes(normalizedName as BundledSkill)) {
+    return null;
+  }
+
+  const skillPath = path.join(BUILTIN_SKILLS_DIR, `${normalizedName}.md`);
+
+  if (!fs.existsSync(skillPath)) {
+    return null;
+  }
+
+  try {
+    const content = fs.readFileSync(skillPath, "utf-8");
+    return {
+      name: normalizedName,
+      path: skillPath,
+      content,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * List all available bundled skills.
+ */
+export function listBundledSkills(): string[] {
+  return [...BUNDLED_SKILLS];
+}
+
+/**
+ * Check if a skill is available in the bundle.
+ */
+export function hasSkill(skillName: string): boolean {
+  const normalizedName = skillName.replace(/^@skill\//, "");
+  return BUNDLED_SKILLS.includes(normalizedName as BundledSkill);
+}
+
 export interface OrxaPlugin {
   name: string;
   config: (

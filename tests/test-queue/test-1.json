@@ -4,11 +4,11 @@
     "worktree_name": "orxa-1",
     "status": "failed",
     "commit_hash": "abc123",
-    "id": "queue-1769996016220-7makk7pfc",
-    "created_at": "2026-02-02T01:33:36.220Z",
+    "id": "queue-1770031127438-lxsxha8ql",
+    "created_at": "2026-02-02T11:18:47.438Z",
     "merge_attempts": 0,
     "error_message": "Cherry-pick failed"
   },
   "version": 1,
-  "updated_at": "2026-02-02T01:33:36.280Z"
+  "updated_at": "2026-02-02T11:18:47.501Z"
 }

@@ -154,6 +154,11 @@ describe('Config Schema', () => {
         disabled_agents: [],
         agent_overrides: {},
         custom_agents: [],
+        mcps: {
+          enabled: [],
+          disabled: [],
+          config: {},
+        },
         toolAliases: { resolve: {} },
         orxa: {
           model: 'gpt-4',
@@ -493,6 +498,41 @@ describe('Config Schema', () => {
 
       const result = orxaConfigSchema.safeParse(config);
       expect(result.success).toBe(true);
+    });
+
+    it('should validate mcps configuration block', () => {
+      const config = {
+        ...defaultConfig,
+        mcps: {
+          enabled: ['ios-simulator', 'playwright'],
+          disabled: [],
+          config: {
+            'ios-simulator': {
+              defaultOutputDir: '~/Downloads',
+            },
+            playwright: {
+              headless: true,
+              browser: 'chromium',
+            },
+          },
+        },
+      };
+
+      const result = orxaConfigSchema.safeParse(config);
+      expect(result.success).toBe(true);
+    });
+
+    it('should reject mcps config without required fields', () => {
+      const config = {
+        ...defaultConfig,
+        mcps: {
+          enabled: ['ios-simulator'],
+          // missing disabled and config
+        },
+      };
+
+      const result = orxaConfigSchema.safeParse(config);
+      expect(result.success).toBe(false);
     });
   });
 
