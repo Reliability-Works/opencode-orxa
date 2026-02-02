@@ -1,6 +1,6 @@
 <div align="center">
 
-[![OpenCode Orxa](./.github/assets/oc-orxa.png)](https://github.com/yourusername/opencode-orxa)
+[![OpenCode Orxa](./.github/assets/oc-orxa.png)](https://github.com/Reliability-Works/opencode-orxa)
 
 </div>
 
@@ -31,15 +31,19 @@ OpenCode Orxa transforms your OpenCode experience into a disciplined, manager-le
 
 - [OpenCode Orxa](#opencode-orxa)
   - [Why Orxa?](#why-orxa)
-  - [Installation for Humans](#installation-for-humans)
-  - [Installation for LLM Agents](#installation-for-llm-agents)
-  - [Uninstallation](#uninstallation)
+  - [Installation](#installation)
+    - [For Humans](#installation-for-humans)
+    - [For LLM Agents](#installation-for-llm-agents)
+    - [Uninstallation](#uninstallation)
   - [Quick Start](#quick-start)
   - [Features](#features)
   - [Agent Fleet](#agent-fleet)
   - [Slash Commands](#slash-commands)
+  - [Orxa Orchestration Mode](#orxa-orchestration-mode)
   - [Configuration](#configuration)
   - [Enforcement Rules](#enforcement-rules)
+  - [CLI](#cli)
+  - [Additional Features](#additional-features)
   - [Development](#development)
   - [License](#license)
 
@@ -65,7 +69,9 @@ Traditional AI coding assistants are like having a brilliant but undisciplined d
 
 ---
 
-## Installation for Humans
+## Installation
+
+### For Humans
 
 ### Prerequisites
 
@@ -169,19 +175,22 @@ The init wizard will automatically detect supermemory and guide you through setu
 
 ---
 
-## Installation for LLM Agents
+### For LLM Agents
+
+<details>
+<summary>📋 Click to expand LLM Agent installation guide</summary>
 
 **If you're an LLM agent helping a user set up Orxa, follow this guide.**
 
-### CRITICAL PREREQUISITE CHECK
+#### CRITICAL PREREQUISITE CHECK
 
 **Before installing Orxa, you MUST verify the user has providers and models configured in their `~/.config/opencode/opencode.json`.**
 
 The orxa plugin references models in its config, but those models must be AVAILABLE in OpenCode's main config first.
 
-### Step-by-Step Setup
+#### Step-by-Step Setup
 
-#### 1. Check Current OpenCode Configuration
+##### 1. Check Current OpenCode Configuration
 
 ```bash
 # Check what's available in opencode.json
@@ -200,7 +209,7 @@ You should see something like:
 }
 ```
 
-#### 2. Run the Interactive Setup Wizard
+##### 2. Run the Interactive Setup Wizard
 
 The easiest way to configure Orxa is with the interactive setup wizard:
 
@@ -244,7 +253,7 @@ The wizard will:
 ✅ Configuration saved to ~/.config/opencode/orxa/orxa.json
 ```
 
-#### 3. Manual Configuration (Alternative)
+##### 3. Manual Configuration (Alternative)
 
 If you prefer manual setup, edit `~/.config/opencode/orxa/orxa.json`:
 
@@ -273,7 +282,7 @@ If you prefer manual setup, edit `~/.config/opencode/orxa/orxa.json`:
 }
 ```
 
-#### 6. Test Installation
+##### 4. Test Installation
 
 ```bash
 opencode
@@ -286,7 +295,7 @@ opencode
    Default agent: orxa
 ```
 
-### Example Model Configuration Workflow
+#### Example Model Configuration Workflow
 
 ```bash
 # 1. Check current opencode.json providers
@@ -319,7 +328,7 @@ EOF
 opencode --version
 ```
 
-### Troubleshooting for LLM Agents
+#### Troubleshooting for LLM Agents
 
 **Issue: "Model not found" errors**
 - The model specified in orxa.json doesn't exist in opencode.json providers
@@ -333,9 +342,11 @@ opencode --version
 - Check agent files exist: `ls ~/.config/opencode/orxa/agents/`
 - Should see orxa.yaml, plan.yaml, and subagents/ directory
 
+</details>
+
 ---
 
-## Uninstallation
+### Uninstallation
 
 To completely remove OpenCode Orxa:
 
