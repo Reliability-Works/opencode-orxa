@@ -1,4 +1,5 @@
 import type { PluginInput } from "@opencode-ai/plugin";
+import type { OrxaConfig } from "../config/schema.js";
 import { HookContext } from "../types.js";
 import { checkForUpdates, formatUpdateMessage } from "./update-checker.js";
 
@@ -113,55 +114,45 @@ async function backgroundUpdateCheck(
  * Factory function to create the welcome toast handler
  * Captures the PluginInput context to access client.tui
  */
-export function createWelcomeToastHandler(ctx: PluginInput) {
+export function createWelcomeToastHandler(ctx: PluginInput, config: OrxaConfig) {
   /**
-   * Hook handler for session creation - shows welcome toast
-   * Only shows for orxa sessions (not subagent sessions)
+   * Event handler for session creation - shows welcome toast
+   * Only shows for main sessions (not subagent sessions)
    */
-  return async function welcomeToastHandler(
-    context: HookContext
-  ): Promise<{ injectMessage?: string }> {
-    const { config, agentName } = context;
+  return async function welcomeToastHandler(input: {
+    event: { type: string; properties?: unknown };
+  }): Promise<void> {
+    const { event } = input;
 
-    // Only show once per process
-    if (hasShownWelcome) {
-      return {};
+    if (event.type !== "session.created") {
+      return;
     }
 
-    // Check if welcome toast is enabled (default to true)
+    const props = event.properties as { info?: { parentID?: string } } | undefined;
+    if (props?.info?.parentID) {
+      return;
+    }
+
+    if (hasShownWelcome) {
+      return;
+    }
+
     const isEnabled = config.ui?.showDelegationWarnings !== false;
     if (!isEnabled) {
-      return {};
-    }
-
-    // Only show for orxa agent (main sessions)
-    // Subagent sessions should not trigger the welcome message
-    if (agentName && agentName !== "orxa") {
-      return {};
+      return;
     }
 
     hasShownWelcome = true;
 
-    // Show the visual toast (non-blocking)
     const version = getVersion();
     showSpinnerToast(ctx, version).catch(() => {
       // Ignore errors - toast is best-effort
     });
 
-    // Background update check (non-blocking)
-    // Check config for autoUpdateCheck (defaults to true)
     const autoUpdateCheck = config.ui?.autoUpdateCheck !== false;
     backgroundUpdateCheck(ctx, version, autoUpdateCheck).catch(() => {
       // Ignore errors
     });
-
-    // Also return the inject message as fallback/enhancement
-    return {
-      injectMessage:
-        `🎼 OpenCode Orxa Initialized\n\n` +
-        `Workforce orchestration enabled. Managing agents...\n` +
-        `Type /help for available commands or start delegating tasks.`,
-    };
   };
 }
 

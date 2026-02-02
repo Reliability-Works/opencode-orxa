@@ -5,8 +5,9 @@
  * Strips the keyword and injects the Orxa system prompt.
  */
 
-import type { HookContext, EnforcementResult } from '../types.js';
-import type { OrxaDetectionResult } from '../orxa/types.js';
+import type { PluginInput } from "@opencode-ai/plugin";
+import type { HookContext, EnforcementResult } from "../types.js";
+import type { OrxaDetectionResult } from "../orxa/types.js";
 
 /**
  * Pattern to detect "orxa" keyword (case insensitive, word boundary).
@@ -80,21 +81,97 @@ export function detectOrxaKeyword(message: string): OrxaDetectionResult {
   };
 }
 
+type ChatMessageInput = {
+  sessionID: string;
+  agent?: string;
+  model?: { providerID: string; modelID: string };
+  messageID?: string;
+};
+
+type ChatMessageOutput = {
+  message: Record<string, unknown>;
+  parts: Array<{ type: string; text?: string; [key: string]: unknown }>;
+};
+
+const extractPromptText = (parts: ChatMessageOutput["parts"]): string =>
+  parts
+    .filter((part) => part.type === "text" && typeof part.text === "string")
+    .map((part) => part.text)
+    .join("\n")
+    .trim();
+
+const injectSystemPrompt = (
+  parts: ChatMessageOutput["parts"],
+  systemPrompt: string,
+  cleanedMessage: string
+): void => {
+  const textPartIndex = parts.findIndex(
+    (part) => part.type === "text" && typeof part.text === "string"
+  );
+
+  if (textPartIndex === -1) {
+    return;
+  }
+
+  const originalText = parts[textPartIndex].text ?? "";
+  const messageText = cleanedMessage || originalText;
+  parts[textPartIndex].text = `${systemPrompt}\n\n---\n\n${messageText}`;
+};
+
+const showOrxaToast = (ctx: PluginInput): void => {
+  ctx.client.tui
+    .showToast({
+      body: {
+        title: "Orxa Mode Activated",
+        message: "Parallel orchestration engaged.",
+        variant: "success" as const,
+        duration: 3000,
+      },
+    })
+    .catch(() => {
+      // Ignore toast errors
+    });
+};
+
 /**
- * Pre-tool execution hook for Orxa detection.
- * 
- * @param context - Hook context
- * @returns Enforcement result with Orxa prompt if triggered
+ * Chat message hook for Orxa detection.
+ *
+ * @param ctx - Plugin input for TUI access
+ * @returns Handler for chat.message
+ */
+export function createOrxaDetector(ctx: PluginInput) {
+  return async function orxaDetector(
+    _input: ChatMessageInput,
+    output: ChatMessageOutput
+  ): Promise<void> {
+    const promptText = extractPromptText(output.parts);
+    if (!promptText) {
+      return;
+    }
+
+    const detection = detectOrxaKeyword(promptText);
+
+    if (!detection.triggered) {
+      return;
+    }
+
+    showOrxaToast(ctx);
+    injectSystemPrompt(output.parts, ORXA_SYSTEM_PROMPT, detection.cleaned_message);
+  };
+}
+
+/**
+ * Legacy hook for backward compatibility.
+ * @deprecated Use createOrxaDetector with chat.message hook.
  */
 export async function orxaDetector(context: HookContext): Promise<EnforcementResult> {
-  // Only check on initial user message (not tool executions)
   if (context.toolName || context.tool) {
     return { allow: true };
   }
 
-  // Get the user's message from context
-  const message = context.session?.messages?.[context.session.messages.length - 1]?.content || '';
-  
+  const message =
+    context.session?.messages?.[context.session.messages.length - 1]?.content || "";
+
   if (!message) {
     return { allow: true };
   }
@@ -105,7 +182,6 @@ export async function orxaDetector(context: HookContext): Promise<EnforcementRes
     return { allow: true };
   }
 
-  // Orxa keyword detected - inject system prompt
   return {
     allow: true,
     metadata: {
