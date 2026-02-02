@@ -29,8 +29,8 @@ export { SpecGenerator, createSpecGenerator } from "./orxa/spec-generator";
 export { MergeQueue, createMergeQueue } from "./orxa/merge-queue";
 export { OrxaOrchestrator, createOrchestrator } from "./orxa/orchestrator";
 
-// Bundled skills exports
-export const BUNDLED_SKILLS = [
+// Bundled skills - internal constant, not exported to avoid plugin loader issues
+const BUNDLED_SKILLS = [
   "frontend-design",
   "web-design-guidelines",
   "testing-quality",
@@ -52,7 +52,7 @@ export const BUNDLED_SKILLS = [
   "remotion-best-practices",
 ] as const;
 
-export type BundledSkill = (typeof BUNDLED_SKILLS)[number];
+type BundledSkill = (typeof BUNDLED_SKILLS)[number];
 
 const BUILTIN_SKILLS_DIR = path.resolve(__dirname, "..", "skills");
 

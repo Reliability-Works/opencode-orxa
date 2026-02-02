@@ -33,6 +33,11 @@ OpenCode Orxa transforms your OpenCode experience into a disciplined, manager-le
   - [Why Orxa?](#why-orxa)
   - [Installation](#installation)
     - [For Humans](#installation-for-humans)
+      - [Prerequisites](#prerequisites)
+      - [Install Orxa](#install-orxa)
+      - [What the Postinstall Script Does](#what-the-postinstall-script-does)
+      - [Verifying Installation](#verifying-installation)
+      - [Verify Installation (Runtime)](#verify-installation-runtime)
     - [For LLM Agents](#installation-for-llm-agents)
     - [Uninstallation](#uninstallation)
   - [Quick Start](#quick-start)
@@ -96,6 +101,15 @@ opencode --version
 npm install -g @reliabilityworks/opencode-orxa
 ```
 
+> **Note:** npm v7+ suppresses postinstall script output by default during global installs. The installation IS working (config files are created, plugin is registered), but you won't see the output unless you use the `--foreground-scripts` flag.
+
+#### To See Full Installation Output
+
+```bash
+# Install with visible output (npm v7+)
+npm install -g @reliabilityworks/opencode-orxa --foreground-scripts
+```
+
 ### What the Postinstall Script Does
 
 When you run `npm install -g @reliabilityworks/opencode-orxa`, the postinstall script automatically:
@@ -121,6 +135,8 @@ When you run `npm install -g @reliabilityworks/opencode-orxa`, the postinstall s
 
 5. **Shows installation summary** with next steps
 
+> **Note:** On npm v7+, you may not see the installation summary output due to output suppression. The script is still running and completing all these steps—verify by checking the files exist (see [Verifying Installation](#verifying-installation) below).
+
 **Agent Loading Priority:**
 When OpenCode loads agents, it checks in this order:
 1. **Custom** (`agents/custom/`) - Your entirely new agents
@@ -129,9 +145,116 @@ When OpenCode loads agents, it checks in this order:
 
 **Why use overrides?** If you edit files directly in `subagents/`, your changes will be lost when you update the plugin. Instead, copy the agent file to `overrides/` and edit it there - your customizations will persist across updates.
 
-### Verify Installation
+---
 
-After installation, simply run:
+### Verifying Installation
+
+If you didn't see installation output (common with npm v7+), verify the installation completed successfully:
+
+#### 1. Check Configuration Files Exist
+
+```bash
+# List the Orxa configuration directory
+ls -la ~/.config/opencode/orxa/
+```
+
+**Expected output:**
+```
+drwxr-xr-x  5 user  staff   160 Jan 30 10:00 .
+drwxr-xr-x  3 user  staff    96 Jan 30 10:00 ..
+-rw-r--r--  1 user  staff  2048 Jan 30 10:00 orxa.json
+drwxr-xr-x  5 user  staff   160 Jan 30 10:00 agents
+```
+
+#### 2. Check Agent Files Were Copied
+
+```bash
+# List all agent files
+ls -la ~/.config/opencode/orxa/agents/
+ls ~/.config/opencode/orxa/agents/subagents/
+```
+
+**Expected output:**
+```
+# agents/ directory:
+drwxr-xr-x  5 user  staff   160 Jan 30 10:00 .
+drwxr-xr-x  3 user  staff    96 Jan 30 10:00 ..
+drwxr-xr-x  2 user  staff    64 Jan 30 10:00 custom
+drwxr-xr-x  2 user  staff    64 Jan 30 10:00 overrides
+drwxr-xr-x  2 user  staff    64 Jan 30 10:00 subagents
+
+# subagents/ directory (13+ YAML files):
+architect.yaml    coder.yaml        explorer.yaml     git.yaml
+librarian.yaml    mobile-simulator.yaml  multimodal.yaml
+navigator.yaml    plan.yaml         reviewer.yaml     strategist.yaml
+writer.yaml       build.yaml        frontend.yaml     orxa.yaml
+```
+
+#### 3. Verify Plugin Registration
+
+```bash
+# Check if plugin is registered in OpenCode config
+cat ~/.config/opencode/opencode.json | grep -A5 '"plugins"'
+```
+
+**Expected output:**
+```json
+"plugins": [
+  "@reliabilityworks/opencode-orxa"
+]
+```
+
+#### 4. Check Orxa Configuration
+
+```bash
+# Verify orxa.json was created with default settings
+cat ~/.config/opencode/orxa/orxa.json | head -20
+```
+
+**Expected output:**
+```json
+{
+  "orxa": {
+    "model": "opencode/kimi-k2.5",
+    "enforcement": {
+      "delegation": "strict",
+      "todoCompletion": "strict",
+      "qualityGates": "strict",
+      "memoryAutomation": "strict"
+    }
+  },
+  "enabled_agents": [
+    "orxa",
+    "plan",
+    "strategist",
+    ...
+```
+
+#### 5. Quick Verification Command
+
+Run this one-liner to verify all components:
+
+```bash
+echo "=== Checking Orxa Installation ===" && \
+echo "✓ Config directory:" && ls ~/.config/opencode/orxa/ 2>/dev/null && echo && \
+echo "✓ Agent files:" && ls ~/.config/opencode/orxa/agents/subagents/ 2>/dev/null | wc -l && echo "agent files found" && echo && \
+echo "✓ Plugin registration:" && grep -o "@reliabilityworks/opencode-orxa" ~/.config/opencode/opencode.json 2>/dev/null && echo && \
+echo "=== Installation Verified ==="
+```
+
+**If all checks pass,** your installation is complete! Proceed to [Verify Installation (Runtime)](#verify-installation-runtime) below.
+
+**If files are missing,** try reinstalling with visible output:
+```bash
+npm uninstall -g @reliabilityworks/opencode-orxa
+npm install -g @reliabilityworks/opencode-orxa --foreground-scripts
+```
+
+---
+
+### Verify Installation (Runtime)
+
+After confirming the files are in place (see [Verifying Installation](#verifying-installation) above), test the runtime:
 
 ```bash
 opencode
@@ -151,6 +274,13 @@ This confirms:
 - ✅ All 15 agents are loaded
 - ✅ Orxa is the default agent
 - ✅ No `--orxa` flag needed (automatic takeover)
+
+**If you don't see the welcome toast:**
+1. Check that OpenCode is installed: `opencode --version`
+2. Verify the plugin is registered: `cat ~/.config/opencode/opencode.json | grep plugins`
+3. Try restarting your terminal or running `hash -r` (to refresh the command cache)
+
+---
 
 ### Alternative Installation Methods
 
@@ -220,9 +350,14 @@ You should see something like:
 The easiest way to configure Orxa is with the interactive setup wizard:
 
 ```bash
+# Install the plugin (add --foreground-scripts if you want to see all output)
 npm install -g @reliabilityworks/opencode-orxa
+
+# Run the setup wizard
 orxa init
 ```
+
+> **Note:** npm v7+ suppresses postinstall script output by default. The installation is still working—verify by checking that `~/.config/opencode/orxa/` exists with agent files.
 
 The wizard will:
 1. **Detect your existing OpenCode configuration** - Checks which providers are already set up
