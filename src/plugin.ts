@@ -27,4 +27,4 @@ const orxaPlugin: OrxaPlugin = {
   },
 };
 
-export default orxaPlugin;
+export = orxaPlugin;
