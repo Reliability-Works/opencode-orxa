@@ -59,7 +59,7 @@ const ensureDirectories = () => {
   fs.mkdirSync(path.join(CONFIG_DIR, "agents", "subagents"), { recursive: true });
 };
 
-const createDefaultConfig = () => {
+const createDefaultConfig = (currentVersion) => {
   const configPath = path.join(CONFIG_DIR, "orxa.json");
 
   // Check if we should skip config creation (for testing init wizard)
@@ -75,6 +75,7 @@ const createDefaultConfig = () => {
   }
 
   const defaultConfig = {
+    pluginVersion: currentVersion || "unknown",
     enabled_agents: [
       "orxa",
       "plan",
@@ -233,7 +234,7 @@ const registerPlugin = () => {
   }
 };
 
-const copySubagentFiles = () => {
+const copySubagentFiles = ({ force = false } = {}) => {
   const sourceSubagentsDir = path.join(__dirname, "agents", "subagents");
   const targetSubagentsDir = path.join(CONFIG_DIR, "agents", "subagents");
 
@@ -244,6 +245,7 @@ const copySubagentFiles = () => {
 
   let copiedCount = 0;
   let skippedCount = 0;
+  let overwrittenCount = 0;
 
   try {
     const subagentFiles = fs.readdirSync(sourceSubagentsDir).filter(f => f.endsWith(".yaml") || f.endsWith(".yml"));
@@ -252,9 +254,13 @@ const copySubagentFiles = () => {
       const sourcePath = path.join(sourceSubagentsDir, filename);
       const targetPath = path.join(targetSubagentsDir, filename);
 
-      if (fs.existsSync(targetPath)) {
+      if (fs.existsSync(targetPath) && !force) {
         skippedCount++;
         continue;
+      }
+
+      if (fs.existsSync(targetPath) && force) {
+        overwrittenCount++;
       }
 
       fs.copyFileSync(sourcePath, targetPath);
@@ -262,13 +268,15 @@ const copySubagentFiles = () => {
       console.log(`  ✓ Copied subagents/${filename}`);
     }
 
-    console.log(`✓ Subagent files: ${copiedCount} copied, ${skippedCount} skipped (already exist)`);
+    console.log(
+      `✓ Subagent files: ${copiedCount} copied, ${skippedCount} skipped (already exist), ${overwrittenCount} overwritten`
+    );
   } catch (error) {
     console.error("⚠ Failed to copy subagent files:", error.message);
   }
 };
 
-const copyBundledSkills = () => {
+const copyBundledSkills = ({ force = false } = {}) => {
   if (!fs.existsSync(BUNDLED_SKILLS_DIR)) {
     console.log("⚠ Bundled skills directory not found, skipping skill copy");
     return;
@@ -276,6 +284,7 @@ const copyBundledSkills = () => {
 
   let copiedCount = 0;
   let skippedCount = 0;
+  let overwrittenCount = 0;
 
   try {
     const skillFiles = fs
@@ -286,43 +295,101 @@ const copyBundledSkills = () => {
       const skillName = path.basename(filename, ".md");
       const targetSkillDir = path.join(USER_SKILL_DIR, skillName);
 
-      if (fs.existsSync(targetSkillDir)) {
+      const targetPath = path.join(targetSkillDir, "SKILL.md");
+
+      if (fs.existsSync(targetPath) && !force) {
         skippedCount++;
         continue;
       }
 
       fs.mkdirSync(targetSkillDir, { recursive: true });
       const sourcePath = path.join(BUNDLED_SKILLS_DIR, filename);
-      const targetPath = path.join(targetSkillDir, "SKILL.md");
+
+      if (fs.existsSync(targetPath) && force) {
+        overwrittenCount++;
+      }
 
       fs.copyFileSync(sourcePath, targetPath);
       copiedCount++;
       console.log(`  ✓ Copied skills/${filename} -> ${skillName}/SKILL.md`);
     }
 
-    console.log(`✓ Skills: ${copiedCount} copied, ${skippedCount} skipped (already exist)`);
+    console.log(
+      `✓ Skills: ${copiedCount} copied, ${skippedCount} skipped (already exist), ${overwrittenCount} overwritten`
+    );
   } catch (error) {
     console.error("⚠ Failed to copy bundled skills:", error.message);
+  }
+};
+
+const getCurrentPluginVersion = () => {
+  const packagePath = path.join(__dirname, "package.json");
+
+  try {
+    const packageJson = JSON.parse(fs.readFileSync(packagePath, "utf-8"));
+    return packageJson.version || null;
+  } catch (error) {
+    console.error("⚠ Failed to read package.json version:", error.message);
+    return null;
+  }
+};
+
+const readConfigFile = (configPath) => {
+  if (!fs.existsSync(configPath)) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(fs.readFileSync(configPath, "utf-8"));
+  } catch (error) {
+    console.error("⚠ Failed to read orxa.json:", error.message);
+    return null;
+  }
+};
+
+const updateConfigVersion = (configPath, existingConfig, currentVersion) => {
+  if (!existingConfig) {
+    return;
+  }
+
+  const nextConfig = {
+    ...existingConfig,
+    pluginVersion: currentVersion || existingConfig.pluginVersion || "unknown",
+  };
+
+  try {
+    fs.writeFileSync(configPath, JSON.stringify(nextConfig, null, 2));
+    console.log("✓ Updated pluginVersion in orxa.json");
+  } catch (error) {
+    console.error("⚠ Failed to update orxa.json:", error.message);
   }
 };
 
 const main = () => {
   console.log("🎼 OpenCode Orxa - Post Install\n");
 
-  if (!isGlobalInstall()) {
-    console.log("ℹ Local install detected. Skipping automatic setup.");
-    console.log("  Run 'orxa init' to set up manually.\n");
-    return;
-  }
-
   console.log("Setting up OpenCode Orxa...\n");
 
   ensureDirectories();
   console.log("✓ Created config directories");
 
-  copySubagentFiles();
-  copyBundledSkills();
-  createDefaultConfig();
+  const configPath = path.join(CONFIG_DIR, "orxa.json");
+  const currentVersion = getCurrentPluginVersion();
+  const userConfig = readConfigFile(configPath);
+  const lastVersion = userConfig?.pluginVersion;
+  const needsUpdate = !lastVersion || lastVersion !== currentVersion;
+
+  if (needsUpdate) {
+    console.log(`📦 Updating from v${lastVersion || "unknown"} to v${currentVersion || "unknown"}...`);
+  }
+
+  copySubagentFiles({ force: needsUpdate });
+  copyBundledSkills({ force: needsUpdate });
+  createDefaultConfig(currentVersion);
+
+  if (userConfig && needsUpdate) {
+    updateConfigVersion(configPath, userConfig, currentVersion);
+  }
   registerPlugin();
 
   // Show MCP status
