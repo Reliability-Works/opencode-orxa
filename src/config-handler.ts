@@ -185,18 +185,12 @@ export const createConfigHandler = () => {
     // Load all orxa agents from YAML files
     const orxaAgents = loadOrxaAgents();
 
-    // Log what we're loading
-    const agentNames = Object.keys(orxaAgents);
-    console.log(`[orxa] Loading ${agentNames.length} orxa agents: ${agentNames.join(", ")}`);
-
     // REPLACE config.agent entirely with ONLY orxa agents
     // This completely ignores user's opencode.json agent array
     config.agent = orxaAgents;
 
     // Set default agent to orxa
     config.default_agent = "orxa";
-
-    console.log("[orxa] Agent configuration replaced. Default agent: orxa");
   };
 };
 
