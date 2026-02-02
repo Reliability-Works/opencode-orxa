@@ -236,25 +236,31 @@ The wizard will:
 
 **Example wizard flow:**
 ```
-🔍 OpenCode Configuration
-✅ Authenticated providers: opencode, anthropic
-❌ Needs authentication: openai
+🔍 Detecting Agent Configuration...
+✅ Found 16 agents with model assignments
 
-🎯 Select Model for Orxa (Orchestration)
-1. ✅ Kimi K2.5 - Excellent reasoning, large context window
-2. ✅ Claude 3 Opus - Superior reasoning and instruction following
-3. ⚠️ GPT-4 - Strong general capabilities (requires auth)
+📋 Required Models (from agent YAML files):
+• opencode/kimi-k2.5 (orxa + 7 subagents)
+  Providers: OpenCode OR Kimi for Coding
+• opencode/gpt-5.2-codex (plan + 5 subagents)
+  Providers: OpenCode OR OpenAI
+• opencode/gemini-3-pro (frontend)
+  Providers: OpenCode OR Google
+• opencode/gemini-3-flash (multimodal)
+  Providers: OpenCode OR Google
 
-📐 Select Model for Plan Agent (Planning)
-...
-
-🔧 Select Default Model for Subagents (Execution)
-...
+🔐 Provider Authentication Status:
+✅ opencode - Authenticated
+✅ kimi-for-coding - Authenticated
+❌ openai - Not authenticated
 
 🔐 Authentication Required:
 ❌ openai - Not authenticated
    Run: opencode auth login
    Then select: OpenAI
+
+✅ RECOMMENDED: OpenCode Provider
+   Access to ALL models with one authentication
 
 ✅ Configuration saved to ~/.config/opencode/orxa/orxa.json
 ```
