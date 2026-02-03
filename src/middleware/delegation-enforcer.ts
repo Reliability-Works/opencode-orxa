@@ -31,6 +31,8 @@ const resolvePrompt = (args: unknown, explicitPrompt?: string): string => {
     record.instructions,
     record.task,
     record.context,
+    record.description, // task tool uses description field
+    record.input, // OpenCode tool input wrapper
   ];
 
   for (const candidate of candidates) {
@@ -42,6 +44,13 @@ const resolvePrompt = (args: unknown, explicitPrompt?: string): string => {
       const nested = candidate as Record<string, unknown>;
       if (typeof nested.prompt === "string") {
         return nested.prompt;
+      }
+      // Check for input.prompt (OpenCode tool input wrapper)
+      if (nested.input && typeof nested.input === "object") {
+        const input = nested.input as Record<string, unknown>;
+        if (typeof input.prompt === "string") {
+          return input.prompt;
+        }
       }
     }
   }
@@ -337,6 +346,17 @@ export const enforceDelegation = (context: HookContext): EnforcementResult => {
   // Apply 6-section validation to task tool calls from orxa
   if (normalizedTool === "task" && isOrxa && config.governance.delegationTemplate.required) {
     const prompt = resolvePrompt(context.args, context.delegationPrompt);
+    
+    // Debug logging to understand what's being passed
+    if (config.ui?.verboseLogging) {
+      console.log("[orxa][delegation-enforcer] Task tool validation:", {
+        toolName: normalizedTool,
+        isOrxa,
+        args: context.args,
+        prompt: prompt?.slice(0, 200) + "...",
+        promptLength: prompt?.length,
+      });
+    }
     const missing = extractSectionMissing(
       prompt,
       config.governance.delegationTemplate.requiredSections
