@@ -55,6 +55,12 @@ Background info
       expect(missing).toContain('Expected Outcome');
       expect(missing).toContain('Context');
     });
+
+    it('accepts escaped newlines (\\n) in prompt', () => {
+      const prompt = `**Task**: Do something\\n**Expected Outcome**: Result\\n**Required Tools**: edit\\n**Must Do**: Step 1\\n**Must Not Do**: Don't break things\\n**Context**: Background info`;
+      const missing = validateDelegationPrompt(prompt, requiredSections);
+      expect(missing).toEqual([]);
+    });
   });
 
   describe('Tool Payload Validation', () => {

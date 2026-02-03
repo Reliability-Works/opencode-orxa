@@ -25,33 +25,57 @@ const resolvePrompt = (args: unknown, explicitPrompt?: string): string => {
   }
 
   const record = args as Record<string, unknown>;
-  const candidates = [
-    record.prompt,
+  
+  // For task tool, the prompt is typically in the 'description' field
+  // But it might also be nested under input.description or input.prompt
+  if (record.description && typeof record.description === "string") {
+    return record.description;
+  }
+  
+  // Check input wrapper for task tool
+  if (record.input && typeof record.input === "object") {
+    const input = record.input as Record<string, unknown>;
+    if (typeof input.description === "string") {
+      return input.description;
+    }
+    if (typeof input.prompt === "string") {
+      return input.prompt;
+    }
+  }
+  
+  // Check for direct string fields first (higher priority)
+  if (typeof record.prompt === "string") {
+    return record.prompt;
+  }
+  
+  // Check for nested prompt in message, instructions, task, context objects
+  const nestedCandidates = [
     record.message,
     record.instructions,
     record.task,
     record.context,
-    record.description, // task tool uses description field
-    record.input, // OpenCode tool input wrapper
   ];
-
-  for (const candidate of candidates) {
-    if (typeof candidate === "string") {
-      return candidate;
-    }
-
+  
+  for (const candidate of nestedCandidates) {
     if (candidate && typeof candidate === "object") {
       const nested = candidate as Record<string, unknown>;
       if (typeof nested.prompt === "string") {
         return nested.prompt;
       }
-      // Check for input.prompt (OpenCode tool input wrapper)
-      if (nested.input && typeof nested.input === "object") {
-        const input = nested.input as Record<string, unknown>;
-        if (typeof input.prompt === "string") {
-          return input.prompt;
-        }
-      }
+    }
+  }
+  
+  // Check remaining direct string fields
+  const stringCandidates = [
+    record.message,
+    record.instructions,
+    record.task,
+    record.context,
+  ];
+
+  for (const candidate of stringCandidates) {
+    if (typeof candidate === "string") {
+      return candidate;
     }
   }
 
@@ -62,19 +86,20 @@ const SECTION_ALIASES: Record<string, string[]> = {
   "Context": ["Context", "Project Context"],
 };
 
-const extractSectionMissing = (prompt: string, sections: string[]): string[] =>
-  sections.filter((section) => {
+const extractSectionMissing = (prompt: string, sections: string[]): string[] => {
+  if (!prompt || typeof prompt !== "string") {
+    return sections;
+  }
+  
+  return sections.filter((section) => {
     const aliases = SECTION_ALIASES[section] || [section];
     return !aliases.some((alias) => {
-      const escapedAlias = alias.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      // Match: Task:, ## Task:, **Task**:, **Task:**, etc.
-      const pattern = new RegExp(
-        `(^|\\n)\\s*(#+\\s*)?(?:\\*\\*\\s*)?${escapedAlias}(?:\\s*\\*\\*)?\\s*:?`,
-        "i"
-      );
-      return pattern.test(prompt);
+      // Simple case-sensitive check - just look for the section name in the prompt
+      // This is more lenient and allows various formatting styles
+      return prompt.includes(alias);
     });
   });
+};
 
 const extractImageCount = (args: unknown, attachments?: HookContext["attachments"]): number => {
   let count = 0;
@@ -354,20 +379,15 @@ export const enforceDelegation = (context: HookContext): EnforcementResult => {
   if (normalizedTool === "task" && isOrxa && config.governance.delegationTemplate.required) {
     const prompt = resolvePrompt(context.args, context.delegationPrompt);
     
-    // Debug logging to understand what's being passed
-    if (config.ui?.verboseLogging) {
-      console.log("[orxa][delegation-enforcer] Task tool validation:", {
-        toolName: normalizedTool,
-        isOrxa,
-        args: context.args,
-        prompt: prompt?.slice(0, 200) + "...",
-        promptLength: prompt?.length,
-      });
-    }
+
     const missing = extractSectionMissing(
       prompt,
       config.governance.delegationTemplate.requiredSections
     );
+    
+    if (config.ui?.verboseLogging && missing.length > 0) {
+      console.log("[orxa][delegation-enforcer] Missing sections:", missing);
+    }
     if (missing.length > 0) {
       return {
         ...decide(

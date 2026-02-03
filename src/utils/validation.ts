@@ -35,14 +35,12 @@ export const validateDelegationPrompt = (
   prompt: string,
   requiredSections: string[]
 ): string[] => {
-  return requiredSections.filter((section) => {
-    const escapedSection = section.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const pattern = new RegExp(
-      `(^|\\n)\\s*(#+\\s*)?(?:\\*\\*\\s*)?${escapedSection}(?:\\s*\\*\\*)?\\s*:?`,
-      "i"
-    );
-    return !pattern.test(prompt);
-  });
+  if (!prompt || typeof prompt !== "string") {
+    return requiredSections;
+  }
+  
+  // Simple case-sensitive check - just look for the section name in the prompt
+  return requiredSections.filter((section) => !prompt.includes(section));
 };
 
 export const validateConfig = (config: unknown): ConfigValidationResult => {

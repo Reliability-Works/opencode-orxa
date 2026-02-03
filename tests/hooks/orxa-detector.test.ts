@@ -158,9 +158,15 @@ describe('Orxa Detector Hook', () => {
       expect(prompt).toContain('ORCHESTRATOR');
     });
 
-    it('should contain orchestration format instructions', () => {
+    it('should contain 6-section delegation template', () => {
       const prompt = getOrxaSystemPrompt();
-      expect(prompt).toContain('createOrchestrator');
+      expect(prompt).toContain('6-Section Delegation Template');
+      expect(prompt).toContain('**Task**:');
+      expect(prompt).toContain('**Expected Outcome**:');
+      expect(prompt).toContain('**Required Tools**:');
+      expect(prompt).toContain('**Must Do**:');
+      expect(prompt).toContain('**Must Not Do**:');
+      expect(prompt).toContain('**Context**:');
     });
 
     it('should return consistent prompt on multiple calls', () => {
