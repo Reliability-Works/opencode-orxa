@@ -6,7 +6,7 @@ on:
       - 'v*'
 
 permissions:
-  id-token: write  # Required for OIDC trusted publishing
+  id-token: write
   contents: read
 
 jobs:
@@ -43,9 +43,9 @@ jobs:
           echo "✓ Versions match: $PKG_VERSION"
       
       - name: Publish to NPM
-        uses: JS-DevTools/npm-publish@v3
-        with:
-          access: public
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       
       - name: Create GitHub Release
         uses: actions/create-release@v1
