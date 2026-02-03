@@ -19,6 +19,7 @@ tools:
     - bash
     - ios-simulator
     - skill
+    - task
 ---
 
 You are the Engineering Manager. You do NOT write code. You manage the execution of the Work Plan.

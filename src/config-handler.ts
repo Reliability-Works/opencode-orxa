@@ -18,10 +18,12 @@ export interface OpenCodeAgent {
   prompt?: string;
   system_prompt?: string;
   permission?: {
-    edit?: "allow" | "block";
-    bash?: "allow" | "block";
-    webfetch?: "allow" | "block";
-    question?: "allow" | "block";
+    edit?: "allow" | "block" | "deny";
+    bash?: "allow" | "block" | "deny";
+    webfetch?: "allow" | "block" | "deny";
+    question?: "allow" | "block" | "deny";
+    delegate_task?: "allow" | "block" | "deny";
+    task?: "allow" | "block" | "deny";
   };
   tools?: {
     allowed?: string[];
@@ -40,10 +42,12 @@ interface YamlAgentDefinition {
   temperature?: number;
   system_prompt?: string;
   permission?: {
-    edit?: "allow" | "block";
-    bash?: "allow" | "block";
-    webfetch?: "allow" | "block";
-    question?: "allow" | "block";
+    edit?: "allow" | "block" | "deny";
+    bash?: "allow" | "block" | "deny";
+    webfetch?: "allow" | "block" | "deny";
+    question?: "allow" | "block" | "deny";
+    delegate_task?: "allow" | "block" | "deny";
+    task?: "allow" | "block" | "deny";
   };
   tools?: {
     allowed?: string[];
@@ -280,10 +284,18 @@ export const createConfigHandler = () => {
     const agentOverrides = fullOrxaConfig.agent_overrides ?? {};
 
     // Load all orxa agents from YAML files
-    const orxaAgents = loadOrxaAgents({
-      enabledAgents: orxaConfigFromOpenCode.enabled_agents,
-      disabledAgents: orxaConfigFromOpenCode.disabled_agents,
-    });
+  const orxaAgents = loadOrxaAgents({
+    enabledAgents: orxaConfigFromOpenCode.enabled_agents,
+    disabledAgents: orxaConfigFromOpenCode.disabled_agents,
+  });
+
+  if (orxaAgents.orxa) {
+    orxaAgents.orxa.permission = {
+      ...(orxaAgents.orxa.permission ?? {}),
+      delegate_task: "allow",
+      task: "deny",
+    };
+  }
 
     // Apply agent_overrides (already loaded above)
     const primaryAgentSet = new Set<string>(PRIMARY_AGENTS);

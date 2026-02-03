@@ -190,6 +190,10 @@ export const getRecommendedAgent = (toolName: string): string => {
     return "orxa";
   }
 
+  if (toolName === "task") {
+    return "orxa";
+  }
+
   if (toolName === "grep" || toolName === "glob") {
     return "plan";
   }
@@ -210,12 +214,9 @@ export const enforceDelegation = (context: HookContext): EnforcementResult => {
   const agentName = context.agentName ?? "";
   const toolName = resolveToolAlias(context.toolName ?? "", config.toolAliases.resolve);
   const normalizedTool = normalizeToolName(toolName);
+  const delegationTool = normalizedTool === "task" ? "delegate_task" : normalizedTool;
 
-  if (
-    config.governance.onlyOrxaCanDelegate &&
-    normalizedTool === "delegate_task" &&
-    agentName !== "orxa"
-  ) {
+  if (config.governance.onlyOrxaCanDelegate && delegationTool === "delegate_task" && agentName !== "orxa") {
     return {
       ...decide(config, "Only the orxa may delegate tasks."),
       recommendedAgent: "orxa",
@@ -311,10 +312,7 @@ export const enforceDelegation = (context: HookContext): EnforcementResult => {
     }
   }
 
-  if (
-    normalizedTool === "delegate_task" &&
-    config.governance.delegationTemplate.required
-  ) {
+  if (delegationTool === "delegate_task" && config.governance.delegationTemplate.required) {
     const prompt = resolvePrompt(context.args, context.delegationPrompt);
     const missing = extractSectionMissing(
       prompt,

@@ -8,6 +8,7 @@ import { postSubagentResponse } from "./hooks/post-subagent-response.js";
 import { todoContinuationEnforcer } from "./hooks/todo-continuation-enforcer.js";
 import { orxaIndicator } from "./hooks/orxa-indicator.js";
 import type { Message, Session } from "./types.js";
+import { createDelegateTask } from "./tools/delegate-task.js";
 
 const orxaPlugin: Plugin = async (ctx: PluginInput) => {
   const orxaConfig = loadOrxaConfig();
@@ -109,6 +110,12 @@ const orxaPlugin: Plugin = async (ctx: PluginInput) => {
 
   return {
     config: configHandler,
+    tool: {
+      delegate_task: createDelegateTask({
+        client: ctx.client,
+        directory: ctx.directory,
+      }),
+    },
     "chat.message": async (input, output) => {
       await orxaDetector(input, output);
     },
