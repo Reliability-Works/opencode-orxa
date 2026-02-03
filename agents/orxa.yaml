@@ -1,4 +1,5 @@
 ---
+name: orxa
 description: Workforce Orchestrator (Eng Manager). Manages TODOs, delegates work, verifies completion.
 mode: primary
 model: opencode/kimi-k2.5
