@@ -18,9 +18,8 @@ describe("Agent Models Parser", () => {
       // Should have 17 agents (2 primary + 15 subagents including orxa-worker and orxa-planner)
       expect(config.agents.length).toBe(17);
       
-      // Should have 5 unique models (including kimi-for-coding/kimi-k2.5)
-      expect(config.uniqueModels).toHaveLength(5);
-      expect(config.uniqueModels).toContain("kimi-for-coding/kimi-k2.5");
+      // Should have 4 unique models (opencode/ provider only)
+      expect(config.uniqueModels).toHaveLength(4);
       expect(config.uniqueModels).toContain("opencode/kimi-k2.5");
       expect(config.uniqueModels).toContain("opencode/gpt-5.2-codex");
       expect(config.uniqueModels).toContain("opencode/gemini-3-pro");
@@ -41,10 +40,10 @@ describe("Agent Models Parser", () => {
     it("should group agents by model correctly", () => {
       const config = parseAgentModels();
       
-      // Find kimi-k2.5 group (orxa now uses kimi-for-coding/kimi-k2.5)
-      const kimiGroup = config.models.find((m) => m.model === "kimi-for-coding/kimi-k2.5");
+      // Find kimi-k2.5 group (orxa + 8 subagents use opencode/kimi-k2.5)
+      const kimiGroup = config.models.find((m) => m.model === "opencode/kimi-k2.5");
       expect(kimiGroup).toBeDefined();
-      expect(kimiGroup!.count).toBe(1); // orxa only
+      expect(kimiGroup!.count).toBe(9); // orxa + 8 subagents
       
       // Find gpt-5.2-codex group
       const gptGroup = config.models.find((m) => m.model === "opencode/gpt-5.2-codex");
@@ -57,7 +56,7 @@ describe("Agent Models Parser", () => {
       
       const orxa = config.agents.find((a) => a.name === "orxa");
       expect(orxa).toBeDefined();
-      expect(orxa!.model).toBe("kimi-for-coding/kimi-k2.5");
+      expect(orxa!.model).toBe("opencode/kimi-k2.5");
       expect(orxa!.mode).toBe("primary");
     });
 

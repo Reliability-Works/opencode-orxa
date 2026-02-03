@@ -40,7 +40,7 @@ describe("Config Handler", () => {
       expect(orxa.name).toBe("orxa");
       expect(orxa.description).toContain("Workforce Orchestrator");
       expect(orxa.mode).toBe("primary");
-      expect(orxa.model).toBe("kimi-for-coding/kimi-k2.5");
+      expect(orxa.model).toBe("opencode/kimi-k2.5");
       // Temperature may be parsed as string from YAML
       expect(Number(orxa.temperature)).toBe(0.1);
       // Prompt is now extracted from markdown body after frontmatter
