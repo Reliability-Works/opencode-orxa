@@ -58,9 +58,9 @@ Background info
       expect(result).toBe('edit');
     });
 
-    it('resolves task to delegate_task', () => {
+    it('resolves task to task (no alias)', () => {
       const result = resolveToolAlias('task', defaultConfig.toolAliases?.resolve || {});
-      expect(result).toBe('delegate_task');
+      expect(result).toBe('task');
     });
 
     it('returns original name if no alias', () => {
@@ -114,8 +114,8 @@ Background info
   describe('Delegation Gate', () => {
     it('blocks non-orxa from using delegate_task', () => {
       const context = createContext({
-        toolName: 'delegate_task',
-        tool: { name: 'delegate_task' },
+        toolName: "task",
+        tool: { name: "task" },
         agent: 'coder'
       });
       const result = enforceDelegation(context);
@@ -124,8 +124,8 @@ Background info
 
     it('allows orxa to use delegate_task', () => {
       const context = createContext({
-        toolName: 'delegate_task',
-        tool: { name: 'delegate_task' },
+        toolName: "task",
+        tool: { name: "task" },
         args: { prompt: validDelegationPrompt },
         agent: 'orxa'
       });
@@ -197,8 +197,8 @@ Background info
   describe('Multimodal Batch Limit', () => {
     it('blocks multimodal delegation with >10 images', () => {
       const context = createContext({
-        toolName: 'delegate_task',
-        tool: { name: 'delegate_task' },
+        toolName: "task",
+        tool: { name: "task" },
         args: {
           agent: 'multimodal',
           images: new Array(11).fill('image.jpg'),
@@ -212,8 +212,8 @@ Background info
 
     it('allows multimodal delegation with ≤10 images', () => {
       const context = createContext({
-        toolName: 'delegate_task',
-        tool: { name: 'delegate_task' },
+        toolName: "task",
+        tool: { name: "task" },
         args: {
           agent: 'multimodal',
           images: new Array(10).fill('image.jpg'),
@@ -229,8 +229,8 @@ Background info
   describe('resolvePrompt - null/undefined args', () => {
     it('returns empty string when args is null', () => {
       const context = createContext({
-        toolName: 'delegate_task',
-        tool: { name: 'delegate_task' },
+        toolName: "task",
+        tool: { name: "task" },
         args: null as unknown as Record<string, unknown>,
         agent: 'orxa',
       });
@@ -241,8 +241,8 @@ Background info
 
     it('returns empty string when args is undefined', () => {
       const context = createContext({
-        toolName: 'delegate_task',
-        tool: { name: 'delegate_task' },
+        toolName: "task",
+        tool: { name: "task" },
         args: undefined as unknown as Record<string, unknown>,
         agent: 'orxa',
       });
@@ -253,8 +253,8 @@ Background info
 
     it('returns empty string when args is a primitive (string)', () => {
       const context = createContext({
-        toolName: 'delegate_task',
-        tool: { name: 'delegate_task' },
+        toolName: "task",
+        tool: { name: "task" },
         args: 'not an object' as unknown as Record<string, unknown>,
         agent: 'orxa',
       });
@@ -265,8 +265,8 @@ Background info
 
     it('returns empty string when args is a primitive (number)', () => {
       const context = createContext({
-        toolName: 'delegate_task',
-        tool: { name: 'delegate_task' },
+        toolName: "task",
+        tool: { name: "task" },
         args: 123 as unknown as Record<string, unknown>,
         agent: 'orxa',
       });
@@ -301,8 +301,8 @@ Don't break
 Test context
       `;
       const context = createContext({
-        toolName: 'delegate_task',
-        tool: { name: 'delegate_task' },
+        toolName: "task",
+        tool: { name: "task" },
         args: {
           message: { prompt: nestedPrompt },
         },
@@ -336,8 +336,8 @@ Don't break
 Test context
       `;
       const context = createContext({
-        toolName: 'delegate_task',
-        tool: { name: 'delegate_task' },
+        toolName: "task",
+        tool: { name: "task" },
         args: {
           instructions: { prompt: nestedPrompt },
         },
@@ -371,8 +371,8 @@ Don't break
 Test context
       `;
       const context = createContext({
-        toolName: 'delegate_task',
-        tool: { name: 'delegate_task' },
+        toolName: "task",
+        tool: { name: "task" },
         args: {
           task: { prompt: nestedPrompt },
         },
@@ -406,8 +406,8 @@ Don't break
 Test context
       `;
       const context = createContext({
-        toolName: 'delegate_task',
-        tool: { name: 'delegate_task' },
+        toolName: "task",
+        tool: { name: "task" },
         args: {
           context: { prompt: nestedPrompt },
         },
@@ -419,8 +419,8 @@ Test context
 
     it('returns empty string when nested object has no prompt field', () => {
       const context = createContext({
-        toolName: 'delegate_task',
-        tool: { name: 'delegate_task' },
+        toolName: "task",
+        tool: { name: "task" },
         args: {
           message: { content: 'some content but no prompt field' },
         },
@@ -433,8 +433,8 @@ Test context
 
     it('returns empty string when nested prompt is not a string', () => {
       const context = createContext({
-        toolName: 'delegate_task',
-        tool: { name: 'delegate_task' },
+        toolName: "task",
+        tool: { name: "task" },
         args: {
           message: { prompt: 123 },
         },
@@ -469,8 +469,8 @@ Don't break
 Direct context
       `;
       const context = createContext({
-        toolName: 'delegate_task',
-        tool: { name: 'delegate_task' },
+        toolName: "task",
+        tool: { name: "task" },
         args: {
           prompt: directPrompt,
           message: { prompt: 'nested but incomplete' },
@@ -505,8 +505,8 @@ Don't break
 Nested context
       `;
       const context = createContext({
-        toolName: 'delegate_task',
-        tool: { name: 'delegate_task' },
+        toolName: "task",
+        tool: { name: "task" },
         args: {
           instructions: { prompt: nestedPrompt },
         },

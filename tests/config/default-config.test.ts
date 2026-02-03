@@ -155,7 +155,7 @@ describe('Default Config', () => {
   describe('defaultConfig values', () => {
     it('should have correct tool aliases', () => {
       expect(defaultConfig.toolAliases.resolve.apply_patch).toBe('edit');
-      expect(defaultConfig.toolAliases.resolve.task).toBe('delegate_task');
+      expect(defaultConfig.toolAliases.resolve.task).toBeUndefined();
     });
 
     it('should have correct orxa model', () => {

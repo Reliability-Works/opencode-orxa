@@ -186,7 +186,8 @@ export async function welcomeToastHandler(
   return {
     injectMessage:
       `🎼 OpenCode Orxa Initialized\n\n` +
-      `Workforce orchestration enabled. Managing agents...\n` +
-      `Type /help for available commands or start delegating tasks.`,
+      `Workforce orchestration enabled. Managing agents...\n\n` +
+      `⚠️  REMINDER: Create a TODO list BEFORE doing anything else!\n` +
+      `Use todowrite to track your work.`,
   };
 }

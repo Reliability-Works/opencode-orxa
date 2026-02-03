@@ -403,8 +403,8 @@ Background info
 
     it('blocks delegation with mismatched session ID', () => {
       const context = createContext({
-        toolName: 'delegate_task',
-        tool: { name: 'delegate_task' },
+        toolName: "task",
+        tool: { name: "task" },
         args: {
           prompt: validDelegationPrompt,
           sessionId: 'different-session-123',
@@ -431,8 +431,8 @@ Background info
 
     it('blocks delegation with mismatched session ID in nested task object', () => {
       const context = createContext({
-        toolName: 'delegate_task',
-        tool: { name: 'delegate_task' },
+        toolName: "task",
+        tool: { name: "task" },
         args: {
           prompt: validDelegationPrompt,
           task: { sessionId: 'task-session-789' },
@@ -459,8 +459,8 @@ Background info
 
     it('allows delegation with matching session ID', () => {
       const context = createContext({
-        toolName: 'delegate_task',
-        tool: { name: 'delegate_task' },
+        toolName: "task",
+        tool: { name: "task" },
         args: {
           prompt: validDelegationPrompt,
           sessionId: 'matching-session-111',
@@ -484,8 +484,8 @@ Background info
 
     it('allows delegation when no session ID is provided', () => {
       const context = createContext({
-        toolName: 'delegate_task',
-        tool: { name: 'delegate_task' },
+        toolName: "task",
+        tool: { name: "task" },
         args: {
           prompt: validDelegationPrompt,
         },
@@ -551,22 +551,21 @@ Don't break things
 Background info
     `;
 
-    it('blocks delegation without Summary section when required', () => {
+    it('allows delegation without Summary section when not required', () => {
       const context = createContext({
-        toolName: 'delegate_task',
-        tool: { name: 'delegate_task' },
+        toolName: "task",
+        tool: { name: "task" },
         args: { prompt: promptWithoutSummary },
         agent: 'orxa',
       });
       const result = enforceDelegation(context);
-      expect(result.allow).toBe(false);
-      expect(result.reason).toContain('Summary section');
+      expect(result.allow).toBe(true);
     });
 
     it('allows delegation with Summary section', () => {
       const context = createContext({
-        toolName: 'delegate_task',
-        tool: { name: 'delegate_task' },
+        toolName: "task",
+        tool: { name: "task" },
         args: { prompt: promptWithSummary },
         agent: 'orxa',
       });
@@ -598,8 +597,8 @@ Don't break things
 Background info
       `;
       const context = createContext({
-        toolName: 'delegate_task',
-        tool: { name: 'delegate_task' },
+        toolName: "task",
+        tool: { name: "task" },
         args: { prompt: promptWithAltSummary },
         agent: 'orxa',
       });
@@ -636,8 +635,8 @@ Background info
       // Create a string that exceeds the maxToolOutputChars limit (default is 4000)
       const excessiveOutput = 'x'.repeat(4001);
       const context = createContext({
-        toolName: 'delegate_task',
-        tool: { name: 'delegate_task' },
+        toolName: "task",
+        tool: { name: "task" },
         args: {
           prompt: validDelegationPromptWithSummary,
           context: {
@@ -655,8 +654,8 @@ Background info
     it('blocks delegation with excessive tool output in array format', () => {
       const excessiveOutput = ['x'.repeat(2000), 'y'.repeat(2001)];
       const context = createContext({
-        toolName: 'delegate_task',
-        tool: { name: 'delegate_task' },
+        toolName: "task",
+        tool: { name: "task" },
         args: {
           prompt: validDelegationPromptWithSummary,
           context: {
@@ -677,8 +676,8 @@ Background info
         { content: 'y'.repeat(1501) },
       ];
       const context = createContext({
-        toolName: 'delegate_task',
-        tool: { name: 'delegate_task' },
+        toolName: "task",
+        tool: { name: "task" },
         args: {
           prompt: validDelegationPromptWithSummary,
           context: {
@@ -696,8 +695,8 @@ Background info
     it('allows delegation with tool output under the limit', () => {
       const acceptableOutput = 'x'.repeat(3999);
       const context = createContext({
-        toolName: 'delegate_task',
-        tool: { name: 'delegate_task' },
+        toolName: "task",
+        tool: { name: "task" },
         args: {
           prompt: validDelegationPromptWithSummary,
           context: {
@@ -713,8 +712,8 @@ Background info
     it('allows delegation with toolOutput field (singular)', () => {
       const acceptableOutput = 'x'.repeat(1000);
       const context = createContext({
-        toolName: 'delegate_task',
-        tool: { name: 'delegate_task' },
+        toolName: "task",
+        tool: { name: "task" },
         args: {
           prompt: validDelegationPromptWithSummary,
           context: {
@@ -730,8 +729,8 @@ Background info
     it('blocks delegation with excessive toolOutput field (singular)', () => {
       const excessiveOutput = 'x'.repeat(4001);
       const context = createContext({
-        toolName: 'delegate_task',
-        tool: { name: 'delegate_task' },
+        toolName: "task",
+        tool: { name: "task" },
         args: {
           prompt: validDelegationPromptWithSummary,
           context: {
@@ -772,8 +771,8 @@ Background info
 
     it('returns warning when delegation mode is off', () => {
       const context = createContext({
-        toolName: 'delegate_task',
-        tool: { name: 'delegate_task' },
+        toolName: "task",
+        tool: { name: "task" },
         args: { prompt: 'incomplete prompt' },
         agent: 'coder',
         config: {
@@ -795,8 +794,8 @@ Background info
 
     it('returns warning when delegation mode is warn', () => {
       const context = createContext({
-        toolName: 'delegate_task',
-        tool: { name: 'delegate_task' },
+        toolName: "task",
+        tool: { name: "task" },
         args: { prompt: 'incomplete prompt' },
         agent: 'coder',
         config: {
@@ -862,8 +861,8 @@ Background info
   describe('getRecommendedAgent helper', () => {
     it('recommends orxa for delegate_task', () => {
       const context = createContext({
-        toolName: 'delegate_task',
-        tool: { name: 'delegate_task' },
+        toolName: "task",
+        tool: { name: "task" },
         agent: 'coder',
       });
       const result = enforceDelegation(context);
@@ -986,8 +985,8 @@ Background info
 
     it('counts images from attachments array with mimeType', () => {
       const context = createContext({
-        toolName: 'delegate_task',
-        tool: { name: 'delegate_task' },
+        toolName: "task",
+        tool: { name: "task" },
         args: {
           prompt: validDelegationPrompt,
           attachments: [
@@ -1004,8 +1003,8 @@ Background info
 
     it('counts images from attachments with type field only', () => {
       const context = createContext({
-        toolName: 'delegate_task',
-        tool: { name: 'delegate_task' },
+        toolName: "task",
+        tool: { name: "task" },
         args: {
           prompt: validDelegationPrompt,
           attachments: [
@@ -1022,8 +1021,8 @@ Background info
 
     it('filters out non-object items in attachments array', () => {
       const context = createContext({
-        toolName: 'delegate_task',
-        tool: { name: 'delegate_task' },
+        toolName: "task",
+        tool: { name: "task" },
         args: {
           prompt: validDelegationPrompt,
           attachments: [
@@ -1043,8 +1042,8 @@ Background info
     it('blocks when attachments exceed image limit', () => {
       const attachments = Array(12).fill({ type: 'image', mimeType: 'image/png' });
       const context = createContext({
-        toolName: 'delegate_task',
-        tool: { name: 'delegate_task' },
+        toolName: "task",
+        tool: { name: "task" },
         args: {
           prompt: validDelegationPrompt,
           attachments,
@@ -1128,8 +1127,8 @@ Background info
 
     it('uses explicit delegationPrompt over args.prompt', () => {
       const context = createContext({
-        toolName: 'delegate_task',
-        tool: { name: 'delegate_task' },
+        toolName: "task",
+        tool: { name: "task" },
         args: {
           prompt: 'incomplete prompt missing sections',
         },
@@ -1142,8 +1141,8 @@ Background info
 
     it('prefers explicit delegationPrompt over nested prompt in args', () => {
       const context = createContext({
-        toolName: 'delegate_task',
-        tool: { name: 'delegate_task' },
+        toolName: "task",
+        tool: { name: "task" },
         args: {
           message: { prompt: 'incomplete nested prompt' },
         },
@@ -1158,8 +1157,8 @@ Background info
   describe('Tool output extraction edge cases', () => {
     it('returns 0 when context is not an object', () => {
       const context = createContext({
-        toolName: 'delegate_task',
-        tool: { name: 'delegate_task' },
+        toolName: "task",
+        tool: { name: "task" },
         args: {
           prompt: `
 ## Summary
@@ -1193,8 +1192,8 @@ Background info
 
     it('returns 0 when context has no toolOutputs or toolOutput', () => {
       const context = createContext({
-        toolName: 'delegate_task',
-        tool: { name: 'delegate_task' },
+        toolName: "task",
+        tool: { name: "task" },
         args: {
           prompt: `
 ## Summary
@@ -1230,8 +1229,8 @@ Background info
 
     it('handles array with non-string non-object items', () => {
       const context = createContext({
-        toolName: 'delegate_task',
-        tool: { name: 'delegate_task' },
+        toolName: "task",
+        tool: { name: "task" },
         args: {
           prompt: `
 ## Summary
@@ -1268,8 +1267,8 @@ Background info
 
     it('handles array with objects missing content field', () => {
       const context = createContext({
-        toolName: 'delegate_task',
-        tool: { name: 'delegate_task' },
+        toolName: "task",
+        tool: { name: "task" },
         args: {
           prompt: `
 ## Summary

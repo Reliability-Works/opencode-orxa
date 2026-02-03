@@ -56,14 +56,13 @@ export const defaultConfig: OrxaConfig = {
       write_to_file: "write",
       replace_file_content: "write",
       multi_replace_file_content: "write",
-      task: "delegate_task",
     },
   },
   orxa: {
     model: "opencode/kimi-k2.5",
     allowedTools: [
       "read",
-      "delegate_task",
+      "task",
       "todowrite",
       "todoread",
       "supermemory",
@@ -102,7 +101,7 @@ export const defaultConfig: OrxaConfig = {
       contextHygiene: {
         maxToolOutputChars: 4000,
         summaryHeader: "Summary",
-        requireSummary: true,
+        requireSummary: false,
       },
     },
   },

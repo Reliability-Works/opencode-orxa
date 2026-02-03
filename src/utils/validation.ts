@@ -36,7 +36,11 @@ export const validateDelegationPrompt = (
   requiredSections: string[]
 ): string[] => {
   return requiredSections.filter((section) => {
-    const pattern = new RegExp(`(^|\\n)\\s*(#+\\s*)?${section}\\s*:?`, "i");
+    const escapedSection = section.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const pattern = new RegExp(
+      `(^|\\n)\\s*(#+\\s*)?(?:\\*\\*\\s*)?${escapedSection}(?:\\s*\\*\\*)?\\s*:?`,
+      "i"
+    );
     return !pattern.test(prompt);
   });
 };

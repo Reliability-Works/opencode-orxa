@@ -36,6 +36,19 @@ Background info
       expect(missing).toEqual([]);
     });
 
+    it('accepts bolded section labels with colons', () => {
+      const prompt = `
+**Task**: Do something
+**Expected Outcome**: Result
+**Required Tools**: edit
+**Must Do**: Step 1
+**Must Not Do**: Don't break things
+**Context**: Background info
+      `;
+      const missing = validateDelegationPrompt(prompt, requiredSections);
+      expect(missing).toEqual([]);
+    });
+
     it('returns missing sections for incomplete prompt', () => {
       const prompt = '## Task\nDo something';
       const missing = validateDelegationPrompt(prompt, requiredSections);

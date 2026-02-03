@@ -46,7 +46,7 @@ describe("Config Handler", () => {
       // Prompt is now extracted from markdown body after frontmatter
       expect(orxa.prompt).toContain("You are the Engineering Manager");
       expect(orxa.tools?.allowed).toContain("read");
-      expect(orxa.tools?.allowed).toContain("delegate_task");
+      expect(orxa.tools?.allowed).toContain("task");
       expect(orxa.tools?.blocked).toContain("grep");
       expect(orxa.tools?.blocked).toContain("glob");
     });

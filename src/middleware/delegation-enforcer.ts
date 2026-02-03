@@ -51,7 +51,12 @@ const resolvePrompt = (args: unknown, explicitPrompt?: string): string => {
 
 const extractSectionMissing = (prompt: string, sections: string[]): string[] =>
   sections.filter((section) => {
-    const pattern = new RegExp(`(^|\\n)\\s*(#+\\s*)?${section}\\s*:?`, "i");
+    const escapedSection = section.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    // Match: Task:, ## Task:, **Task**:, **Task:**, etc.
+    const pattern = new RegExp(
+      `(^|\\n)\\s*(#+\\s*)?(?:\\*\\*\\s*)?${escapedSection}(?:\\s*\\*\\*)?\\s*:?`,
+      "i"
+    );
     return !pattern.test(prompt);
   });
 
@@ -216,11 +221,28 @@ export const enforceDelegation = (context: HookContext): EnforcementResult => {
   const normalizedTool = normalizeToolName(toolName);
   const delegationTool = normalizedTool === "task" ? "delegate_task" : normalizedTool;
 
-  if (config.governance.onlyOrxaCanDelegate && delegationTool === "delegate_task" && agentName !== "orxa") {
-    return {
-      ...decide(config, "Only the orxa may delegate tasks."),
-      recommendedAgent: "orxa",
-    };
+  // Check if agent is orxa - check both agentName and session agent
+  const sessionAgentName = context.session?.agentName ?? "";
+  const effectiveAgentName = agentName || sessionAgentName;
+  const isOrxa = effectiveAgentName.toLowerCase() === "orxa" || 
+                 effectiveAgentName.toLowerCase().includes("orxa");
+
+
+  
+  // Block task/delegate_task tools for non-orxa agents
+  if (config.governance.onlyOrxaCanDelegate && !isOrxa) {
+    if (normalizedTool === "task") {
+      return {
+        ...decide(config, "Only the orxa may use the task tool. Use delegate_task instead."),
+        recommendedAgent: "orxa",
+      };
+    }
+    if (delegationTool === "delegate_task") {
+      return {
+        ...decide(config, "Only the orxa may delegate tasks."),
+        recommendedAgent: "orxa",
+      };
+    }
   }
 
   if (
@@ -312,7 +334,8 @@ export const enforceDelegation = (context: HookContext): EnforcementResult => {
     }
   }
 
-  if (delegationTool === "delegate_task" && config.governance.delegationTemplate.required) {
+  // Apply 6-section validation to task tool calls from orxa
+  if (normalizedTool === "task" && isOrxa && config.governance.delegationTemplate.required) {
     const prompt = resolvePrompt(context.args, context.delegationPrompt);
     const missing = extractSectionMissing(
       prompt,

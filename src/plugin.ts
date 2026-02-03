@@ -8,7 +8,6 @@ import { postSubagentResponse } from "./hooks/post-subagent-response.js";
 import { todoContinuationEnforcer } from "./hooks/todo-continuation-enforcer.js";
 import { orxaIndicator } from "./hooks/orxa-indicator.js";
 import type { Message, Session } from "./types.js";
-import { createDelegateTask } from "./tools/delegate-task.js";
 
 const orxaPlugin: Plugin = async (ctx: PluginInput) => {
   const orxaConfig = loadOrxaConfig();
@@ -110,18 +109,20 @@ const orxaPlugin: Plugin = async (ctx: PluginInput) => {
 
   return {
     config: configHandler,
-    tool: {
-      delegate_task: createDelegateTask({
-        client: ctx.client,
-        directory: ctx.directory,
-      }),
-    },
     "chat.message": async (input, output) => {
       await orxaDetector(input, output);
     },
     "tool.execute.before": async (input, output) => {
       const toolInput = input as { tool: string; sessionID: string; callID: string; agent?: string; attachments?: Array<{ type: string; mimeType?: string; name?: string; size?: number }> };
       const toolOutput = output as { args?: Record<string, unknown> } | undefined;
+      if (orxaConfig.ui?.verboseLogging && toolInput.tool === "delegate_task") {
+        console.log("[orxa][tool.execute.before] raw tool input", {
+          tool: toolInput.tool,
+          agent: toolInput.agent,
+          sessionID: toolInput.sessionID,
+          callID: toolInput.callID,
+        });
+      }
       const session = await loadSession(toolInput.sessionID, toolInput.agent);
       const context = {
         toolName: toolInput.tool,

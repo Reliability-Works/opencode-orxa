@@ -292,8 +292,7 @@ export const createConfigHandler = () => {
   if (orxaAgents.orxa) {
     orxaAgents.orxa.permission = {
       ...(orxaAgents.orxa.permission ?? {}),
-      delegate_task: "allow",
-      task: "deny",
+      task: "allow",
     };
   }
 

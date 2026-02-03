@@ -2,7 +2,6 @@ import { HookContext, EnforcementResult } from "../types.js";
 import { enforceDelegation, resolveToolAlias } from "../middleware/delegation-enforcer.js";
 import {
   buildTodoContinuationMessage,
-  checkPendingTodos,
   extractQuestionText,
   getPendingTodos,
   isStoppingResponse,
@@ -18,6 +17,8 @@ export const preToolExecution = async (context: HookContext): Promise<Enforcemen
   );
   const agentName = context.agent ?? context.agentName ?? "";
 
+
+
   const result = enforceDelegation({
     ...context,
     toolName,
@@ -31,6 +32,7 @@ export const preToolExecution = async (context: HookContext): Promise<Enforcemen
     return result;
   }
 
+  // Only block/nudge when agent tries to stop with pending TODOs
   if (session && config.orxa.enforcement.todoCompletion !== "off") {
     const pendingTodos = getPendingTodos(session);
     if (pendingTodos.length > 0 && toolName === "question") {
@@ -55,19 +57,6 @@ export const preToolExecution = async (context: HookContext): Promise<Enforcemen
           message,
         };
       }
-    }
-  }
-
-  if (session && config.ui?.showTodoReminders) {
-    const todoWarning = checkPendingTodos(session, config);
-    if (todoWarning) {
-      const warnings = [...(result.warnings ?? []), todoWarning.warning];
-      return {
-        ...result,
-        warnings,
-        warn: true,
-        message: [result.message, todoWarning.warning].filter(Boolean).join("\n"),
-      };
     }
   }
 
