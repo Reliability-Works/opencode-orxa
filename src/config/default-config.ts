@@ -80,7 +80,7 @@ export const defaultConfig: OrxaConfig = {
     maxManualEditsPerSession: 0,
     requireTodoList: true,
     autoUpdateTodos: false,
-    planWriteAllowlist: [".orxa/plans/*.md"],
+    planWriteAllowlist: [".orxa/**/*.md", ".orxa/**/*.json"],
     blockMobileTools: true,
   },
   governance: {
