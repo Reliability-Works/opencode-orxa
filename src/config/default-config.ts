@@ -107,26 +107,10 @@ export const defaultConfig: OrxaConfig = {
   },
   subagents: {
     defaults: {
-      model: "opencode/kimi-k2.5",
       timeout: 120000,
       maxRetries: 2,
     },
-    overrides: {
-      build: {
-        model: "opencode/gpt-5.2-codex",
-        timeout: 300000,
-      },
-      architect: {
-        model: "opencode/gpt-5.2-codex",
-        timeout: 300000,
-      },
-      frontend: {
-        model: "opencode/gemini-3-pro",
-      },
-      multimodal: {
-        model: "opencode/gemini-3-pro",
-      },
-    },
+    overrides: {},
     custom: [],
   },
   memory: {

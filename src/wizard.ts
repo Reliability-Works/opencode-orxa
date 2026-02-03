@@ -581,9 +581,8 @@ export const runInitWizard = async (options?: {
       }
     }
     
-    // Set default subagent model from the most common model
-    const mostCommonModel = agentConfig.models[0]?.model || "opencode/kimi-k2.5";
-    config.subagents.defaults.model = mostCommonModel;
+    // Don't set default subagent model - let users configure explicitly if needed
+    // Subagents will use the system default or agent_overrides if specified
 
     // Agent selection
     const agentSelection = await promptAgents(rl, BUILTIN_AGENTS);

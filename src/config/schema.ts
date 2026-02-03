@@ -68,7 +68,7 @@ export interface OrxaConfig {
   };
   subagents: {
     defaults: {
-      model: string;
+      model?: string;
       timeout: number;
       maxRetries: number;
     };
@@ -283,7 +283,7 @@ export const orxaConfigSchema: z.ZodType<OrxaConfig> = z.object({
   }),
   subagents: z.object({
     defaults: z.object({
-      model: z.string(),
+      model: z.string().optional(),
       timeout: z.number().int().nonnegative(),
       maxRetries: z.number().int().nonnegative(),
     }),
