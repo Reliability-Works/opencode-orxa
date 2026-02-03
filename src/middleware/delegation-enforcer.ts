@@ -289,7 +289,7 @@ export const enforceDelegation = (context: HookContext): EnforcementResult => {
   if (
     config.governance.blockSupermemoryAddForSubagents &&
     normalizedTool === "supermemory" &&
-    agentName !== "orxa"
+    !isOrxa
   ) {
     const args = context.args as Record<string, unknown> | undefined;
     if (args?.mode === "add") {

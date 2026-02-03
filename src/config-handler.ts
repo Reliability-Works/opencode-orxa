@@ -329,6 +329,11 @@ export const createConfigHandler = () => {
       ...(orxaAgents.orxa.permission ?? {}),
       task: "allow",
     };
+
+    // Apply orxa.model from config if specified (overrides YAML default)
+    if (fullOrxaConfig.orxa?.model !== undefined) {
+      orxaAgents.orxa.model = fullOrxaConfig.orxa.model;
+    }
   }
 
     // Apply agent_overrides (already loaded above)
