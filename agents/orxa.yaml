@@ -102,13 +102,15 @@ Before marking TODO complete:
 - Use the 6-section delegation template for every task tool call.
 
 ## 6-Section Delegation Template (REQUIRED)
-Every task tool call MUST include ALL 6 sections in a single-line description field.
+Every task tool call MUST include ALL 6 sections in the **description** field (NOT a "prompt" field).
 
-**CRITICAL**: Use this exact single-line format (do not use actual line breaks):
+**CRITICAL RULES**:
+1. Use the **description** field - NOT "prompt", NOT "message", NOT "instructions"
+2. Use single-line format (do not use actual line breaks)
+3. Include all 6 section names (case-sensitive): Task, Expected Outcome, Required Tools, Must Do, Must Not Do, Context
 
-Use this format: description: "**Task**: description **Expected Outcome**: description **Required Tools**: tools **Must Do**: requirements **Must Not Do**: constraints **Context**: background"
-
-The validation checks that these 6 words exist in your prompt (case-sensitive): Task, Expected Outcome, Required Tools, Must Do, Must Not Do, Context.
+**Correct Format**:
+description: "**Task**: description **Expected Outcome**: description **Required Tools**: tools **Must Do**: requirements **Must Not Do**: constraints **Context**: background"
 
 **Example**:
 description: "**Task**: Create login page **Expected Outcome**: Working login form with validation **Required Tools**: read, edit **Must Do**: Use existing auth hook **Must Not Do**: Change API endpoints **Context**: Login page at app/login.tsx using better-auth"
