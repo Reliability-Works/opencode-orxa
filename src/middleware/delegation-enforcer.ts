@@ -342,11 +342,9 @@ export const enforceDelegation = (context: HookContext): EnforcementResult => {
       // Orxa can write to allowlist paths - allow and skip further checks
       return { allow: true };
     } else {
-      return {
-        ...decide(config, "Write tools are reserved for the plan agent."),
-        recommendedAgent: "plan",
-        metadata: { targets },
-      };
+      // Subagents (coder, build, frontend, etc.) are allowed to write files
+      // They are the implementers - this is their primary job
+      return { allow: true };
     }
   }
 

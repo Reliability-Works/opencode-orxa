@@ -90,8 +90,8 @@ describe('Delegation Enforcer - Coverage Tests', () => {
     });
   });
 
-  describe('Write tool restrictions for non-plan/non-orxa agents', () => {
-    it('blocks write tools for coder agent', () => {
+  describe('Write tool permissions for subagents', () => {
+    it('allows write tools for coder agent', () => {
       const context = createContext({
         toolName: 'write',
         tool: { name: 'write' },
@@ -99,11 +99,10 @@ describe('Delegation Enforcer - Coverage Tests', () => {
         agent: 'coder',
       });
       const result = enforceDelegation(context);
-      expect(result.allow).toBe(false);
-      expect(result.recommendedAgent).toBe('plan');
+      expect(result.allow).toBe(true);
     });
 
-    it('blocks edit tools for build agent', () => {
+    it('allows edit tools for build agent', () => {
       const context = createContext({
         toolName: 'edit',
         tool: { name: 'edit' },
@@ -111,11 +110,10 @@ describe('Delegation Enforcer - Coverage Tests', () => {
         agent: 'build',
       });
       const result = enforceDelegation(context);
-      expect(result.allow).toBe(false);
-      expect(result.recommendedAgent).toBe('plan');
+      expect(result.allow).toBe(true);
     });
 
-    it('blocks apply_patch for strategist agent', () => {
+    it('allows apply_patch for strategist agent', () => {
       const context = createContext({
         toolName: 'apply_patch',
         tool: { name: 'apply_patch' },
@@ -123,11 +121,10 @@ describe('Delegation Enforcer - Coverage Tests', () => {
         agent: 'strategist',
       });
       const result = enforceDelegation(context);
-      expect(result.allow).toBe(false);
-      expect(result.recommendedAgent).toBe('plan');
+      expect(result.allow).toBe(true);
     });
 
-    it('blocks write_to_file for reviewer agent', () => {
+    it('allows write_to_file for reviewer agent', () => {
       const context = createContext({
         toolName: 'write_to_file',
         tool: { name: 'write_to_file' },
@@ -135,11 +132,10 @@ describe('Delegation Enforcer - Coverage Tests', () => {
         agent: 'reviewer',
       });
       const result = enforceDelegation(context);
-      expect(result.allow).toBe(false);
-      expect(result.reason).toContain('Write tools are reserved for the plan agent');
+      expect(result.allow).toBe(true);
     });
 
-    it('blocks replace_file_content for explorer agent', () => {
+    it('allows replace_file_content for explorer agent', () => {
       const context = createContext({
         toolName: 'replace_file_content',
         tool: { name: 'replace_file_content' },
@@ -147,10 +143,10 @@ describe('Delegation Enforcer - Coverage Tests', () => {
         agent: 'explorer',
       });
       const result = enforceDelegation(context);
-      expect(result.allow).toBe(false);
+      expect(result.allow).toBe(true);
     });
 
-    it('blocks multi_replace_file_content for frontend agent', () => {
+    it('allows multi_replace_file_content for frontend agent', () => {
       const context = createContext({
         toolName: 'multi_replace_file_content',
         tool: { name: 'multi_replace_file_content' },
@@ -158,10 +154,10 @@ describe('Delegation Enforcer - Coverage Tests', () => {
         agent: 'frontend',
       });
       const result = enforceDelegation(context);
-      expect(result.allow).toBe(false);
+      expect(result.allow).toBe(true);
     });
 
-    it('recommends plan agent for blocked write tools', () => {
+    it('allows write tools for architect agent', () => {
       const context = createContext({
         toolName: 'write',
         tool: { name: 'write' },
@@ -169,11 +165,10 @@ describe('Delegation Enforcer - Coverage Tests', () => {
         agent: 'architect',
       });
       const result = enforceDelegation(context);
-      expect(result.allow).toBe(false);
-      expect(result.recommendedAgent).toBe('plan');
+      expect(result.allow).toBe(true);
     });
 
-    it('includes targets in metadata for blocked write tools', () => {
+    it('allows write tools for git agent', () => {
       const context = createContext({
         toolName: 'write',
         tool: { name: 'write' },
@@ -181,8 +176,7 @@ describe('Delegation Enforcer - Coverage Tests', () => {
         agent: 'git',
       });
       const result = enforceDelegation(context);
-      expect(result.allow).toBe(false);
-      expect(result.metadata?.targets).toContain('src/main.ts');
+      expect(result.allow).toBe(true);
     });
   });
 
@@ -927,12 +921,21 @@ Background info
       expect(result.recommendedAgent).toBe('build');
     });
 
-    it('recommends plan for write tools', () => {
+    it('recommends plan for write tools when blocked by per-agent restrictions', () => {
+      // This test is for when write tools are explicitly blocked in perAgentRestrictions
       const context = createContext({
         toolName: 'write',
         tool: { name: 'write' },
         args: { filePath: 'test.ts' },
         agent: 'coder',
+        config: {
+          ...defaultConfig,
+          perAgentRestrictions: {
+            coder: {
+              blockedTools: ['write'],
+            },
+          },
+        },
       });
       const result = enforceDelegation(context);
       expect(result.allow).toBe(false);
