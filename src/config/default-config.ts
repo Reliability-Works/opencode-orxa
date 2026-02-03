@@ -67,7 +67,7 @@ export const defaultConfig: OrxaConfig = {
       "todoread",
       "supermemory",
     ],
-    blockedTools: ["grep", "glob", "bash", "skill"],
+    blockedTools: ["grep", "glob", "bash", "skill", "edit", "write"],
     enforcement: {
       delegation: "strict",
       todoCompletion: "strict",
@@ -80,7 +80,7 @@ export const defaultConfig: OrxaConfig = {
     maxManualEditsPerSession: 0,
     requireTodoList: true,
     autoUpdateTodos: false,
-    planWriteAllowlist: [".orxa/**/*.md", ".orxa/**/*.json"],
+    planWriteAllowlist: [".orxa/plans/**/*.md", ".orxa/plans/**/*.json"],
     blockMobileTools: true,
   },
   governance: {
