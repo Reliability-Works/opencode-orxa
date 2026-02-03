@@ -59,7 +59,7 @@ export const defaultConfig: OrxaConfig = {
     },
   },
   orxa: {
-    model: "opencode/kimi-k2.5",
+    model: "kimi-for-coding/kimi-k2.5",
     allowedTools: [
       "read",
       "task",

@@ -159,7 +159,7 @@ describe('Default Config', () => {
     });
 
     it('should have correct orxa model', () => {
-      expect(defaultConfig.orxa.model).toBe('opencode/kimi-k2.5');
+      expect(defaultConfig.orxa.model).toBe('kimi-for-coding/kimi-k2.5');
     });
 
     it('should have correct enforcement levels', () => {
