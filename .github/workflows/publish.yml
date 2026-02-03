@@ -42,10 +42,8 @@ jobs:
           fi
           echo "✓ Versions match: $PKG_VERSION"
       
-      - name: Publish to NPM
-        run: npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Publish to NPM with provenance
+        run: npm publish --provenance --access public
       
       - name: Create GitHub Release
         uses: actions/create-release@v1
