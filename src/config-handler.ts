@@ -168,8 +168,30 @@ const parseAgentYaml = (filePath: string): OpenCodeAgent | null => {
         prompt = trimmedContent;
       }
     } else {
-      // No frontmatter, treat entire content as prompt
-      prompt = trimmedContent;
+      const parsedYaml = yaml.load(trimmedContent);
+      if (
+        parsedYaml &&
+        typeof parsedYaml === "object" &&
+        !Array.isArray(parsedYaml) &&
+        Object.keys(parsedYaml).some((key) =>
+          [
+            "name",
+            "description",
+            "mode",
+            "model",
+            "temperature",
+            "system_prompt",
+            "permission",
+            "tools",
+          ].includes(key)
+        )
+      ) {
+        frontmatter = parsedYaml as YamlAgentDefinition;
+        prompt = frontmatter.system_prompt?.toString().trim() || "";
+      } else {
+        // No frontmatter, treat entire content as prompt
+        prompt = trimmedContent;
+      }
     }
 
     // Use name from YAML if available, otherwise use filename

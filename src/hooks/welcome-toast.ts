@@ -22,7 +22,6 @@ function getVersion(): string {
   try {
     // Read version from package.json
     const packageJson = JSON.parse(
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
       require("fs").readFileSync(
         require("path").join(__dirname, "..", "..", "package.json"),
         "utf-8"

@@ -190,7 +190,11 @@ describe('Orxa Orchestration', () => {
 
     it('should get original branch', () => {
       const branch = manager.getOriginalBranch();
-      expect(branch).toBe('main');
+      const expectedBranch = execSync('git branch --show-current', {
+        cwd: TEST_REPO_PATH,
+        encoding: 'utf8',
+      }).trim();
+      expect(branch).toBe(expectedBranch);
     });
 
     it('should create and remove a worktree', async () => {
