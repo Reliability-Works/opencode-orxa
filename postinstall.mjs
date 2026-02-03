@@ -461,7 +461,6 @@ const migrateConfig = (configPath, userConfig, currentVersion) => {
         }
       },
       orxa: {
-        model: "opencode/kimi-k2.5",
         allowedTools: ["read", "delegate_task", "todowrite", "todoread", "supermemory"],
         blockedTools: ["grep", "glob", "bash", "skill"],
         enforcement: {
@@ -497,12 +496,7 @@ const migrateConfig = (configPath, userConfig, currentVersion) => {
           timeout: 120000,
           maxRetries: 2
         },
-        overrides: {
-          build: { model: "opencode/gpt-5.2-codex", timeout: 300000 },
-          architect: { model: "opencode/gpt-5.2-codex", timeout: 300000 },
-          frontend: { model: "opencode/gemini-3-pro" },
-          multimodal: { model: "opencode/gemini-3-pro" }
-        },
+        overrides: {},
         custom: []
       },
       memory: {
