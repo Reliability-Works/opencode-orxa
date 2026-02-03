@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import yaml from "js-yaml";
-import { getCustomAgentsDir, getOverridesAgentsDir, loadOrxaConfig } from "./config/loader.js";
+import { getCustomAgentsDir, getOverridesAgentsDir, loadOrxaConfig, getUserConfigPath } from "./config/loader.js";
 import { PRIMARY_AGENTS } from "./config/default-config.js";
 import type { OrxaConfig, AgentConfig } from "./config/schema.js";
 
@@ -277,24 +277,39 @@ export const loadOrxaAgents = (options?: {
 /**
  * Migrate deprecated tool aliases from user config
  * Removes aliases that are no longer needed or cause conflicts
+ * Returns true if migration was performed
  */
-const migrateToolAliasesInConfig = (config: Record<string, unknown>): void => {
+const migrateToolAliasesInConfig = (config: Record<string, unknown>): boolean => {
   const toolAliases = config.toolAliases as Record<string, Record<string, string>> | undefined;
   if (!toolAliases?.resolve) {
-    return;
+    return false;
   }
 
   // Remove the deprecated task -> delegate_task alias
   // This alias is no longer needed since we use task tool directly
   if (toolAliases.resolve.task === "delegate_task") {
     delete toolAliases.resolve.task;
+    return true;
   }
+  return false;
 };
 
 export const createConfigHandler = () => {
   return async (config: Record<string, unknown>): Promise<void> => {
     // Migrate deprecated tool aliases first
-    migrateToolAliasesInConfig(config);
+    const migrated = migrateToolAliasesInConfig(config);
+    
+    // If migration was performed, save the cleaned config back to file
+    if (migrated) {
+      try {
+        const configPath = getUserConfigPath();
+        const existingConfig = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+        existingConfig.toolAliases = config.toolAliases;
+        fs.writeFileSync(configPath, JSON.stringify(existingConfig, null, 2) + '\n');
+      } catch (err) {
+        // Silently fail - the in-memory migration is sufficient
+      }
+    }
 
     // The config object passed by OpenCode contains enabled_agents and disabled_agents from orxa.json
     const orxaConfigFromOpenCode = config as unknown as OrxaConfig;

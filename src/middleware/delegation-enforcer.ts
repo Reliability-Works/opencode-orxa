@@ -58,15 +58,22 @@ const resolvePrompt = (args: unknown, explicitPrompt?: string): string => {
   return "";
 };
 
+const SECTION_ALIASES: Record<string, string[]> = {
+  "Context": ["Context", "Project Context"],
+};
+
 const extractSectionMissing = (prompt: string, sections: string[]): string[] =>
   sections.filter((section) => {
-    const escapedSection = section.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    // Match: Task:, ## Task:, **Task**:, **Task:**, etc.
-    const pattern = new RegExp(
-      `(^|\\n)\\s*(#+\\s*)?(?:\\*\\*\\s*)?${escapedSection}(?:\\s*\\*\\*)?\\s*:?`,
-      "i"
-    );
-    return !pattern.test(prompt);
+    const aliases = SECTION_ALIASES[section] || [section];
+    return !aliases.some((alias) => {
+      const escapedAlias = alias.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      // Match: Task:, ## Task:, **Task**:, **Task:**, etc.
+      const pattern = new RegExp(
+        `(^|\\n)\\s*(#+\\s*)?(?:\\*\\*\\s*)?${escapedAlias}(?:\\s*\\*\\*)?\\s*:?`,
+        "i"
+      );
+      return pattern.test(prompt);
+    });
   });
 
 const extractImageCount = (args: unknown, attachments?: HookContext["attachments"]): number => {
