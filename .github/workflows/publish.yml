@@ -43,8 +43,9 @@ jobs:
           echo "✓ Versions match: $PKG_VERSION"
       
       - name: Publish to NPM
-        run: npm publish --access public
-        # No NPM_TOKEN needed! OIDC handles authentication
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          access: public
       
       - name: Create GitHub Release
         uses: actions/create-release@v1
