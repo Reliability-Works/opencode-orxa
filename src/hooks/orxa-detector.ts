@@ -70,9 +70,52 @@ EXAMPLE DELEGATION:
 
 3. Delegate workstreams in parallel:
    task({
-     subagent_type: "coder",
-     description: "**Task**: Implement [specific workstream] **Expected Outcome**: [deliverable] **Required Tools**: read, edit **Must Do**: [requirements] **Must Not Do**: [constraints] **Context**: [background info]"
-   })`;
+      subagent_type: "coder",
+      description: "**Task**: Implement [specific workstream] **Expected Outcome**: [deliverable] **Required Tools**: read, edit **Must Do**: [requirements] **Must Not Do**: [constraints] **Context**: [background info]"
+    })`;
+
+const ORXA_ACTIVE_KEY = "orxaModeActive";
+const orxaSessionState = new Map<string, { active: boolean; updatedAt: string }>();
+
+const getOrxaSessionActive = (
+  sessionID?: string,
+  session?: { metadata?: Record<string, unknown> }
+): boolean => {
+  if (session) {
+    if (session.metadata && typeof session.metadata[ORXA_ACTIVE_KEY] === "boolean") {
+      return session.metadata[ORXA_ACTIVE_KEY] as boolean;
+    }
+
+    return false;
+  }
+
+  if (!sessionID) {
+    return false;
+  }
+
+  return orxaSessionState.get(sessionID)?.active ?? false;
+};
+
+const setOrxaSessionActive = (
+  sessionID?: string,
+  session?: { metadata?: Record<string, unknown> },
+  active: boolean = true
+): void => {
+  if (session) {
+    session.metadata = {
+      ...(session.metadata ?? {}),
+      [ORXA_ACTIVE_KEY]: active,
+    };
+    return;
+  }
+
+  if (sessionID) {
+    orxaSessionState.set(sessionID, {
+      active,
+      updatedAt: new Date().toISOString(),
+    });
+  }
+};
 
 /**
  * Detect if a message contains the Orxa keyword.
@@ -164,7 +207,7 @@ const showOrxaToast = (ctx: PluginInput): void => {
  */
 export function createOrxaDetector(ctx: PluginInput) {
   return async function orxaDetector(
-    _input: ChatMessageInput,
+    input: ChatMessageInput,
     output: ChatMessageOutput
   ): Promise<void> {
     const promptText = extractPromptText(output.parts);
@@ -177,6 +220,13 @@ export function createOrxaDetector(ctx: PluginInput) {
     if (!detection.triggered) {
       return;
     }
+
+    const isActive = getOrxaSessionActive(input.sessionID);
+    if (isActive) {
+      return;
+    }
+
+    setOrxaSessionActive(input.sessionID, undefined, true);
 
     showOrxaToast(ctx);
     injectSystemPrompt(output.parts, ORXA_SYSTEM_PROMPT, detection.cleaned_message);
@@ -204,6 +254,14 @@ export async function orxaDetector(context: HookContext): Promise<EnforcementRes
   if (!detection.triggered) {
     return { allow: true };
   }
+
+  const sessionID = context.sessionId ?? context.session?.id;
+  const isActive = getOrxaSessionActive(sessionID, context.session);
+  if (isActive) {
+    return { allow: true };
+  }
+
+  setOrxaSessionActive(sessionID, context.session, true);
 
   return {
     allow: true,
