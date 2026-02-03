@@ -274,8 +274,28 @@ export const loadOrxaAgents = (options?: {
  * Create the config handler function
  * This handler intercepts OpenCode's config and replaces agents with orxa agents
  */
+/**
+ * Migrate deprecated tool aliases from user config
+ * Removes aliases that are no longer needed or cause conflicts
+ */
+const migrateToolAliasesInConfig = (config: Record<string, unknown>): void => {
+  const toolAliases = config.toolAliases as Record<string, Record<string, string>> | undefined;
+  if (!toolAliases?.resolve) {
+    return;
+  }
+
+  // Remove the deprecated task -> delegate_task alias
+  // This alias is no longer needed since we use task tool directly
+  if (toolAliases.resolve.task === "delegate_task") {
+    delete toolAliases.resolve.task;
+  }
+};
+
 export const createConfigHandler = () => {
   return async (config: Record<string, unknown>): Promise<void> => {
+    // Migrate deprecated tool aliases first
+    migrateToolAliasesInConfig(config);
+
     // The config object passed by OpenCode contains enabled_agents and disabled_agents from orxa.json
     const orxaConfigFromOpenCode = config as unknown as OrxaConfig;
 

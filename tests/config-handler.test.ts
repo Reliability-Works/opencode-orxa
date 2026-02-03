@@ -121,6 +121,26 @@ describe("Config Handler", () => {
       const agents = config.agent as Record<string, unknown>;
       expect(Object.keys(agents)).toHaveLength(17);
     });
+
+    it("migrates deprecated task -> delegate_task alias", async () => {
+      const handler = createConfigHandler();
+      const config: Record<string, unknown> = {
+        agent: {},
+        toolAliases: {
+          resolve: {
+            apply_patch: "edit",
+            task: "delegate_task", // deprecated alias
+          },
+        },
+      };
+
+      await handler(config);
+
+      // The deprecated alias should be removed
+      const toolAliases = config.toolAliases as Record<string, Record<string, string>>;
+      expect(toolAliases.resolve.task).toBeUndefined();
+      expect(toolAliases.resolve.apply_patch).toBe("edit"); // other aliases preserved
+    });
   });
 
   describe("Error scenarios", () => {

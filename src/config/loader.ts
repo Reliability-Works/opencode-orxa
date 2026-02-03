@@ -117,6 +117,23 @@ const normalizeLegacyEnforcement = (config: Record<string, unknown>): void => {
   delete config.enforcement;
 };
 
+/**
+ * Migrate deprecated tool aliases
+ * Removes aliases that are no longer needed or cause conflicts
+ */
+const migrateDeprecatedToolAliases = (config: Record<string, unknown>): void => {
+  const toolAliases = config.toolAliases as Record<string, Record<string, string>> | undefined;
+  if (!toolAliases?.resolve) {
+    return;
+  }
+
+  // Remove the deprecated task -> delegate_task alias
+  // This alias is no longer needed since we use task tool directly
+  if (toolAliases.resolve.task === "delegate_task") {
+    delete toolAliases.resolve.task;
+  }
+};
+
 export const getUserConfigDir = (): string => CONFIG_ROOT_DIR;
 
 export const getUserConfigPath = (): string =>
@@ -167,6 +184,9 @@ export const loadOrxaConfig = (
   }
 
   const merged = mergeDeep(defaultConfig, userConfig ?? {});
+
+  // Migrate deprecated tool aliases
+  migrateDeprecatedToolAliases(merged as unknown as Record<string, unknown>);
 
   stripPrimaryAgentOverrides(merged as unknown as Record<string, unknown>);
 
