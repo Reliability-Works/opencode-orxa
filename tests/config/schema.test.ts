@@ -507,12 +507,9 @@ describe('Config Schema', () => {
       const config = {
         ...defaultConfig,
         mcps: {
-          enabled: ['ios-simulator', 'playwright'],
+          enabled: ['playwright'],
           disabled: [],
           config: {
-            'ios-simulator': {
-              defaultOutputDir: '~/Downloads',
-            },
             playwright: {
               headless: true,
               browser: 'chromium',
@@ -529,7 +526,7 @@ describe('Config Schema', () => {
       const config = {
         ...defaultConfig,
         mcps: {
-          enabled: ['ios-simulator'],
+          enabled: ['playwright'],
           // missing disabled and config
         },
       };

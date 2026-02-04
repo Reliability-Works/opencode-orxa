@@ -85,9 +85,8 @@ describe('Default Config', () => {
       expect(typeof defaultConfig.mcps.config).toBe('object');
     });
 
-    it('should have ios-simulator and playwright enabled by default', () => {
-      expect(defaultConfig.mcps.enabled).toContain('ios-simulator');
-      expect(defaultConfig.mcps.enabled).toContain('playwright');
+    it('should have no MCPs enabled by default', () => {
+      expect(defaultConfig.mcps.enabled).toEqual([]);
     });
 
     it('should have toolAliases with resolve object', () => {

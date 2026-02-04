@@ -181,16 +181,16 @@ describe('Delegation Enforcer - Coverage Tests', () => {
   });
 
   describe('Mobile tool blocking for orxa', () => {
-    it('blocks ios-simulator_launch_app for orxa', () => {
+    it('blocks agent-device_launch_app for orxa', () => {
       const context = createContext({
-        toolName: 'ios-simulator_launch_app',
-        tool: { name: 'ios-simulator_launch_app' },
+        toolName: 'agent-device_launch_app',
+        tool: { name: 'agent-device_launch_app' },
         agent: 'orxa',
         config: {
           ...defaultConfig,
           orxa: {
             ...defaultConfig.orxa,
-            allowedTools: [...defaultConfig.orxa.allowedTools, 'ios-simulator_launch_app'],
+            allowedTools: [...defaultConfig.orxa.allowedTools, 'agent-device_launch_app'],
           },
         },
       });
@@ -199,110 +199,110 @@ describe('Delegation Enforcer - Coverage Tests', () => {
       expect(result.reason).toContain('Mobile tooling is blocked for the orxa');
     });
 
-    it('blocks ios-simulator_ui_swipe for orxa', () => {
+    it('blocks agent-device_ui_swipe for orxa', () => {
       const context = createContext({
-        toolName: 'ios-simulator_ui_swipe',
-        tool: { name: 'ios-simulator_ui_swipe' },
+        toolName: 'agent-device_ui_swipe',
+        tool: { name: 'agent-device_ui_swipe' },
         agent: 'orxa',
       });
       const result = enforceDelegation(context);
       expect(result.allow).toBe(false);
     });
 
-    it('blocks ios-simulator_record_video for orxa', () => {
+    it('blocks agent-device_record_video for orxa', () => {
       const context = createContext({
-        toolName: 'ios-simulator_record_video',
-        tool: { name: 'ios-simulator_record_video' },
+        toolName: 'agent-device_record_video',
+        tool: { name: 'agent-device_record_video' },
         agent: 'orxa',
       });
       const result = enforceDelegation(context);
       expect(result.allow).toBe(false);
     });
 
-    it('blocks ios-simulator_stop_recording for orxa', () => {
+    it('blocks agent-device_stop_recording for orxa', () => {
       const context = createContext({
-        toolName: 'ios-simulator_stop_recording',
-        tool: { name: 'ios-simulator_stop_recording' },
+        toolName: 'agent-device_stop_recording',
+        tool: { name: 'agent-device_stop_recording' },
         agent: 'orxa',
       });
       const result = enforceDelegation(context);
       expect(result.allow).toBe(false);
     });
 
-    it('blocks ios-simulator_ui_type for orxa', () => {
+    it('blocks agent-device_ui_type for orxa', () => {
       const context = createContext({
-        toolName: 'ios-simulator_ui_type',
-        tool: { name: 'ios-simulator_ui_type' },
+        toolName: 'agent-device_ui_type',
+        tool: { name: 'agent-device_ui_type' },
         agent: 'orxa',
       });
       const result = enforceDelegation(context);
       expect(result.allow).toBe(false);
     });
 
-    it('blocks ios-simulator_ui_describe_all for orxa', () => {
+    it('blocks agent-device_ui_describe_all for orxa', () => {
       const context = createContext({
-        toolName: 'ios-simulator_ui_describe_all',
-        tool: { name: 'ios-simulator_ui_describe_all' },
+        toolName: 'agent-device_ui_describe_all',
+        tool: { name: 'agent-device_ui_describe_all' },
         agent: 'orxa',
       });
       const result = enforceDelegation(context);
       expect(result.allow).toBe(false);
     });
 
-    it('blocks ios-simulator_ui_describe_point for orxa', () => {
+    it('blocks agent-device_ui_describe_point for orxa', () => {
       const context = createContext({
-        toolName: 'ios-simulator_ui_describe_point',
-        tool: { name: 'ios-simulator_ui_describe_point' },
+        toolName: 'agent-device_ui_describe_point',
+        tool: { name: 'agent-device_ui_describe_point' },
         agent: 'orxa',
       });
       const result = enforceDelegation(context);
       expect(result.allow).toBe(false);
     });
 
-    it('blocks ios-simulator_ui_view for orxa', () => {
+    it('blocks agent-device_ui_view for orxa', () => {
       const context = createContext({
-        toolName: 'ios-simulator_ui_view',
-        tool: { name: 'ios-simulator_ui_view' },
+        toolName: 'agent-device_ui_view',
+        tool: { name: 'agent-device_ui_view' },
         agent: 'orxa',
       });
       const result = enforceDelegation(context);
       expect(result.allow).toBe(false);
     });
 
-    it('blocks ios-simulator_get_booted_sim_id for orxa', () => {
+    it('blocks agent-device_get_booted_sim_id for orxa', () => {
       const context = createContext({
-        toolName: 'ios-simulator_get_booted_sim_id',
-        tool: { name: 'ios-simulator_get_booted_sim_id' },
+        toolName: 'agent-device_get_booted_sim_id',
+        tool: { name: 'agent-device_get_booted_sim_id' },
         agent: 'orxa',
       });
       const result = enforceDelegation(context);
       expect(result.allow).toBe(false);
     });
 
-    it('blocks ios-simulator_open_simulator for orxa', () => {
+    it('blocks agent-device_open_simulator for orxa', () => {
       const context = createContext({
-        toolName: 'ios-simulator_open_simulator',
-        tool: { name: 'ios-simulator_open_simulator' },
+        toolName: 'agent-device_open_simulator',
+        tool: { name: 'agent-device_open_simulator' },
         agent: 'orxa',
       });
       const result = enforceDelegation(context);
       expect(result.allow).toBe(false);
     });
 
-    it('blocks ios-simulator_install_app for orxa', () => {
+    it('blocks agent-device_install_app for orxa', () => {
       const context = createContext({
-        toolName: 'ios-simulator_install_app',
-        tool: { name: 'ios-simulator_install_app' },
+        toolName: 'agent-device_install_app',
+        tool: { name: 'agent-device_install_app' },
         agent: 'orxa',
       });
       const result = enforceDelegation(context);
       expect(result.allow).toBe(false);
     });
 
-    it('blocks ios-simulator_screenshot for orxa', () => {
+    it('blocks agent-device_screenshot for orxa', () => {
       const context = createContext({
-        toolName: 'ios-simulator_screenshot',
-        tool: { name: 'ios-simulator_screenshot' },
+        toolName: 'agent-device_screenshot',
+        tool: { name: 'agent-device_screenshot' },
         agent: 'orxa',
       });
       const result = enforceDelegation(context);
@@ -311,8 +311,8 @@ describe('Delegation Enforcer - Coverage Tests', () => {
 
     it('recommends appropriate agent for blocked mobile tools', () => {
       const context = createContext({
-        toolName: 'ios-simulator_ui_tap',
-        tool: { name: 'ios-simulator_ui_tap' },
+        toolName: 'agent-device_ui_tap',
+        tool: { name: 'agent-device_ui_tap' },
         agent: 'orxa',
       });
       const result = enforceDelegation(context);

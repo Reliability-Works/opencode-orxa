@@ -13,7 +13,7 @@ const WRITE_TOOLS = new Set([
   "multi_replace_file_content",
 ]);
 
-const MOBILE_TOOL_PREFIXES = ["ios-simulator", "android", "mobile"];
+const MOBILE_TOOL_PREFIXES = ["agent-device", "android", "mobile"];
 
 const normalizeToolName = (toolName: string): string => toolName.trim();
 

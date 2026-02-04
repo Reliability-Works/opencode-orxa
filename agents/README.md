@@ -55,8 +55,7 @@ The Orxa is the central orchestrator. It does NOT write code directly - it deleg
 **Blocked Tools** (must delegate):
 - `grep`, `glob` - Use `@plan` agent
 - `bash` - Use appropriate subagent
-- `ios-simulator` - Use `@mobile-simulator`
-- `skill` - Use appropriate subagent
+- `agent-device` - Use `@mobile-simulator`
 
 **Configuration**:
 The Orxa cannot be customized via YAML (it's enforced by the plugin). Configuration is done via `~/.config/opencode/orxa/orxa.json`.

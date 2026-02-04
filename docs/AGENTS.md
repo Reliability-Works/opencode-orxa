@@ -135,8 +135,7 @@ User Request
 | `grep`          | Research task    | `@plan`              |
 | `glob`          | File discovery   | `@plan`              |
 | `bash`          | Execution        | Appropriate subagent |
-| `skill`         | Specialized work | Appropriate subagent |
-| `ios-simulator` | Mobile testing   | `@mobile-simulator`  |
+| `agent-device`  | Mobile testing   | `@mobile-simulator`  |
 
 **When to Use:**
 Orxa is the default agent for all interactions. You don't choose when to use Orxa — Orxa is always the entry point.
@@ -683,7 +682,7 @@ Must Not Do:
 Orxa: @mobile-simulator — Test the login flow on iOS simulator
 and capture screenshots of each step.
 
-Required Tools: ios-simulator, screenshot
+Required Tools: bash (agent-device), screenshot
 
 Must Do:
 - Launch the app in simulator

@@ -341,8 +341,7 @@ if (pendingTodos.length > 0 && isStoppingResponse(message)) {
 | `grep`          | `@plan`              |
 | `glob`          | `@plan`              |
 | `bash`          | Appropriate subagent |
-| `skill`         | Appropriate subagent |
-| `ios-simulator` | `@mobile-simulator`  |
+| `agent-device`  | `@mobile-simulator`  |
 
 **Why These Restrictions?**
 - Forces proper delegation

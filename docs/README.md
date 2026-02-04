@@ -166,8 +166,8 @@ The Orxa has limited tool access by design:
 | `read`                      | `grep` → delegate to `@plan`                      |
 | `delegate_task`             | `glob` → delegate to `@plan`                      |
 | `todowrite`/`todoread`      | `bash` → delegate to appropriate subagent         |
-| `supermemory`               | `ios-simulator` → delegate to `@mobile-simulator` |
-| `edit`/`write` (plans only) | `skill` → delegate to appropriate subagent        |
+| `supermemory`               | `agent-device` → delegate to `@mobile-simulator`  |
+| `edit`/`write` (plans only) | —                                                 |
 
 ### 3. The 6-Section Delegation Template
 

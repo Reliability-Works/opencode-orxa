@@ -1353,12 +1353,9 @@ MCPs are configured in your `orxa.json`:
 ```json
 {
   "mcps": {
-    "enabled": ["ios-simulator", "playwright"],
+    "enabled": ["playwright"],
     "disabled": [],
     "config": {
-      "ios-simulator": {
-        "defaultOutputDir": "~/Downloads"
-      },
       "playwright": {
         "headless": true,
         "browser": "chromium"
@@ -1374,7 +1371,7 @@ To disable an MCP, add it to the `disabled` array or remove it from `enabled`.
 
 ## Bundled Skills
 
-OpenCode Orxa includes 16 skills that provide expert guidance on common development tasks. Access them via `@skill/{name}`:
+OpenCode Orxa includes 17 skills that provide expert guidance on common development tasks. Access them via `@skill/{name}`:
 
 ### General Development
 | Skill | Description |
@@ -1386,6 +1383,7 @@ OpenCode Orxa includes 16 skills that provide expert guidance on common developm
 | `@skill/image-generator` | Image generation with AI models |
 | `@skill/devops-release` | CI/CD and release management |
 | `@skill/feature-flags-experiments` | Feature flags and A/B testing |
+| `@skill/agent-device` | Mobile automation via agent-device CLI |
 
 ### Expo / React Native
 | Skill | Description |
@@ -1430,7 +1428,7 @@ Skills are bundled with the plugin and don't require copying to your user direct
 4. **Plan-only writes**: Orxa can only write to `.orxa/plans/*.md`
 5. **6-section delegation template**: All delegations must include Task, Expected Outcome, Required Tools, Must Do, Must Not Do, Context
 6. **Multimodal batch limit**: Max 10 images per delegation
-7. **Mobile tool block**: Orxa cannot use ios-simulator tools directly
+7. **Mobile tool block**: Orxa cannot use agent-device tools directly
 
 ---
 

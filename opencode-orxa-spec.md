@@ -29,7 +29,7 @@ User → OpenCode → Orxa Plugin → Orxa Agent → Subagents
 - **Delegation gate**: Only Orxa can call `delegate_task` (or its aliases)
 - **Plan-write gate**: Edit/write tools allowed only for `.orxa/plans/*.md`
 - **Orxa tool gate**: Orxa’s allowed tool list is strictly enforced
-- **Mobile tool block**: Orxa cannot use `ios-simulator` tools directly
+- **Mobile tool block**: Orxa cannot use `agent-device` tools directly
 - **Delegation template validator**: 6-section delegation prompt required
 - **Multimodal batch limit**: Blocks delegations with >10 images
 - **Session continuity**: Re-delegations must reuse the same `session_id`
@@ -108,7 +108,7 @@ interface OrxaConfig {
     requireTodoList: boolean; // Must maintain TODOs?
     autoUpdateTodos: boolean; // Auto-mark complete on validation?
     planWriteAllowlist: string[]; // Glob allowlist for edit/write tools
-    blockMobileTools: boolean; // Block ios-simulator tools
+    blockMobileTools: boolean; // Block mobile automation tools
   };
 
   // Governance
@@ -442,12 +442,12 @@ export const preToolExecution = async (context: HookContext) => {
     };
   }
 
-  // BLOCK: Orxa using ios-simulator tools
+  // BLOCK: Orxa using agent-device tools
   if (agent === "orxa" && config.orxa.blockMobileTools) {
-    if (toolName.startsWith("ios-simulator")) {
+    if (toolName.startsWith("agent-device")) {
       return {
         block: true,
-        message: `🛑 MOBILE VIOLATION: Orxa cannot use ios-simulator tools. Delegate to @mobile-simulator.`,
+        message: `🛑 MOBILE VIOLATION: Orxa cannot use agent-device tools. Delegate to @mobile-simulator.`,
       };
     }
   }
@@ -716,7 +716,7 @@ system_prompt: |
   4. Run quality gates before marking any TODO complete
   5. Save important context to supermemory automatically
   6. Only write plan files in .orxa/plans/*.md
-  7. Do NOT use grep/glob or ios-simulator tools
+  7. Do NOT use grep/glob or mobile automation tools
 
   ## Bias for Action
   - Manager Identity Check: If you are about to write code, STOP and delegate.
@@ -786,8 +786,7 @@ tools:
     - grep
     - glob
     - bash
-    - ios-simulator
-    - skill
+    - agent-device
 ```
 
 ### Subagent Definitions
@@ -1178,13 +1177,14 @@ system_prompt: |
   You are an expert in mobile automation and visual QA. You interact with iOS/Android simulators to verify flows and audit UI/UX.
 
   ## Toolkit
-  - Use ios-simulator tools for direct control.
+  - Use agent-device CLI for mobile automation.
+  - Reference @skill/agent-device for command patterns.
   - Analyze screenshots to validate UI against requirements.
 
   ## Workflow
-  1. Ensure simulator is booted.
+  1. Use bash to run agent-device commands to list/boot simulators.
   2. Navigate to target screen; verify each step if dynamic.
-  3. Capture final state; compare against requirements.
+  3. Capture final state with agent-device screenshot tools; compare against requirements.
   4. Report with clear summaries and embedded screenshots.
 
   ## Safety & Efficiency
@@ -1221,19 +1221,6 @@ mcp:
   playwright:
     type: local
     command: ["npx", "-y", "@playwright/mcp"]
-```
-
-### ios-simulator
-
-```yaml
-mcp:
-  ios-simulator:
-    type: local
-    command: ["npx", "-y", "ios-simulator-mcp"]
-    environment:
-      IOS_SIMULATOR_MCP_IDB_PATH: "/Users/callumspencer/.local/bin/idb"
-      IOS_SIMULATOR_MCP_DEFAULT_OUTPUT_DIR: "/Users/callumspencer/Repos/mobile/dreamweaver/qa/artifacts"
-      IDB_COMPANION_PATH: "/opt/homebrew/bin/idb_companion"
 ```
 
 Note: RevenueCat MCPs are project-specific and not included in the base plugin.
@@ -1498,9 +1485,9 @@ describe("Delegation Enforcer", () => {
     expect(result.allow).toBe(true);
   });
 
-  it("blocks orxa from using ios-simulator tools", async () => {
+  it("blocks orxa from using agent-device tools", async () => {
     const result = await preToolExecution({
-      tool: { name: "ios-simulator_ui_tap" },
+      tool: { name: "agent-device_ui_tap" },
       agent: "orxa",
       config: defaultConfig,
     });

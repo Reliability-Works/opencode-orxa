@@ -4,6 +4,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import os from "os";
+import { execSync } from "child_process";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -99,7 +100,7 @@ const createDefaultConfig = (currentVersion) => {
     agent_overrides: {},
     custom_agents: [],
     mcps: {
-      enabled: ["ios-simulator", "playwright"],
+      enabled: [],
       disabled: [],
       config: {}
     },
@@ -114,7 +115,7 @@ const createDefaultConfig = (currentVersion) => {
     orxa: {
       model: "opencode/kimi-k2.5",
       allowedTools: ["read", "task", "todowrite", "todoread", "supermemory"],
-      blockedTools: ["grep", "glob", "bash", "skill"],
+      blockedTools: ["grep", "glob", "bash"],
       enforcement: {
         delegation: "strict",
         todoCompletion: "strict",
@@ -130,7 +131,7 @@ const createDefaultConfig = (currentVersion) => {
     plan: {
       model: "opencode/kimi-k2.5",
       allowedTools: ["read", "task", "todowrite", "todoread", "supermemory"],
-      blockedTools: ["grep", "glob", "bash", "skill"]
+      blockedTools: ["grep", "glob", "bash"]
     },
     governance: {
       onlyOrxaCanDelegate: true,
@@ -473,6 +474,54 @@ const copyBundledCommands = ({ force = false } = {}) => {
   }
 };
 
+const installAgentDeviceCli = () => {
+  console.log("\n📦 Installing agent-device CLI...");
+
+  try {
+    execSync("npm install -g agent-device", { stdio: "inherit" });
+    console.log("✓ agent-device CLI installed globally");
+  } catch (error) {
+    console.error("⚠ Failed to install agent-device CLI");
+    if (error?.message) {
+      console.error(`  ${error.message}`);
+    }
+    console.error("  You can retry manually: npm install -g agent-device");
+  }
+};
+
+const installAgentBrowserCli = () => {
+  console.log("\n📦 Installing agent-browser CLI...");
+
+  let installed = false;
+
+  try {
+    execSync("npm install -g agent-browser", { stdio: "inherit" });
+    installed = true;
+    console.log("✓ agent-browser CLI installed globally");
+  } catch (error) {
+    console.error("⚠ Failed to install agent-browser CLI");
+    if (error?.message) {
+      console.error(`  ${error.message}`);
+    }
+    console.error("  You can retry manually: npm install -g agent-browser");
+  }
+
+  if (!installed) {
+    return;
+  }
+
+  try {
+    execSync("agent-browser install", { stdio: "inherit" });
+    console.log("✓ Chromium downloaded for agent-browser");
+  } catch (error) {
+    console.error("⚠ Failed to download Chromium for agent-browser");
+    if (error?.message) {
+      console.error(`  ${error.message}`);
+    }
+    console.error("  You can retry manually: agent-browser install");
+  }
+};
+
 const getCurrentPluginVersion = () => {
   const packagePath = path.join(__dirname, "package.json");
 
@@ -596,7 +645,7 @@ const migrateConfig = (configPath, userConfig, currentVersion) => {
       agent_overrides: {},
       custom_agents: [],
       mcps: {
-        enabled: ["ios-simulator", "playwright"],
+        enabled: [],
         disabled: [],
         config: {}
       },
@@ -610,7 +659,7 @@ const migrateConfig = (configPath, userConfig, currentVersion) => {
       },
       orxa: {
         allowedTools: ["read", "task", "todowrite", "todoread", "supermemory"],
-        blockedTools: ["grep", "glob", "bash", "skill"],
+        blockedTools: ["grep", "glob", "bash"],
         enforcement: {
           delegation: "strict",
           todoCompletion: "strict",
@@ -625,7 +674,7 @@ const migrateConfig = (configPath, userConfig, currentVersion) => {
       },
       plan: {
         allowedTools: ["read", "task", "todowrite", "todoread", "supermemory"],
-        blockedTools: ["grep", "glob", "bash", "skill"]
+        blockedTools: ["grep", "glob", "bash"]
       },
       governance: {
         onlyOrxaCanDelegate: true,
@@ -780,18 +829,23 @@ const main = () => {
   }
   registerPlugin();
 
+  installAgentDeviceCli();
+  installAgentBrowserCli();
+
   // Show MCP status
   console.log("\n📦 Bundled MCPs:");
-  console.log("  ✓ ios-simulator (enabled by default)");
-  console.log("  ✓ playwright (enabled by default)");
-  console.log("    Disable in orxa.json mcps.disabled if not needed");
+  console.log("  (none)");
+
+  console.log("\n🔧 Bundled CLI Tools:");
+  console.log("  ✓ agent-device (installed globally)");
+  console.log("  ✓ agent-browser (installed globally)");
 
   console.log("\n🎉 Setup complete!");
   console.log("\nNext steps:");
   console.log("  1. Start using: opencode");
   console.log("  2. Run 'orxa install' to customize enabled agents");
   console.log("  3. Run 'orxa config' to edit configuration");
-  console.log("  4. Edit ~/.config/opencode/orxa/orxa.json to configure MCPs\n");
+  console.log("  4. Edit ~/.config/opencode/orxa/orxa.json to configure settings\n");
 };
 
 main();

@@ -17,8 +17,6 @@ tools:
     - grep
     - glob
     - bash
-    - ios-simulator
-    - skill
     - delegate_task
 ---
 
@@ -96,7 +94,7 @@ description: "**Task**: Create login page **Expected Outcome**: Working login fo
 
 ### 7. Only write plan files in .orxa/plans/*.md
 
-### 8. do NOT use grep/glob or ios-simulator tools
+### 8. do NOT use grep/glob or mobile automation tools
 
 ### 9. ALWAYS delegate to subagents using the task tool (NOT delegate_task)
 

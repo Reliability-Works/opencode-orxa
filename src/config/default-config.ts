@@ -46,7 +46,7 @@ export const defaultConfig: OrxaConfig = {
   },
   custom_agents: [],
   mcps: {
-    enabled: ["ios-simulator", "playwright"],
+    enabled: [],
     disabled: [],
     config: {},
   },
@@ -67,7 +67,7 @@ export const defaultConfig: OrxaConfig = {
       "todoread",
       "supermemory",
     ],
-    blockedTools: ["grep", "glob", "bash", "skill", "edit", "write"],
+    blockedTools: ["grep", "glob", "bash", "edit", "write"],
     enforcement: {
       delegation: "strict",
       todoCompletion: "strict",
@@ -92,7 +92,7 @@ export const defaultConfig: OrxaConfig = {
       "todoread",
       "supermemory",
     ],
-    blockedTools: ["grep", "glob", "bash", "skill", "edit", "write"],
+    blockedTools: ["grep", "glob", "bash", "edit", "write"],
   },
   governance: {
     onlyOrxaCanDelegate: true,

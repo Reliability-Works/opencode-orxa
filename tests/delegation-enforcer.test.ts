@@ -159,10 +159,10 @@ Background info
   });
 
   describe('Mobile Tool Block', () => {
-    it('blocks orxa from using ios-simulator tools', () => {
+    it('blocks orxa from using agent-device tools', () => {
       const context = createContext({
-        toolName: 'ios-simulator_ui_tap',
-        tool: { name: 'ios-simulator_ui_tap' },
+        toolName: 'agent-device_ui_tap',
+        tool: { name: 'agent-device_ui_tap' },
         agent: 'orxa'
       });
       const result = enforceDelegation(context);

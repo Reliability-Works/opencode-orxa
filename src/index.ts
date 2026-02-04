@@ -50,6 +50,8 @@ const BUNDLED_SKILLS = [
   "vercel-react-best-practices",
   // Video
   "remotion-best-practices",
+  "agent-browser",
+  "agent-device",
 ] as const;
 
 type BundledSkill = (typeof BUNDLED_SKILLS)[number];
