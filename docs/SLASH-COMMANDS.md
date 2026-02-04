@@ -6,12 +6,14 @@ Complete reference for all built-in slash commands in OpenCode Orxa.
 
 - [Overview](#overview)
 - [Command Reference](#command-reference)
+  - [/orchestrate](#orchestrate)
   - [/validate](#validate)
   - [/refactor](#refactor)
   - [/explain](#explain)
   - [/test](#test)
   - [/debug](#debug)
   - [/commit](#commit)
+  - [/search](#search)
 - [Command Aliases](#command-aliases)
 - [How Commands Work](#how-commands-work)
 - [Creating Custom Commands](#creating-custom-commands)
@@ -44,6 +46,113 @@ Each command returns:
 - **Suggested next actions** (actionable items)
 
 ## Command Reference
+
+### /orchestrate
+
+**Aliases:** `/orx`, `/ox`
+
+**Description:** Activates Orxa orchestration mode for parallel multi-agent execution. Creates isolated git worktrees with parallel workstreams for complex multi-file tasks, enabling concurrent development by multiple specialized agents.
+
+**When to Use:**
+- Complex multi-file features requiring coordinated changes
+- Large refactoring projects across multiple modules
+- Tasks that can be parallelized (e.g., frontend + backend simultaneously)
+- Multi-phase implementations with clear dependencies
+- When you need maximum throughput for complex work
+
+**Arguments:**
+- `[request]` — Description of the complex task to orchestrate (required)
+
+**Example Usage:**
+
+```
+You: /orchestrate Implement a complete user management system with authentication, profiles, and admin dashboard
+
+Orxa: ## 🎼 Orxa Orchestration Mode Activated
+
+Analyzing your request for parallel execution opportunities...
+
+**Parallel Workstreams Identified:**
+
+| Workstream | Agent | Description | Dependencies |
+|------------|-------|-------------|--------------|
+| #1 | @build | Database schema and auth API | None |
+| #2 | @frontend | Login/registration UI | #1 (API contract) |
+| #3 | @frontend | User profile page | #1 (API contract) |
+| #4 | @build | Admin dashboard backend | #1 |
+| #5 | @frontend | Admin dashboard UI | #4 |
+
+**Orchestration Plan:**
+1. Create isolated git worktrees for concurrent development
+2. Execute independent workstreams in parallel (max 5 concurrent)
+3. Monitor progress and resolve dependencies
+4. Merge completed workstreams with conflict detection
+5. Run quality gates on merged result
+
+**Starting Parallel Execution...**
+
+Workstream #1 (@build): [████████░░] 80% - Creating database schema
+Workstream #2 (@frontend): [████░░░░░░] 40% - Awaiting API contract
+Workstream #3 (@frontend): [████░░░░░░] 40% - Awaiting API contract
+Workstream #4 (@build): [██████░░░░] 60% - Building admin API
+Workstream #5 (@frontend): [░░░░░░░░░░] 0% - Awaiting backend completion
+```
+
+**Workflow:**
+1. **SpecGenerator** analyzes request and identifies parallel workstreams
+2. **WorktreeManager** creates isolated git worktrees for each workstream
+3. **OrxaOrchestrator** manages parallel execution with dependency resolution
+4. Agents work concurrently within their isolated worktrees
+5. **MergeQueue** processes completed workstreams with conflict detection
+6. **Architect** agent resolves any merge conflicts
+7. Quality gates run on the final merged result
+
+**Agents Used:**
+- `@orxa` — Orchestration coordinator
+- `@orxa-planner` — Creates parallel workstream specifications
+- `@orxa-worker` — Executes individual workstreams
+- `@architect` — Resolves merge conflicts
+- Multiple execution agents (`@build`, `@frontend`, `@coder`, etc.) depending on task
+
+**How It Works:**
+
+1. **Git Worktrees**: Creates isolated working directories linked to the same repository, allowing concurrent development without conflicts
+2. **Dependency Graph**: Analyzes task dependencies to determine execution order and parallelization opportunities
+3. **Parallel Execution**: Runs up to 5 workstreams simultaneously based on dependencies
+4. **Merge Strategy**: FIFO merge queue with automatic conflict detection and resolution
+5. **Quality Gates**: All workstreams must pass lint, type-check, and tests before merging
+
+**Configuration:**
+
+Orchestration settings in `orxa.json`:
+
+```json
+{
+  "orchestration": {
+    "enabled": true,
+    "maxConcurrent": 5,
+    "maxDepth": 3,
+    "mergeStrategy": "fifo",
+    "qualityGates": ["lint", "typecheck", "test"],
+    "worktreePrefix": ".orxa/worktrees/"
+  }
+}
+```
+
+**Tips:**
+- Provide clear, comprehensive task descriptions for better parallelization analysis
+- Complex tasks with independent components work best (e.g., frontend + backend)
+- Review the orchestration plan before execution begins
+- Monitor workstream progress in real-time
+- Be available to clarify requirements if dependencies change during execution
+
+**Limitations:**
+- Maximum 5 concurrent workstreams
+- Tasks with heavy interdependencies may not parallelize well
+- Merge conflicts are auto-resolved but may require manual review
+- Requires clean git repository state (no uncommitted changes)
+
+---
 
 ### /validate
 
@@ -466,15 +575,16 @@ Orxa: ## 🔍 Search: "how authentication works"
 
 All commands support short aliases for faster typing:
 
-| Command     | Short Alias | Shorter Alias |
-|-------------|-------------|---------------|
-| `/validate` | `/v`        | `/check`      |
-| `/refactor` | `/rf`       | —             |
-| `/explain`  | `/ex`       | `/exp`        |
-| `/test`     | `/t`        | —             |
-| `/debug`    | `/dbg`      | `/fix`        |
-| `/commit`   | `/c`        | `/git`        |
-| `/search`   | `/s`        | `/find`       |
+| Command       | Short Alias | Shorter Alias |
+|---------------|-------------|---------------|
+| `/orchestrate`| `/orx`      | `/ox`         |
+| `/validate`   | `/v`        | `/check`      |
+| `/refactor`   | `/rf`       | —             |
+| `/explain`    | `/ex`       | `/exp`        |
+| `/test`       | `/t`        | —             |
+| `/debug`      | `/dbg`      | `/fix`        |
+| `/commit`     | `/c`        | `/git`        |
+| `/search`     | `/s`        | `/find`       |
 
 ## How Commands Work
 
@@ -627,15 +737,16 @@ When invoked, this command will:
 
 ### When to Use Each Command
 
-| Situation         | Recommended Command |
-|-------------------|---------------------|
-| Starting new work | `/validate`         |
-| Code cleanup      | `/refactor`         |
-| Learning codebase | `/explain`          |
-| Adding tests      | `/test`             |
-| Something broken  | `/debug`            |
-| Ready to commit   | `/commit`           |
-| Finding code      | `/search`           |
+| Situation                    | Recommended Command |
+|------------------------------|---------------------|
+| Starting new work            | `/validate`         |
+| Complex multi-file tasks     | `/orchestrate`      |
+| Code cleanup                 | `/refactor`         |
+| Learning codebase            | `/explain`          |
+| Adding tests                 | `/test`             |
+| Something broken             | `/debug`            |
+| Ready to commit              | `/commit`           |
+| Finding code                 | `/search`           |
 
 ### Command Chains
 
@@ -644,15 +755,16 @@ Commands work well together:
 ```
 /search how auth works
 /explain the auth flow
-/debug why login fails
+/orchestrate implement full auth system with login, signup, and dashboard
 /test src/auth/
-/commit "Fix authentication"
+/commit "Implement authentication system"
 ```
 
 ### Tips for Effective Use
 
 1. **Start with `/validate`** before complex work
-2. **Use `/explain`** to understand before changing
-3. **Run `/test`** after implementing features
-4. **`/commit`** regularly with atomic splits
-5. **Combine commands** for complete workflows
+2. **Use `/orchestrate`** for multi-file/multi-phase tasks to maximize parallelism
+3. **Use `/explain`** to understand before changing
+4. **Run `/test`** after implementing features
+5. **`/commit`** regularly with atomic splits
+6. **Combine commands** for complete workflows

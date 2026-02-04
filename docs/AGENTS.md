@@ -1,6 +1,6 @@
 # Agent System Documentation
 
-Complete guide to the OpenCode Orxa agent fleet — 15 specialized agents working together to deliver high-quality AI-assisted development.
+Complete guide to the OpenCode Orxa agent fleet — 17 specialized agents working together to deliver high-quality AI-assisted development.
 
 ## Table of Contents
 
@@ -23,6 +23,8 @@ Complete guide to the OpenCode Orxa agent fleet — 15 specialized agents workin
   - [Writer](#writer)
   - [Multimodal](#multimodal)
   - [Mobile Simulator](#mobile-simulator)
+  - [Orxa-Planner](#orxa-planner)
+  - [Orxa-Worker](#orxa-worker)
 - [Agent Selection Guide](#agent-selection-guide)
 - [Delegation Patterns](#delegation-patterns)
 - [Customizing Agents](#customizing-agents)
@@ -33,7 +35,7 @@ Complete guide to the OpenCode Orxa agent fleet — 15 specialized agents workin
 
 ## Overview
 
-The Orxa plugin replaces OpenCode's default agent system with a structured fleet of 15 specialized agents. This design follows the principle of **separation of concerns** — each agent has a specific role, toolset, and expertise area.
+The Orxa plugin replaces OpenCode's default agent system with a structured fleet of 17 specialized agents. This design follows the principle of **separation of concerns** — each agent has a specific role, toolset, and expertise area.
 
 ### Why Multiple Agents?
 
@@ -57,7 +59,7 @@ The Orxa plugin replaces OpenCode's default agent system with a structured fleet
           │ delegates to
           ▼
 ┌─────────────────────────────────────────────────────────┐
-│                    SUBAGENTS (13)                       │
+│                    SUBAGENTS (15)                       │
 │  ┌──────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐       │
 │  │Strategist│ │Reviewer │ │  Build  │ │  Coder  │       │
 │  └──────────┘ └─────────┘ └─────────┘ └─────────┘       │
@@ -67,9 +69,9 @@ The Orxa plugin replaces OpenCode's default agent system with a structured fleet
 │  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌──────────┐       │
 │  │Librarian│ │Navigator│ │ Writer  │ │Multimodal│       │
 │  └─────────┘ └─────────┘ └─────────┘ └──────────┘       │
-│  ┌─────────────────┐                                    │
-│  │ Mobile Simulator│                                    │
-│  └─────────────────┘                                    │
+│  ┌─────────────────┐ ┌─────────────┐ ┌──────────────┐   │
+│  │ Mobile Simulator│ │ Orxa-Planner│ │  Orxa-Worker │   │
+│  └─────────────────┘ └─────────────┘ └──────────────┘   │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -692,6 +694,90 @@ Must Do:
 ```
 
 **Restriction:** Orxa cannot use mobile tools directly — must delegate.
+
+---
+
+### Orxa-Planner
+
+**Role:** Parallel workstream planning agent for orchestration mode.
+
+**Best For:**
+- Analyzing complex multi-part tasks
+- Creating parallel workstream specifications
+- Breaking down large projects into concurrent workstreams
+- Dependency analysis and execution ordering
+
+**Model:** `opencode/gpt-5.2-codex`
+
+**Characteristics:**
+- Analyzes tasks for parallelization opportunities
+- Creates structured workstream specifications
+- Identifies dependencies between workstreams
+- Optimizes for concurrent execution
+
+**When to Delegate:**
+```
+Orxa: @orxa-planner — Analyze this feature request and create a parallel
+workstream plan for implementation.
+
+Required Tools: read, write
+
+Must Do:
+- Identify all components that can be worked on in parallel
+- Define clear dependencies between workstreams
+- Create structured specifications for each workstream
+- Recommend optimal execution order
+```
+
+**Orchestration Mode Only:**
+This agent is specifically designed for Orxa's orchestration mode (`/orchestrate`). It should only be invoked when Orxa needs to plan parallel execution of complex tasks.
+
+**Output Format:**
+Returns a structured plan with:
+- Workstream definitions with unique IDs
+- Dependency mappings
+- Estimated complexity for each workstream
+- Recommended agent assignments
+
+---
+
+### Orxa-Worker
+
+**Role:** Parallel workstream execution agent for orchestration mode.
+
+**Best For:**
+- Executing individual workstreams in parallel
+- Working in isolated git worktrees
+- Handling concurrent implementation tasks
+- Processing merge queue operations
+
+**Model:** `opencode/kimi-k2.5`
+
+**Characteristics:**
+- Executes within isolated worktrees
+- Reports progress to Orxa
+- Handles merge conflict detection
+- Works on assigned workstream only
+
+**When to Delegate:**
+```
+Orxa: @orxa-worker — Execute workstream WS-001: Implement authentication
+middleware in isolated worktree.
+
+Required Tools: read, edit, write, bash, grep
+
+Must Do:
+- Work only within the assigned workstream scope
+- Report progress and completion status
+- Handle errors gracefully
+- Prepare for merge to main worktree
+```
+
+**Orchestration Mode Only:**
+This agent is specifically designed for Orxa's orchestration mode (`/orchestrate`). It executes workstreams in parallel git worktrees created by Orxa.
+
+**Worktree Isolation:**
+Each orxa-worker operates in a separate git worktree to enable true parallel execution without conflicts. Results are merged back via the merge queue.
 
 ---
 

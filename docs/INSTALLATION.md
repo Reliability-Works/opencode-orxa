@@ -13,9 +13,11 @@ Complete installation instructions for the OpenCode Orxa plugin.
   - [Method 5: Local Development](#method-5-local-development)
 - [Post-Installation Setup](#post-installation-setup)
 - [Verifying Installation](#verifying-installation)
+- [CLI Tool Installation](#cli-tool-installation)
 - [Required Dependencies](#required-dependencies)
 - [Troubleshooting](#troubleshooting)
 - [Uninstallation](#uninstallation)
+- [Updating OpenCode Orxa](#updating-opencode-orxa)
 
 ## Prerequisites
 
@@ -44,6 +46,12 @@ Install globally using npm:
 
 ```bash
 npm install -g opencode-orxa
+```
+
+**Install a specific version:**
+
+```bash
+npm install -g @reliabilityworks/opencode-orxa@1.0.39
 ```
 
 This will:
@@ -85,6 +93,12 @@ If you use Bun as your package manager:
 
 ```bash
 bun add -g opencode-orxa
+```
+
+**Install a specific version:**
+
+```bash
+bun install -g @reliabilityworks/opencode-orxa@1.0.39
 ```
 
 Bun will handle the postinstall script the same way npm does.
@@ -202,7 +216,7 @@ orxa doctor
 Expected output:
 ```
 ✅ Configuration looks good.
-Enabled agents: orxa, plan, strategist, reviewer, build, coder, frontend, architect, git, explorer, librarian, navigator, writer, multimodal, mobile-simulator
+Enabled agents: orxa, plan, strategist, reviewer, build, coder, frontend, architect, git, explorer, librarian, navigator, writer, multimodal, mobile-simulator, orxa-planner, orxa-worker
 Disabled agents: none
 ```
 
@@ -251,6 +265,53 @@ Orxa: I'll create a TODO list for you...
 ```
 
 If the Orxa delegates instead of doing the work directly, installation is successful.
+
+## CLI Tool Installation
+
+OpenCode Orxa requires additional CLI tools for mobile and browser automation:
+
+### agent-device (Mobile Testing)
+
+Install globally for iOS/Android simulator automation:
+
+```bash
+npm install -g agent-device
+```
+
+**Install a specific version:**
+```bash
+npm install -g agent-device@1.0.39
+```
+
+This tool provides:
+- iOS Simulator control (launch, install, interact)
+- Android emulator support
+- Screenshot capture
+- UI automation for mobile devices
+
+### agent-browser (Browser Automation)
+
+Install globally for web browser automation:
+
+```bash
+npm install -g agent-browser
+# Then install browser binaries
+agent-browser install
+```
+
+**Install a specific version:**
+```bash
+npm install -g agent-browser@1.0.39
+agent-browser install
+```
+
+This tool provides:
+- Browser automation and testing
+- Screenshot capture
+- Web page interaction
+- Multi-browser support
+
+> **Note:** These CLI tools are installed automatically by the postinstall script, but you can also install them manually using the commands above.
 
 ## Required Dependencies
 
@@ -593,6 +654,30 @@ After successful installation:
 2. **Try [Slash Commands](SLASH-COMMANDS.md)** — Powerful workflow shortcuts
 3. **Learn about [Agents](AGENTS.md)** — Understand the agent fleet
 4. **Explore [Architecture](ARCHITECTURE.md)** — How it all works
+
+## Updating OpenCode Orxa
+
+To update to the latest version:
+
+```bash
+# Update the main plugin
+npm update -g opencode-orxa
+
+# Update CLI tools
+npm update -g agent-device agent-browser
+
+# Update from the ~/.config/opencode/ directory
+cd ~/.config/opencode
+npm update -g opencode-orxa
+```
+
+> **Note:** When updating from the `~/.config/opencode/` directory, ensure you have proper permissions and the plugin was originally installed globally.
+
+After updating, run the setup wizard to migrate any configuration changes:
+
+```bash
+orxa init
+```
 
 ## Getting Help
 

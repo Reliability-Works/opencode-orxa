@@ -8,7 +8,7 @@
 
 [![npm version](https://img.shields.io/npm/v/@reliabilityworks/opencode-orxa?style=flat-square&color=369eff&logo=npm&logoColor=white)](https://www.npmjs.com/package/@reliabilityworks/opencode-orxa)
 [![npm downloads](https://img.shields.io/npm/dt/@reliabilityworks/opencode-orxa?style=flat-square&color=ff6b35&logo=npm&logoColor=white)](https://www.npmjs.com/package/@reliabilityworks/opencode-orxa)
-[![License](https://img.shields.io/badge/license-SUL--1.0-white?style=flat-square&labelColor=black)](https://github.com/yourusername/opencode-orxa/blob/main/LICENSE)
+[![License](https://img.shields.io/badge/license-SUL--1.0-white?style=flat-square&labelColor=black)](https://github.com/Reliability-Works/opencode-orxa/blob/main/LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/Reliability-Works/opencode-orxa?style=flat-square&color=ffcb47&logo=github&logoColor=black)](https://github.com/Reliability-Works/opencode-orxa/stargazers)
 [![GitHub issues](https://img.shields.io/github/issues/Reliability-Works/opencode-orxa?style=flat-square&color=ff80eb&logo=github&logoColor=black)](https://github.com/Reliability-Works/opencode-orxa/issues)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
@@ -46,7 +46,7 @@ OpenCode Orxa transforms your OpenCode experience into a disciplined, manager-le
   - [Slash Commands](#slash-commands)
   - [Orxa Orchestration Mode](#orxa-orchestration-mode)
   - [Configuration](#configuration)
-  - [Bundled MCPs](#bundled-mcps)
+  - [Bundled CLI Tools](#bundled-cli-tools)
   - [Bundled Skills](#bundled-skills)
   - [Enforcement Rules](#enforcement-rules)
   - [CLI](#cli)
@@ -110,6 +110,16 @@ npm install -g @reliabilityworks/opencode-orxa
 npm install -g @reliabilityworks/opencode-orxa --foreground-scripts
 ```
 
+#### Installing a Specific Version
+
+```bash
+# Install a specific version (e.g., v1.0.39)
+npm install -g @reliabilityworks/opencode-orxa@1.0.39
+
+# Install using bun
+bun install -g @reliabilityworks/opencode-orxa@1.0.39
+```
+
 ### What the Postinstall Script Does
 
 When you run `npm install -g @reliabilityworks/opencode-orxa`, the postinstall script automatically:
@@ -127,13 +137,15 @@ When you run `npm install -g @reliabilityworks/opencode-orxa`, the postinstall s
 2. **Generates default `orxa.json`** with sensible defaults
 
 3. **Copies subagent YAML files** to `~/.config/opencode/orxa/agents/subagents/`
-   - 14 subagent YAMLs (strategist, reviewer, build, coder, frontend, architect, git, explorer, librarian, navigator, writer, multimodal, mobile-simulator, orxa-worker)
+   - 15 subagent YAMLs (strategist, reviewer, build, coder, frontend, architect, git, explorer, librarian, navigator, writer, multimodal, mobile-simulator, orxa-worker, orxa-planner)
    
-   > **Note:** Primary agents (`orxa.yaml` and `plan.yaml`) are built into the plugin and loaded directly from the package. They are not copied to your config directory.
+   > **Note:** The primary `orxa.yaml` agent is built into the plugin and loaded directly from the package. The `plan.yaml` agent is copied to the subagents directory alongside other subagents.
 
-4. **Registers the plugin** in `~/.config/opencode/opencode.json`
+4. **Installs CLI tools** globally (`agent-device`, `agent-browser`)
 
-5. **Shows installation summary** with next steps
+5. **Registers the plugin** in `~/.config/opencode/opencode.json`
+
+6. **Shows installation summary** with next steps
 
 > **Note:** On npm v7+, you may not see the installation summary output due to output suppression. The script is still running and completing all these steps—verify by checking the files exist (see [Verifying Installation](#verifying-installation) below).
 
@@ -183,10 +195,10 @@ drwxr-xr-x  2 user  staff    64 Jan 30 10:00 custom
 drwxr-xr-x  2 user  staff    64 Jan 30 10:00 overrides
 drwxr-xr-x  2 user  staff    64 Jan 30 10:00 subagents
 
-# subagents/ directory (14 YAML files):
+# subagents/ directory (15 YAML files):
 architect.yaml    coder.yaml        explorer.yaml     git.yaml
-librarian.yaml    mobile-simulator.yaml  multimodal.yaml
-navigator.yaml    reviewer.yaml     strategist.yaml
+librarian.yaml    mobile-simulator.yaml  multimodal.yaml  orxa-planner.yaml
+navigator.yaml    reviewer.yaml     strategist.yaml    plan.yaml
 writer.yaml       build.yaml        frontend.yaml     orxa-worker.yaml
 ```
 
@@ -273,7 +285,7 @@ Type /help for available commands or start delegating tasks.
 
 This confirms:
 - ✅ Plugin is registered and active
-- ✅ All 15 agents are loaded
+- ✅ All 17 agents are loaded
 - ✅ Orxa is the default agent
 - ✅ No `--orxa` flag needed (automatic takeover)
 
@@ -374,7 +386,7 @@ The wizard will:
 **Example wizard flow:**
 ```
 🔍 Detecting Agent Configuration...
-✅ Found 16 agents with model assignments
+✅ Found 17 agents with model assignments
 
 📋 Required Models (from agent YAML files):
 • opencode/kimi-k2.5 (orxa + 7 subagents)
@@ -426,7 +438,9 @@ If you prefer manual setup, edit `~/.config/opencode/orxa/orxa.json`:
     "navigator",
     "writer",
     "multimodal",
-    "mobile-simulator"
+    "mobile-simulator",
+    "orxa-worker",
+    "orxa-planner"
   ]
 }
 ```
@@ -439,8 +453,8 @@ opencode
 
 **Expected output:**
 ```
-🎼 OpenCode Orxa v1.0.0
-   Orxa agents loaded: 15
+🎼 OpenCode Orxa v1.0.39
+   Orxa agents loaded: 17
    Default agent: orxa
 ```
 
@@ -469,7 +483,7 @@ cat > ~/.config/opencode/orxa/orxa.json << 'EOF'
       "memoryAutomation": "strict"
     }
   },
-  "enabled_agents": ["orxa", "plan", "build", "coder", "frontend", "architect", "git", "explorer"]
+  "enabled_agents": ["orxa", "plan", "build", "coder", "frontend", "architect", "git", "explorer", "orxa-worker", "orxa-planner"]
 }
 EOF
 
@@ -489,7 +503,7 @@ opencode --version
 
 **Issue: Agents not appearing**
 - Check agent files exist: `ls ~/.config/opencode/orxa/agents/`
-- Should see `subagents/` directory with 14 YAML files
+- Should see `subagents/` directory with 15 YAML files (15 subagents + 2 primary = 17 total agents)
 - Note: `orxa.yaml` and `plan.yaml` are built into the plugin, not copied to your config
 
 </details>
@@ -569,6 +583,7 @@ When you update:
 2. **Your existing config** (`orxa.json`) is preserved
 3. **Your custom agents** in `agents/custom/` and `agents/overrides/` are preserved
 4. **Plugin registration** in `opencode.json` is maintained
+5. **CLI tools** (`agent-device`, `agent-browser`) are updated to latest versions
 
 ### Force a Fresh Install
 
@@ -585,6 +600,54 @@ mv ~/.config/opencode/orxa ~/.config/opencode/orxa.backup
 cd ~/.config/opencode
 npm install -g @reliabilityworks/opencode-orxa
 ```
+
+### Updating CLI Tools
+
+To update the bundled CLI tools separately:
+
+```bash
+# Update agent-device (mobile automation)
+npm update -g agent-device
+
+# Update agent-browser (browser automation)
+npm update -g agent-browser
+```
+
+---
+
+## Migration from MCP-based Versions
+
+If you're upgrading from a version prior to v1.0.39 that used MCPs (Model Context Protocol):
+
+### What Changed
+
+- **MCPs replaced with CLI tools**: `ios-simulator` and `playwright` MCPs have been replaced with `agent-device` and `agent-browser` CLI tools
+- **Simpler architecture**: No MCP configuration needed in `orxa.json`
+- **Better performance**: Direct CLI execution instead of MCP protocol overhead
+
+### Migration Steps
+
+1. **Update the plugin**:
+   ```bash
+   cd ~/.config/opencode
+   npm update -g @reliabilityworks/opencode-orxa
+   ```
+
+2. **CLI tools are auto-installed** during the update, but you can verify:
+   ```bash
+   agent-device --version
+   agent-browser --version
+   ```
+
+3. **Remove old MCP config** from `orxa.json` (if present):
+   ```json
+   // Remove this section if it exists
+   {
+     "mcps": { ... }
+   }
+   ```
+
+4. **No code changes needed** - the `mobile-simulator` and `navigator` subagents automatically use the new CLI tools
 
 ---
 
@@ -640,7 +703,7 @@ Orxa: ✅ Frontend task complete. The component is ready at src/components/UserP
 
 ### Agent Orchestration
 
-- **16 Specialized Agents** — From frontend to architecture to mobile testing
+- **17 Specialized Agents** — From frontend to architecture to mobile testing
 - **Automatic Escalation** — Failed tasks escalate to senior agents
 - **Parallel Execution** — Multiple subagents work simultaneously
 - **Context Hygiene** — Smart summarization prevents context bloat
@@ -766,6 +829,7 @@ Type `/command-name` to invoke powerful workflows:
 | `/debug`    | `/dbg`, `/fix` | Debug issues and trace code flow                   | @architect, @explorer, @coder      |
 | `/commit`   | `/c`, `/git`   | Smart git commits with atomic splitting            | @git                               |
 | `/search`   | `/s`, `/find`  | Search codebase and web                            | @explorer + @navigator             |
+| `/orchestrate` | -         | Activate Orxa orchestration mode                   | @strategist, @orxa-planner, @orxa-worker |
 
 ### Command Examples
 
@@ -796,7 +860,7 @@ Type `/command-name` to invoke powerful workflows:
 
 ## Orxa Orchestration Mode
 
-> **🚧 Coming Soon** — This feature is planned but not yet fully implemented.
+> **✅ Available** — This feature is fully implemented and ready to use.
 
 Orxa Orchestration Mode enables **parallel multi-agent execution** for complex tasks. Similar to oh-my-opencode's ultrawork, but designed for parallel workstreams with git worktrees.
 
@@ -973,7 +1037,7 @@ Directory structure:
 
 **enabled_agents** (string[])
 - Which agents are available for use
-- Default: All 15 built-in agents
+- Default: All 17 built-in agents
 - Example: `["orxa", "plan", "build", "coder"]`
 
 **disabled_agents** (string[])
@@ -1048,7 +1112,7 @@ Controls how strictly the plugin enforces rules:
 
 **orxa.blockedTools** (string[])
 - Tools explicitly blocked for the Orxa
-- Default: `["grep", "glob", "bash", "skill"]`
+- Default: `["grep", "glob", "bash"]`
 - Impact: Blocks high-risk tools even if allowed by other rules
 
 **orxa.maxManualEditsPerSession** (number)
@@ -1247,8 +1311,8 @@ Controls how strictly the plugin enforces rules:
 - Per-agent tool restrictions (allowedTools/blockedTools/maxAttachments)
 - Default: `{}`
 
-**mcp** (object)
-- MCP configuration passthrough
+**cliTools** (object)
+- CLI tool configuration (agent-device, agent-browser)
 - Default: `{}`
 
 #### Orxa Orchestration
@@ -1312,66 +1376,65 @@ Primary agents (orxa, plan) can only override `model` to preserve enforcement in
 
 ---
 
-## Bundled MCPs
+## Bundled CLI Tools
 
-OpenCode Orxa includes two powerful MCP (Model Context Protocol) servers for extended functionality:
+OpenCode Orxa includes two powerful CLI tools for extended functionality:
 
-### iOS Simulator MCP
+### agent-device
 
-Control the iOS Simulator for mobile testing and automation:
+Control mobile devices (iOS Simulator, Android Emulator) for mobile testing and automation:
 
-| Tool | Description |
-|------|-------------|
-| `ios_simulator_screenshot` | Take screenshots of the simulator |
-| `ios_simulator_ui_tap` | Tap on screen coordinates |
-| `ios_simulator_ui_type` | Input text into the simulator |
-| `ios_simulator_ui_swipe` | Perform swipe gestures |
-| `ios_simulator_launch_app` | Launch apps by bundle ID |
-| `ios_simulator_record_video` | Record simulator sessions |
+| Command | Description |
+|---------|-------------|
+| `agent-device screenshot` | Take screenshots of the device |
+| `agent-device tap` | Tap on screen coordinates |
+| `agent-device type` | Input text into the device |
+| `agent-device swipe` | Perform swipe gestures |
+| `agent-device launch` | Launch apps by bundle ID |
+| `agent-device record` | Record device sessions |
 
-**Requirements:** macOS with Xcode installed
+**Installation:**
+```bash
+npm install -g agent-device
+```
 
-### Playwright MCP
+**Requirements:** macOS with Xcode installed (for iOS), or Android SDK (for Android)
+
+### agent-browser
 
 Browser automation using Playwright:
 
-| Tool | Description |
-|------|-------------|
-| `playwright_browser_navigate` | Navigate to URLs |
-| `playwright_browser_click` | Click elements on the page |
-| `playwright_browser_type` | Type text into inputs |
-| `playwright_browser_take_screenshot` | Capture page screenshots |
-| `playwright_browser_evaluate` | Execute JavaScript |
-| `playwright_browser_fill_form` | Fill multiple form fields |
+| Command | Description |
+|---------|-------------|
+| `agent-browser navigate` | Navigate to URLs |
+| `agent-browser click` | Click elements on the page |
+| `agent-browser type` | Type text into inputs |
+| `agent-browser screenshot` | Capture page screenshots |
+| `agent-browser evaluate` | Execute JavaScript |
+| `agent-browser fill-form` | Fill multiple form fields |
+
+**Installation:**
+```bash
+npm install -g agent-browser
+agent-browser install  # Install browser binaries
+```
 
 **Requirements:** Node.js 18+ (browsers auto-install)
 
-### MCP Configuration
+### CLI Tool Configuration
 
-MCPs are configured in your `orxa.json`:
+CLI tools are automatically installed during the postinstall script. They are used by the `mobile-simulator` and `navigator` subagents respectively.
 
-```json
-{
-  "mcps": {
-    "enabled": ["playwright"],
-    "disabled": [],
-    "config": {
-      "playwright": {
-        "headless": true,
-        "browser": "chromium"
-      }
-    }
-  }
-}
+To update CLI tools:
+```bash
+npm update -g agent-device agent-browser
 ```
-
-To disable an MCP, add it to the `disabled` array or remove it from `enabled`.
 
 ---
 
 ## Bundled Skills
 
-OpenCode Orxa includes 17 skills that provide expert guidance on common development tasks. Access them via `@skill/{name}`:
+OpenCode Orxa includes 18 skills that provide expert guidance on common development tasks. Access them via `@skill/{name}`:
 
 ### General Development
 | Skill | Description |
@@ -1384,6 +1447,7 @@ OpenCode Orxa includes 17 skills that provide expert guidance on common developm
 | `@skill/devops-release` | CI/CD and release management |
 | `@skill/feature-flags-experiments` | Feature flags and A/B testing |
 | `@skill/agent-device` | Mobile automation via agent-device CLI |
+| `@skill/agent-browser` | Web browser automation via agent-browser CLI |
 
 ### Expo / React Native
 | Skill | Description |
@@ -1522,7 +1586,7 @@ npm run typecheck
 
 ## License
 
-MIT
+SUL-1.0 (Source Available License)
 
 ---
 

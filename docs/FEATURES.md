@@ -91,7 +91,7 @@ Starting intelligent refactoring workflow...
 | `sessionCheckpoint`        | Periodic (every N messages) | Save session state      |
 | `todoContinuationEnforcer` | When Orxa tries to stop     | Prevent incomplete work |
 | `sessionCreated`           | New session starts          | Welcome toast           |
-| `orxaDetector`             | User sends message          | Detect "orxa" keyword   |
+| `orxaDetector`             | User sends message          | Detect `/orchestrate` command |
 | `orxaIndicator`            | Orxa mode active            | Progress UI             |
 
 **Hook Execution Order:**
@@ -100,7 +100,7 @@ Starting intelligent refactoring workflow...
 User Request
     │
     ▼
-[orxaDetector] ──► Detect "orxa" keyword
+[orxaDetector] ──► Detect `/orchestrate` command
     │
     ▼
 [preToolExecution] ──► Check delegation, tools, TODOs
@@ -419,7 +419,7 @@ export const agentsMdInjector = async (context: HookContext) => {
 **Appearance:**
 ```
 🎼 OpenCode Orxa
-15 agents loaded • Strict mode
+17 agents loaded • Strict mode
 ```
 
 **Information Shown:**
@@ -445,10 +445,46 @@ export const agentsMdInjector = async (context: HookContext) => {
 
 **Usage:**
 ```
-orxa implement authentication with login, signup, oauth
+/orchestrate implement authentication with login, signup, oauth
 ```
 
+When you use the `/orchestrate` command, Orxa activates parallel orchestration mode using specialized orchestration agents to plan and execute complex tasks across multiple workstreams.
+
 **Detailed Documentation:** [ORXA-MODE.md](ORXA-MODE.md)
+
+#### Orchestration Agents
+
+When `/orchestrate` is invoked, two specialized orchestration agents manage the parallel execution:
+
+**Orxa-Planner**
+- **Role:** Analyzes complex requests and creates parallel workstream plans
+- **Function:** Breaks down large tasks into independent workstreams with proper dependency mapping
+- **Output:** Structured workstream specifications for concurrent execution
+- **Delegation:** Called by Orxa when orchestration mode is activated
+
+**Orxa-Worker**
+- **Role:** Manages execution of individual workstreams within the parallel orchestration
+- **Function:** Executes assigned workstream tasks and reports progress back to the orchestrator
+- **Integration:** Works within the git worktree isolation system
+- **Coordination:** Part of the FIFO merge queue for orderly integration of completed work
+
+**Orchestration Flow:**
+```
+User: /orchestrate [complex task]
+    │
+    ▼
+Orxa activates orchestration mode
+    │
+    ├──► Delegates to orxa-planner (creates parallel workstream plan)
+    │
+    ├──► Creates git worktrees for isolation
+    │
+    ├──► Delegates workstreams to orxa-worker agents (up to 5 concurrent)
+    │
+    ├──► Monitors progress via FIFO merge queue
+    │
+    └──► Resolves conflicts and integrates results
+```
 
 ---
 
@@ -574,7 +610,7 @@ tools:
 
 | Feature            | OpenCode          | Orxa            |
 | ---------          | ----------        | ------          |
-| Agent System       | Single generalist | 15 specialists  |
+| Agent System       | Single generalist | 17 specialists  |
 | Delegation         | Any agent         | Orxa only       |
 | Quality Gates      | Manual            | Automated       |
 | Memory             | Manual            | Automated       |
@@ -588,7 +624,7 @@ tools:
 | Feature                | oh-my-opencode  | Orxa            |
 | ---------              | --------------- | ------          |
 | Primary Pattern        | Momus/Reviewer  | Orxa/Manager    |
-| Agent Count            | 15+             | 15              |
+| Agent Count            | 15+             | 17              |
 | Orchestration          | No              | Yes (Orxa mode) |
 | Worktrees              | No              | Yes             |
 | Parallel Execution     | No              | Yes             |
