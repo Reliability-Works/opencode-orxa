@@ -58,6 +58,20 @@ interface YamlAgentDefinition {
 const BUILTIN_AGENTS_DIR = path.resolve(__dirname, "..", "agents");
 const AGENT_EXTENSIONS = [".yaml", ".yml"];
 
+type AgentCacheEntry = {
+  mtimeMs: number;
+  agent: OpenCodeAgent | null;
+};
+
+const agentCache = new Map<string, AgentCacheEntry>();
+
+/**
+ * Clear the agent cache. Used primarily for testing.
+ */
+export const clearAgentCache = (): void => {
+  agentCache.clear();
+};
+
 /**
  * Find an agent file in a directory (checking both root and subagents subdir)
  */
@@ -172,7 +186,16 @@ const parseAgentYaml = (filePath: string): OpenCodeAgent | null => {
         prompt = trimmedContent;
       }
     } else {
-      const parsedYaml = yaml.load(trimmedContent);
+      // Try to parse as YAML to check if it's an old-style agent file
+      // (entire file is YAML without frontmatter delimiters)
+      let parsedYaml: unknown;
+      try {
+        parsedYaml = yaml.load(trimmedContent);
+      } catch {
+        // If YAML parsing fails, treat entire content as prompt
+        parsedYaml = null;
+      }
+      
       if (
         parsedYaml &&
         typeof parsedYaml === "object" &&
@@ -190,6 +213,7 @@ const parseAgentYaml = (filePath: string): OpenCodeAgent | null => {
           ].includes(key)
         )
       ) {
+        // Old-style: entire file is YAML
         frontmatter = parsedYaml as YamlAgentDefinition;
         prompt = frontmatter.system_prompt?.toString().trim() || "";
       } else {
@@ -223,6 +247,41 @@ const parseAgentYaml = (filePath: string): OpenCodeAgent | null => {
 };
 
 /**
+ * Load a single agent by name with caching and mtime invalidation
+ * Resolves custom > override > builtin
+ */
+export const loadAgentByName = (name: string): OpenCodeAgent | null => {
+  const filePath = resolveAgentFile(name);
+  if (!filePath) {
+    return null;
+  }
+
+  let stat: fs.Stats;
+  try {
+    stat = fs.statSync(filePath);
+  } catch (error) {
+    agentCache.delete(filePath);
+    console.warn(`Failed to stat agent file ${filePath}:`, error);
+    return null;
+  }
+
+  const cached = agentCache.get(filePath);
+  if (cached && cached.mtimeMs === stat.mtimeMs) {
+    return cached.agent;
+  }
+
+  let agent: OpenCodeAgent | null;
+  try {
+    agent = parseAgentYaml(filePath);
+  } catch (error) {
+    console.warn(`Failed to parse agent file ${filePath}:`, error);
+    agent = null;
+  }
+  agentCache.set(filePath, { mtimeMs: stat.mtimeMs, agent });
+  return agent;
+};
+
+/**
  * Load all orxa agents from YAML files
  * Checks for user overrides first, then falls back to builtin
  * Returns a map of agent name -> OpenCodeAgent
@@ -250,20 +309,33 @@ export const loadOrxaAgents = (options?: {
       continue;
     }
 
-    const filePath = resolveAgentFile(agentName);
-    if (filePath) {
-      const agent = parseAgentYaml(filePath);
-      if (agent) {
-        if (enabledSet && !enabledSet.has(agent.name)) {
-          continue;
-        }
-
-        if (disabledSet.has(agent.name)) {
-          continue;
-        }
-
-        agents[agent.name] = agent;
+    const agent = loadAgentByName(agentName);
+    if (agent) {
+      if (enabledSet && !enabledSet.has(agent.name)) {
+        continue;
       }
+
+      if (disabledSet.has(agent.name)) {
+        continue;
+      }
+
+      agents[agent.name] = agent;
+    }
+  }
+
+  return agents;
+};
+
+/**
+ * Load only the specified agents by name
+ */
+export const loadEnabledAgents = (agentNames: string[]): Record<string, OpenCodeAgent> => {
+  const agents: Record<string, OpenCodeAgent> = {};
+
+  for (const agentName of agentNames) {
+    const agent = loadAgentByName(agentName);
+    if (agent) {
+      agents[agent.name] = agent;
     }
   }
 

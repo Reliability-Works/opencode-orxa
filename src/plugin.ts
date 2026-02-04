@@ -1,5 +1,5 @@
 import type { Plugin, PluginInput } from "@opencode-ai/plugin";
-import { configHandler } from "./config-handler.js";
+import { configHandler, loadEnabledAgents, loadAgentByName } from "./config-handler.js";
 import { loadOrxaConfig } from "./config/loader.js";
 import { createWelcomeToastHandler } from "./hooks/welcome-toast.js";
 import { createOrxaDetector } from "./hooks/orxa-detector.js";

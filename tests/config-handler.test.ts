@@ -1,4 +1,4 @@
-import { loadOrxaAgents, createConfigHandler } from "../src/config-handler";
+import { loadOrxaAgents, createConfigHandler, clearAgentCache } from "../src/config-handler";
 import path from "path";
 import fs from "fs";
 import yaml from "js-yaml";
@@ -152,12 +152,23 @@ describe("Config Handler", () => {
     let mockYamlLoad: jest.SpyInstance;
 
     beforeEach(() => {
+      // Clear agent cache to prevent test pollution from cached agents
+      clearAgentCache();
+      
       consoleWarnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
       mockExistsSync = jest.spyOn(fs, "existsSync");
       mockReaddirSync = jest.spyOn(fs, "readdirSync");
       mockStatSync = jest.spyOn(fs, "statSync");
       mockReadFileSync = jest.spyOn(fs, "readFileSync");
       mockYamlLoad = jest.spyOn(yaml, "load");
+      
+      // Reset mocks to prevent test pollution (mockClear only clears call history,
+      // mockReset also clears mock implementations set by mockReturnValue/mockImplementation)
+      mockExistsSync.mockReset();
+      mockReaddirSync.mockReset();
+      mockStatSync.mockReset();
+      mockReadFileSync.mockReset();
+      mockYamlLoad.mockReset();
     });
 
     afterEach(() => {
