@@ -456,13 +456,13 @@ npm run build
 
 ## Orxa Mode Issues
 
-### "orxa keyword not detected"
+### "/orchestrate command not detected"
 
 **Problem:** Orxa mode not activating.
 
 **Solutions:**
-1. Ensure "orxa" is standalone word (not part of another word)
-2. Check case (detection is case-insensitive)
+1. Ensure `/orchestrate` is typed as a standalone command (not part of another word)
+2. Use lowercase `/orchestrate` (commands are case-sensitive)
 3. Verify orchestration is enabled:
    ```json
    {

@@ -176,6 +176,11 @@ describe('Config Schema', () => {
           planWriteAllowlist: ['.orxa/plans/*.md'],
           blockMobileTools: true,
         },
+        plan: {
+          model: 'gpt-4',
+          allowedTools: ['read'],
+          blockedTools: [],
+        },
         governance: {
           onlyOrxaCanDelegate: true,
           blockSupermemoryAddForSubagents: true,
@@ -186,8 +191,6 @@ describe('Config Schema', () => {
             requireSameSessionId: true,
             contextHygiene: {
               maxToolOutputChars: 4000,
-              summaryHeader: 'Summary',
-              requireSummary: true,
             },
           },
         },

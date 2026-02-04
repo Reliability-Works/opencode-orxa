@@ -6,6 +6,7 @@ import { testCommand } from "./built-in/test.js";
 import { debugCommand } from "./built-in/debug.js";
 import { commitCommand } from "./built-in/commit.js";
 import { searchCommand } from "./built-in/search.js";
+import { orchestrateCommand } from "../slash-commands/orchestrate.js";
 
 export const builtInCommands: SlashCommand[] = [
   validateCommand,
@@ -15,6 +16,7 @@ export const builtInCommands: SlashCommand[] = [
   debugCommand,
   commitCommand,
   searchCommand,
+  orchestrateCommand,
 ];
 
 export const commandRegistry = new Map<string, SlashCommand>();

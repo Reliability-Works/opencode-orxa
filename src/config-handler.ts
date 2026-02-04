@@ -271,6 +271,68 @@ export const loadOrxaAgents = (options?: {
 };
 
 /**
+ * Load primary agent model overrides from YAML files in overrides directory.
+ * Users can create agents/overrides/orxa.yaml or agents/overrides/plan.yaml
+ * with just a model field to override the primary agent models.
+ * 
+ * @returns Object with agent names as keys and model strings as values
+ */
+const loadPrimaryAgentModelOverrides = (): Record<string, string> => {
+  const overrides: Record<string, string> = {};
+  const overridesDir = getOverridesAgentsDir();
+
+  // Only check for primary agents: orxa and plan
+  const primaryAgents = ["orxa", "plan"];
+
+  for (const agentName of primaryAgents) {
+    for (const ext of [".yaml", ".yml"]) {
+      const filePath = path.join(overridesDir, `${agentName}${ext}`);
+      
+      if (!fs.existsSync(filePath)) {
+        continue;
+      }
+
+      try {
+        const content = fs.readFileSync(filePath, "utf-8");
+        let model: string | undefined;
+
+        // Check if file has YAML frontmatter (starts with ---)
+        const trimmedContent = content.trim();
+        if (trimmedContent.startsWith("---")) {
+          // Find the end of frontmatter (second ---)
+          const frontmatterEnd = trimmedContent.indexOf("---", 3);
+          if (frontmatterEnd !== -1) {
+            const yamlContent = trimmedContent.slice(3, frontmatterEnd).trim();
+            if (yamlContent) {
+              const parsed = yaml.load(yamlContent) as { model?: string } | null;
+              if (parsed && typeof parsed === "object" && parsed.model) {
+                model = parsed.model;
+              }
+            }
+          }
+        } else {
+          // Try parsing entire content as YAML
+          const parsed = yaml.load(trimmedContent) as { model?: string } | null;
+          if (parsed && typeof parsed === "object" && parsed.model) {
+            model = parsed.model;
+          }
+        }
+
+        // If we found a model, use it
+        if (model && typeof model === "string" && model.trim()) {
+          overrides[agentName] = model.trim();
+          console.log(`[orxa] Loaded model override for ${agentName} from ${filePath}: ${model}`);
+        }
+      } catch (error) {
+        console.warn(`[orxa] Failed to parse model override file ${filePath}:`, error);
+      }
+    }
+  }
+
+  return overrides;
+};
+
+/**
  * Create the config handler function
  * This handler intercepts OpenCode's config and replaces agents with orxa agents
  */
@@ -336,6 +398,11 @@ export const createConfigHandler = () => {
     }
   }
 
+  // Apply plan.model from config if specified (overrides YAML default)
+  if (orxaAgents.plan && fullOrxaConfig.plan?.model !== undefined) {
+    orxaAgents.plan.model = fullOrxaConfig.plan.model;
+  }
+
     // Apply agent_overrides (already loaded above)
     const primaryAgentSet = new Set<string>(PRIMARY_AGENTS);
 
@@ -365,6 +432,15 @@ export const createConfigHandler = () => {
             orxaAgents[agentName].tools = subagentOverride.tools;
           }
         }
+      }
+    }
+
+    // Apply primary agent model overrides from YAML files in overrides directory
+    // These take precedence over agent_overrides from orxa.json
+    const yamlModelOverrides = loadPrimaryAgentModelOverrides();
+    for (const [agentName, model] of Object.entries(yamlModelOverrides)) {
+      if (orxaAgents[agentName] && primaryAgentSet.has(agentName)) {
+        orxaAgents[agentName].model = model;
       }
     }
 

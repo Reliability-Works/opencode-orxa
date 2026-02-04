@@ -34,14 +34,14 @@ Orxa Orchestration Mode is a **parallel execution system** that breaks complex t
 | **Conflict Resolution**   | Delegated to architect agent                     |
 | **Progress Tracking**     | Real-time UI indicators                          |
 
-### The "Orxa" Keyword
+### The /orchestrate Command
 
-Activate Orxa mode by including "orxa" in your request:
+Activate Orxa mode by using the /orchestrate command in your request:
 
 ```
-orxa implement authentication with login, signup, and oauth
-orxa create REST API for users, posts, and comments  
-orxa build dashboard with sidebar, charts, and tables
+/orchestrate implement authentication with login, signup, and oauth
+/orchestrate create REST API for users, posts, and comments  
+/orchestrate build dashboard with sidebar, charts, and tables
 ```
 
 ---
@@ -77,8 +77,8 @@ Is the task complex with multiple independent parts?
           ├── NO → Use normal delegation
           │
           └── YES → Are there dependency chains?
-                    ├── Simple/no deps → Use orxa mode
-                    └── Complex deps → Use orxa mode with dependency mapping
+                    ├── Simple/no deps → Use /orchestrate mode
+                    └── Complex deps → Use /orchestrate mode with dependency mapping
 ```
 
 ---
@@ -90,7 +90,7 @@ Is the task complex with multiple independent parts?
 ```mermaid
 graph TB
     subgraph "User Interface"
-        UI[User Request with 'orxa']
+        UI[User Request with '/orchestrate']
         IND[Progress Indicator]
         TOAST[Status Toasts]
     end
@@ -151,7 +151,7 @@ graph TB
 
 | Component            | File                           | Purpose                             |
 | -----------          | ------                         | ---------                           |
-| **Orxa Detector**    | `src/hooks/orxa-detector.ts`   | Detects "orxa" keyword in messages  |
+| **Orxa Detector**    | `src/hooks/orxa-detector.ts`   | Detects /orchestrate command in messages  |
 | **Orxa Indicator**   | `src/hooks/orxa-indicator.ts`  | Shows progress UI                   |
 | **Spec Generator**   | `src/orxa/spec-generator.ts`   | Decomposes tasks into workstreams   |
 | **Worktree Manager** | `src/orxa/worktree-manager.ts` | Manages git worktrees               |
@@ -169,12 +169,12 @@ graph TB
 export const orxaDetector = async (context: HookContext) => {
   const message = context.args?.message || "";
   
-  // Check for "orxa" keyword (case insensitive, word boundary)
-  if (message.match(/\borxa\b/i)) {
+  // Check for /orchestrate command (case insensitive, word boundary)
+  if (message.match(/\/orchestrate\b/i)) {
     return {
       allow: true,
       orxaMode: true,
-      cleanedMessage: message.replace(/\borxa\b/gi, "").trim(),
+      cleanedMessage: message.replace(/\/orchestrate\b/gi, "").trim(),
     };
   }
 };
@@ -322,7 +322,7 @@ export class MergeQueue {
 
 **Request:**
 ```
-orxa implement authentication with login, signup, and oauth
+/orchestrate implement authentication with login, signup, and oauth
 ```
 
 **Generated Workstreams:**
@@ -343,7 +343,7 @@ orxa implement authentication with login, signup, and oauth
 
 **Request:**
 ```
-orxa create REST API for users, posts, and comments
+/orchestrate create REST API for users, posts, and comments
 ```
 
 **Generated Workstreams:**
@@ -361,7 +361,7 @@ orxa create REST API for users, posts, and comments
 
 **Request:**
 ```
-orxa build dashboard with sidebar, charts, and tables
+/orchestrate build dashboard with sidebar, charts, and tables
 ```
 
 **Generated Workstreams:**
@@ -596,13 +596,13 @@ stateDiagram-v2
 
 **Good:**
 ```
-orxa implement login, signup, and password reset
+/orchestrate implement login, signup, and password reset
 ```
 Each feature is independent.
 
 **Bad:**
 ```
-orxa implement authentication
+/orchestrate implement authentication
 ```
 Too vague — decomposition will be suboptimal.
 
@@ -611,7 +611,7 @@ Too vague — decomposition will be suboptimal.
 When workstreams depend on each other, be explicit:
 
 ```
-orxa build API with database schema first, then endpoints
+/orchestrate build API with database schema first, then endpoints
 ```
 
 ### 3. Reasonable Scope

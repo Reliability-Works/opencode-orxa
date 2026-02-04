@@ -80,8 +80,19 @@ export const defaultConfig: OrxaConfig = {
     maxManualEditsPerSession: 0,
     requireTodoList: true,
     autoUpdateTodos: false,
-    planWriteAllowlist: [".orxa/plans/**/*.md", ".orxa/plans/**/*.json"],
+    planWriteAllowlist: [".orxa/**/*.md", ".orxa/**/*.json"],
     blockMobileTools: true,
+  },
+  plan: {
+    model: "opencode/kimi-k2.5",
+    allowedTools: [
+      "read",
+      "task",
+      "todowrite",
+      "todoread",
+      "supermemory",
+    ],
+    blockedTools: ["grep", "glob", "bash", "skill", "edit", "write"],
   },
   governance: {
     onlyOrxaCanDelegate: true,
@@ -100,8 +111,6 @@ export const defaultConfig: OrxaConfig = {
       requireSameSessionId: true,
       contextHygiene: {
         maxToolOutputChars: 4000,
-        summaryHeader: "Summary",
-        requireSummary: false,
       },
     },
   },

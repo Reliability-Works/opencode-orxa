@@ -1,58 +1,36 @@
-# Subagents
+# Subagents Directory
 
-This directory contains the default subagent definitions for the OpenCode Orxa plugin. You can customize any subagent by copying its YAML file to your own project and editing it there.
+This folder contains **cached built-in agents** that are managed automatically by the OpenCode Orxa plugin.
 
-## How customization works
+## ⚠️ Important: Do Not Edit Files Here
 
-1. Copy the subagent YAML you want to customize.
-2. Place it in your project’s `agents/subagents/` directory.
-3. Edit the copied file (model, temperature, system prompt, or tools).
+The files in this directory are **automatically updated** when the plugin is updated. Any manual changes you make will be **overwritten** during the next plugin update.
 
-The plugin will prefer project-local definitions over bundled defaults.
+## How to Customize Built-in Agents
 
-## What you can customize
+If you want to customize a built-in agent, use the **`agents/overrides/`** directory instead:
 
-- **model**: Swap to any compatible model.
-- **temperature**: Adjust creativity vs. determinism.
-- **system_prompt**: Extend role guidance or add domain-specific rules.
-- **tools**: Add/remove tools to align with your governance.
+1. Copy the agent file from `agents/subagents/` to `agents/overrides/`
+2. Make your modifications in the `overrides/` version
+3. The override file takes precedence over the cached version
 
-## Recommended guardrails
+## Directory Structure
 
-- Keep the **Memory Protocol** intact (no `supermemory add` in subagents).
-- Preserve **delegation boundaries** (subagents should not delegate).
-- Maintain **tool restrictions** for safety (e.g., avoid unrestricted bash in UI agents).
-
-## Example: Override the frontend agent
-
-```yaml
-name: frontend
-description: Frontend UI/UX specialist. Premium visuals, styling, and animations.
-mode: subagent
-model: opencode/gemini-3-pro
-temperature: 0.2
-system_prompt: |
-  You are the UI/UX specialist. Prioritize accessibility and performance.
-
-tools:
-  - read
-  - edit
-  - write
-  - bash
+```
+~/.config/opencode/orxa/agents/
+├── subagents/     # Cached built-in agents (DO NOT EDIT)
+├── overrides/     # Your customizations (EDIT HERE)
+└── custom/        # Completely new agents
 ```
 
-## Subagent list
+## What Gets Updated Automatically?
 
-- strategist
-- reviewer
-- build
-- coder
-- frontend
-- architect
-- git
-- explorer
-- librarian
-- navigator
-- writer
-- multimodal
-- mobile-simulator
+- Agent YAML definitions
+- System prompts
+- Tool configurations
+- Default parameters
+
+## See Also
+
+- [`agents/overrides/README.md`](../overrides/README.md) - How to customize built-in agents
+- [`agents/custom/README.md`](../custom/README.md) - How to create new custom agents

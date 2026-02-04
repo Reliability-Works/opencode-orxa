@@ -208,6 +208,10 @@ export const parseAgentModels = (): ParsedAgentConfig => {
     const files = fs.readdirSync(subagentsDir);
     for (const file of files) {
       if (file.endsWith(".yaml")) {
+        // Skip primary agent YAMLs in subagents directory (they're documentation only)
+        if (file === "orxa.yaml" || file === "plan.yaml") {
+          continue;
+        }
         const filePath = path.join(subagentsDir, file);
         const agentInfo = parseAgentYaml(filePath);
         if (agentInfo) {

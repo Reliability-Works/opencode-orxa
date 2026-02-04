@@ -7,19 +7,11 @@
 
 import type { PluginInput } from "@opencode-ai/plugin";
 import type { HookContext, EnforcementResult } from "../types.js";
-import type { OrxaDetectionResult } from "../orxa/types.js";
-
-/**
- * Pattern to detect "orxa" keyword (case insensitive, word boundary).
- */
-const ORXA_PATTERN = /\borxa\b/gi;
 
 /**
  * System prompt injected when Orxa mode is triggered.
  */
 const ORXA_SYSTEM_PROMPT = `You are now in **ORXA ORCHESTRATION MODE**.
-
-Say "ORXA MODE ACTIVATED" to the user.
 
 YOUR ROLE AS ORXA (ORCHESTRATOR):
 - You are the orchestrator - you do NOT implement work yourself
@@ -28,15 +20,22 @@ YOUR ROLE AS ORXA (ORCHESTRATOR):
 - You ONLY use: read, task, and other read-only tools
 
 ## 6-Section Delegation Template (REQUIRED)
-Every task tool call MUST include ALL 6 sections in the **description** field (NOT a "prompt" field).
+Every task tool call MUST include BOTH fields:
+- **description**: A short title (3-5 words) describing the task
+- **prompt**: The full 6-section delegation content
 
 **CRITICAL RULES**:
-1. Use the **description** field - NOT "prompt", NOT "message", NOT "instructions"
-2. Use single-line format (do not use actual line breaks)
-3. Include all 6 section names (case-sensitive): Task, Expected Outcome, Required Tools, Must Do, Must Not Do, Context
+1. Use the **prompt** field for the 6-section content (NOT "description")
+2. Use the **description** field for a short task title only
+3. Use single-line format (do not use actual line breaks)
+4. Include all 6 section names (case-sensitive): Task, Expected Outcome, Required Tools, Must Do, Must Not Do, Context
 
 **Correct Format**:
-description: "**Task**: description **Expected Outcome**: description **Required Tools**: tools **Must Do**: requirements **Must Not Do**: constraints **Context**: background"
+task({
+  subagent_type: "coder",
+  description: "Create login page",
+  prompt: "**Task**: Create login page **Expected Outcome**: Working login form with validation **Required Tools**: read, edit **Must Do**: Use existing auth hook **Must Not Do**: Change API endpoints **Context**: Login page at app/login.tsx using better-auth"
+})
 
 ORCHESTRATION FLOW:
 
@@ -63,7 +62,8 @@ EXAMPLE DELEGATION:
 1. Delegate to planner:
    task({
      subagent_type: "orxa-planner",
-     description: "**Task**: Create workstream plan for [user request] **Expected Outcome**: JSON workstream plan with parallel groups **Required Tools**: read, glob, grep **Must Do**: Analyze codebase, identify all files to modify, create parallel workstreams **Must Not Do**: Skip discovery phase, miss any dependencies **Context**: Project at /path/to/project, Stack: Next.js + Go + Convex"
+     description: "Create workstream plan",
+     prompt: "**Task**: Create workstream plan for [user request] **Expected Outcome**: JSON workstream plan with parallel groups **Required Tools**: read, glob, grep **Must Do**: Analyze codebase, identify all files to modify, create parallel workstreams **Must Not Do**: Skip discovery phase, miss any dependencies **Context**: Project at /path/to/project, Stack: Next.js + Go + Convex"
    })
 
 2. Parse the JSON response with workstreams
@@ -71,13 +71,26 @@ EXAMPLE DELEGATION:
 3. Delegate workstreams in parallel:
    task({
       subagent_type: "coder",
-      description: "**Task**: Implement [specific workstream] **Expected Outcome**: [deliverable] **Required Tools**: read, edit **Must Do**: [requirements] **Must Not Do**: [constraints] **Context**: [background info]"
+      description: "Implement workstream",
+      prompt: "**Task**: Implement [specific workstream] **Expected Outcome**: [deliverable] **Required Tools**: read, edit **Must Do**: [requirements] **Must Not Do**: [constraints] **Context**: [background info]"
     })`;
+
+type ChatMessageInput = {
+  sessionID: string;
+  agent?: string;
+  model?: { providerID: string; modelID: string };
+  messageID?: string;
+};
+
+type ChatMessageOutput = {
+  message: Record<string, unknown>;
+  parts: Array<{ type: string; text?: string; [key: string]: unknown }>;
+};
 
 const ORXA_ACTIVE_KEY = "orxaModeActive";
 const orxaSessionState = new Map<string, { active: boolean; updatedAt: string }>();
 
-const getOrxaSessionActive = (
+export const getOrxaSessionActive = (
   sessionID?: string,
   session?: { metadata?: Record<string, unknown> }
 ): boolean => {
@@ -96,7 +109,7 @@ const getOrxaSessionActive = (
   return orxaSessionState.get(sessionID)?.active ?? false;
 };
 
-const setOrxaSessionActive = (
+export const setOrxaSessionActive = (
   sessionID?: string,
   session?: { metadata?: Record<string, unknown> },
   active: boolean = true
@@ -117,56 +130,7 @@ const setOrxaSessionActive = (
   }
 };
 
-/**
- * Detect if a message contains the Orxa keyword.
- * 
- * @param message - The user's message
- * @returns Detection result with cleaned message
- */
-export function detectOrxaKeyword(message: string): OrxaDetectionResult {
-  const matches = message.match(ORXA_PATTERN);
-  
-  if (!matches || matches.length === 0) {
-    return {
-      triggered: false,
-      cleaned_message: message,
-    };
-  }
-
-  // Remove the keyword from the message
-  const cleanedMessage = message
-    .replace(ORXA_PATTERN, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-
-  return {
-    triggered: true,
-    cleaned_message: cleanedMessage,
-    keyword_variant: matches[0],
-    task_description: cleanedMessage,
-  };
-}
-
-type ChatMessageInput = {
-  sessionID: string;
-  agent?: string;
-  model?: { providerID: string; modelID: string };
-  messageID?: string;
-};
-
-type ChatMessageOutput = {
-  message: Record<string, unknown>;
-  parts: Array<{ type: string; text?: string; [key: string]: unknown }>;
-};
-
-const extractPromptText = (parts: ChatMessageOutput["parts"]): string =>
-  parts
-    .filter((part) => part.type === "text" && typeof part.text === "string")
-    .map((part) => part.text)
-    .join("\n")
-    .trim();
-
-const injectSystemPrompt = (
+export const injectSystemPrompt = (
   parts: ChatMessageOutput["parts"],
   systemPrompt: string,
   cleanedMessage: string
@@ -184,8 +148,21 @@ const injectSystemPrompt = (
   parts[textPartIndex].text = `${systemPrompt}\n\n---\n\n${messageText}`;
 };
 
-const showOrxaToast = (ctx: PluginInput): void => {
-  ctx.client.tui
+type OrxaToastClient = {
+  tui: {
+    showToast: (payload: {
+      body: {
+        title: string;
+        message: string;
+        variant: "success" | "info" | "warning" | "error";
+        duration: number;
+      };
+    }) => Promise<void>;
+  };
+};
+
+export const showOrxaToast = (client: OrxaToastClient): void => {
+  client.tui
     .showToast({
       body: {
         title: "Orxa Mode Activated",
@@ -200,6 +177,26 @@ const showOrxaToast = (ctx: PluginInput): void => {
 };
 
 /**
+ * Extract text content from message parts.
+ *
+ * @param parts - Message parts from chat output
+ * @returns Concatenated text content
+ */
+const extractMessageText = (
+  parts: ChatMessageOutput["parts"]
+): string => {
+  if (!parts || !Array.isArray(parts)) {
+    return "";
+  }
+
+  return parts
+    .filter((part) => part.type === "text" && typeof part.text === "string")
+    .map((part) => part.text)
+    .join("\n")
+    .trim();
+};
+
+/**
  * Chat message hook for Orxa detection.
  *
  * @param ctx - Plugin input for TUI access
@@ -210,26 +207,34 @@ export function createOrxaDetector(ctx: PluginInput) {
     input: ChatMessageInput,
     output: ChatMessageOutput
   ): Promise<void> {
-    const promptText = extractPromptText(output.parts);
-    if (!promptText) {
+    // Only apply to ORXA agent - skip for all other agents
+    const agentName = input.agent?.toLowerCase() || '';
+    if (agentName !== 'orxa') {
       return;
     }
 
-    const detection = detectOrxaKeyword(promptText);
+    // Extract text from message parts
+    const messageText = extractMessageText(output.parts);
 
-    if (!detection.triggered) {
+    // Check if message contains /orchestrate command
+    if (!shouldTriggerOrxa(messageText)) {
       return;
     }
 
-    const isActive = getOrxaSessionActive(input.sessionID);
-    if (isActive) {
-      return;
-    }
+    // Strip the /orchestrate command from the message
+    const cleanedMessage = stripOrxaKeyword(messageText);
 
+    // Get the system prompt
+    const systemPrompt = getOrxaSystemPrompt();
+
+    // Inject system prompt into the message parts
+    injectSystemPrompt(output.parts, systemPrompt, cleanedMessage);
+
+    // Show toast notification
+    showOrxaToast(ctx.client as unknown as OrxaToastClient);
+
+    // Mark session as active for Orxa mode
     setOrxaSessionActive(input.sessionID, undefined, true);
-
-    showOrxaToast(ctx);
-    injectSystemPrompt(output.parts, ORXA_SYSTEM_PROMPT, detection.cleaned_message);
   };
 }
 
@@ -238,62 +243,32 @@ export function createOrxaDetector(ctx: PluginInput) {
  * @deprecated Use createOrxaDetector with chat.message hook.
  */
 export async function orxaDetector(context: HookContext): Promise<EnforcementResult> {
-  if (context.toolName || context.tool) {
-    return { allow: true };
-  }
-
-  const message =
-    context.session?.messages?.[context.session.messages.length - 1]?.content || "";
-
-  if (!message) {
-    return { allow: true };
-  }
-
-  const detection = detectOrxaKeyword(message);
-
-  if (!detection.triggered) {
-    return { allow: true };
-  }
-
-  const sessionID = context.sessionId ?? context.session?.id;
-  const isActive = getOrxaSessionActive(sessionID, context.session);
-  if (isActive) {
-    return { allow: true };
-  }
-
-  setOrxaSessionActive(sessionID, context.session, true);
-
-  return {
-    allow: true,
-    metadata: {
-      orxa_triggered: true,
-      cleaned_message: detection.cleaned_message,
-      inject_system_prompt: ORXA_SYSTEM_PROMPT,
-    },
-    message: `🚀 **ORXA MODE ACTIVATED**\n\nParallel orchestration engaged. Delegating to orchestrator...`,
-  };
+  void context;
+  return { allow: true };
 }
 
 /**
  * Check if a message should trigger Orxa mode.
+ * Detects "/orchestrate" command (with leading slash).
  *
  * @param message - Message to check
  * @returns Whether Orxa should be triggered
  */
 export function shouldTriggerOrxa(message: string): boolean {
-  // Create new regex instance to avoid state issues with global flag
-  return /\borxa\b/gi.test(message);
+  // Check for /orchestrate command (with leading slash, word boundary, case insensitive)
+  return /\/orchestrate\b/gi.test(message);
 }
 
 /**
  * Strip Orxa keyword from message.
+ * Strips "/orchestrate" command (with leading slash).
  * 
  * @param message - Original message
  * @returns Message with keyword removed
  */
 export function stripOrxaKeyword(message: string): string {
   return message
-    .replace(ORXA_PATTERN, '')
+    .replace(/\/orchestrate\b/gi, '')
     .replace(/\s+/g, ' ')
     .trim();
 }
@@ -331,7 +306,55 @@ export function createOrchestratorDelegationPrompt(cleanedMessage: string): stri
 - Execute workstreams sequentially instead of in parallel
 - Call createOrchestrator() or any code from orchestrator.ts
 
-**Context**: User explicitly requested parallel execution with "orxa" keyword. This is a high-priority orchestration request.`;
+ **Context**: User explicitly requested parallel execution with "/orchestrate" command. This is a high-priority orchestration request.`;
+}
+
+/**
+ * Format a delegation description with the required 6-section template.
+ * This helper ensures all delegations follow the correct format.
+ * 
+ * @param sections - Object containing the 6 required sections
+ * @returns Properly formatted single-line delegation description
+ */
+export function formatDelegationDescription(sections: {
+  task: string;
+  expectedOutcome: string;
+  requiredTools: string;
+  mustDo: string;
+  mustNotDo: string;
+  context: string;
+}): string {
+  return `**Task**: ${sections.task} **Expected Outcome**: ${sections.expectedOutcome} **Required Tools**: ${sections.requiredTools} **Must Do**: ${sections.mustDo} **Must Not Do**: ${sections.mustNotDo} **Context**: ${sections.context}`;
+}
+
+/**
+ * Validate that a delegation description has all 6 required sections.
+ * Returns missing sections or empty array if valid.
+ * 
+ * @param description - The delegation description to validate
+ * @returns Array of missing section names
+ */
+export function validateDelegationDescription(description: string): string[] {
+  const requiredSections = [
+    "Task",
+    "Expected Outcome", 
+    "Required Tools",
+    "Must Do",
+    "Must Not Do",
+    "Context"
+  ];
+  
+  const missing: string[] = [];
+  
+  for (const section of requiredSections) {
+    // Check for **Section**: pattern (case-sensitive)
+    const pattern = new RegExp(`\\*\\*${section}\\*\\*\\s*:`);
+    if (!pattern.test(description)) {
+      missing.push(section);
+    }
+  }
+  
+  return missing;
 }
 
 export default orxaDetector;

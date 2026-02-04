@@ -217,7 +217,7 @@ export const resolveAgentDefinition = (
 | `sessionCheckpoint`        | Periodic during session  | Save session state                  |
 | `todoContinuationEnforcer` | When Orxa tries to stop  | Prevent stopping with pending TODOs |
 | `sessionCreated`           | New session started      | Show welcome toast                  |
-| `orxaDetector`             | User sends message       | Detect "orxa" keyword               |
+| `orxaDetector`             | User sends message       | Detect `/orchestrate` command         |
 | `orxaIndicator`            | Orxa mode active         | Show progress UI                    |
 
 ### Hook Execution Flow
@@ -568,7 +568,7 @@ graph TB
         WA3[Worker 3]
     end
     
-    User -->|"orxa implement X"| OD
+    User -->|"/orchestrate implement X"| OD
     OD --> SG
     SG -->|Specs| WM
     WM --> WT1
@@ -587,18 +587,18 @@ graph TB
 
 #### 1. Orxa Detector
 
-Detects "orxa" keyword in user messages:
+Detects `/orchestrate` command in user messages:
 
 ```typescript
 // src/hooks/orxa-detector.ts
 export const orxaDetector = async (context: HookContext) => {
   const message = context.args?.message || "";
   
-  if (message.match(/\borxa\b/i)) {
+  if (message.match(/\b\/orchestrate\b/i)) {
     return {
       allow: true,
       orxaMode: true,
-      cleanedMessage: message.replace(/\borxa\b/gi, "").trim(),
+      cleanedMessage: message.replace(/\b\/orchestrate\b/gi, "").trim(),
     };
   }
 };
@@ -710,7 +710,7 @@ sequenceDiagram
     participant Worker as Worker Agent
     participant Queue as Merge Queue
     
-    User->>Orxa: "orxa implement auth with login, signup, oauth"
+    User->>Orxa: "/orchestrate implement auth with login, signup, oauth"
     
     Orxa->>SpecGen: Decompose request
     SpecGen->>SpecGen: Create workstream specs

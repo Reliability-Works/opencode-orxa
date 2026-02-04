@@ -655,7 +655,7 @@ Orxa: [escalates to @architect for system design]
 For complex multi-part features:
 
 ```
-You: orxa implement dashboard with sidebar, charts, and tables
+You: /orchestrate implement dashboard with sidebar, charts, and tables
 
 Orxa: ## 🚀 Orxa Mode Activated
 

@@ -37,7 +37,6 @@ import {
   isOrxaAvailable,
 } from '../src/orxa/orchestrator';
 import {
-  detectOrxaKeyword,
   shouldTriggerOrxa,
   stripOrxaKeyword,
   getOrxaSystemPrompt,
@@ -520,30 +519,14 @@ Let me know if you need anything else.
   });
 
   describe('Orxa Detector Hook', () => {
-    it('should detect orxa keyword', () => {
-      const result = detectOrxaKeyword('orxa implement authentication');
-      expect(result.triggered).toBe(true);
-      expect(result.cleaned_message).toBe('implement authentication');
-    });
-
-    it('should detect orxa keyword case insensitive', () => {
-      expect(detectOrxaKeyword('ORXA do something').triggered).toBe(true);
-      expect(detectOrxaKeyword('OrXa test').triggered).toBe(true);
-    });
-
-    it('should not trigger on non-orxa messages', () => {
-      const result = detectOrxaKeyword('implement authentication');
-      expect(result.triggered).toBe(false);
-      expect(result.cleaned_message).toBe('implement authentication');
-    });
-
-    it('should strip orxa keyword', () => {
-      expect(stripOrxaKeyword('orxa do this')).toBe('do this');
-      expect(stripOrxaKeyword('ORXA do that')).toBe('do that');
+    it('should strip /orchestrate command', () => {
+      expect(stripOrxaKeyword('/orchestrate do this')).toBe('do this');
+      expect(stripOrxaKeyword('/ORCHESTRATE do that')).toBe('do that');
     });
 
     it('should check if should trigger orxa', () => {
-      expect(shouldTriggerOrxa('orxa test')).toBe(true);
+      expect(shouldTriggerOrxa('/orchestrate test')).toBe(true);
+      expect(shouldTriggerOrxa('orchestrate test')).toBe(false); // Without slash should not trigger
       expect(shouldTriggerOrxa('test')).toBe(false);
     });
 
@@ -648,7 +631,7 @@ Let me know if you need anything else.
 
       // Start orchestration
       const startPromise = orchestrator.start(
-        'orxa implement authentication with login, signup, oauth',
+        'orchestrate implement authentication with login, signup, oauth',
         { wait_for_completion: true }
       );
 

@@ -7,6 +7,7 @@ import { preToolExecution } from "./hooks/pre-tool-execution.js";
 import { postSubagentResponse } from "./hooks/post-subagent-response.js";
 import { todoContinuationEnforcer } from "./hooks/todo-continuation-enforcer.js";
 import { orxaIndicator } from "./hooks/orxa-indicator.js";
+import { slashcommand } from "./tools/slashcommand.js";
 import type { Message, Session } from "./types.js";
 
 const orxaPlugin: Plugin = async (ctx: PluginInput) => {
@@ -27,12 +28,36 @@ const orxaPlugin: Plugin = async (ctx: PluginInput) => {
       .trim();
   };
 
-  const loadSession = async (sessionID?: string, agentName?: string): Promise<Session | undefined> => {
+  const loadSession = async (sessionID?: string, agentName?: string, skipFetch = false): Promise<Session | undefined> => {
     if (!sessionID) {
       return undefined;
     }
 
     const cached = sessionCache.get(sessionID);
+
+    // If skipFetch is true (for subagents), return cached data or minimal session
+    if (skipFetch) {
+      if (cached) {
+        return cached;
+      }
+      // Return minimal session without fetching
+      return {
+        id: sessionID,
+        agentName: agentName ?? "unknown",
+        manualEdits: 0,
+        todos: [],
+        messages: [],
+        messageCount: 0,
+        recentMessages: [],
+        memoryQueue: [],
+        agentAttempts: {},
+      };
+    }
+
+    // Use cached data if available to avoid API calls
+    if (cached) {
+      return cached;
+    }
 
     let messages: Message[] = [];
     try {
@@ -54,10 +79,10 @@ const orxaPlugin: Plugin = async (ctx: PluginInput) => {
         });
       }
     } catch {
-      messages = cached?.messages ?? [];
+      messages = [];
     }
 
-    let todos = cached?.todos ?? [];
+    let todos: Session["todos"] = [];
     try {
       if (typeof ctx.client.session.todo === "function") {
         const todoResponse = await ctx.client.session.todo({ path: { id: sessionID } });
@@ -67,20 +92,20 @@ const orxaPlugin: Plugin = async (ctx: PluginInput) => {
         }
       }
     } catch {
-      todos = cached?.todos ?? [];
+      todos = [];
     }
 
     const session: Session = {
       id: sessionID,
-      agentName: agentName ?? cached?.agentName ?? "orxa",
-      manualEdits: cached?.manualEdits ?? 0,
+      agentName: agentName ?? "unknown",
+      manualEdits: 0,
       todos,
       messages,
-      metadata: cached?.metadata,
+      metadata: undefined,
       messageCount: messages.length,
       recentMessages: messages.slice(-20),
-      memoryQueue: cached?.memoryQueue ?? [],
-      agentAttempts: cached?.agentAttempts ?? {},
+      memoryQueue: [],
+      agentAttempts: {},
     };
 
     sessionCache.set(sessionID, session);
@@ -109,21 +134,32 @@ const orxaPlugin: Plugin = async (ctx: PluginInput) => {
 
   return {
     config: configHandler,
+    tool: {
+      slashcommand,
+    },
     "chat.message": async (input, output) => {
       await orxaDetector(input, output);
     },
     "tool.execute.before": async (input, output) => {
       const toolInput = input as { tool: string; sessionID: string; callID: string; agent?: string; attachments?: Array<{ type: string; mimeType?: string; name?: string; size?: number }> };
       const toolOutput = output as { args?: Record<string, unknown> } | undefined;
+
+      // Determine if this is a subagent - skip expensive session loading for subagents
+      const agentName = toolInput.agent?.toLowerCase() || "";
+      const isSubagent = Boolean(agentName && agentName !== "orxa" && agentName !== "plan");
+
       if (orxaConfig.ui?.verboseLogging && toolInput.tool === "delegate_task") {
         console.log("[orxa][tool.execute.before] raw tool input", {
           tool: toolInput.tool,
           agent: toolInput.agent,
+          isSubagent,
           sessionID: toolInput.sessionID,
           callID: toolInput.callID,
         });
       }
-      const session = await loadSession(toolInput.sessionID, toolInput.agent);
+
+      // Skip session loading for subagents - they don't need ORXA session data
+      const session = await loadSession(toolInput.sessionID, toolInput.agent, isSubagent);
       const context = {
         toolName: toolInput.tool,
         tool: { name: toolInput.tool },
@@ -134,6 +170,7 @@ const orxaPlugin: Plugin = async (ctx: PluginInput) => {
         session,
         sessionId: toolInput.sessionID,
         attachments: toolInput.attachments,
+        workspaceRoot: ctx.directory,
       };
 
       const result = await preToolExecution(context);
@@ -158,7 +195,13 @@ const orxaPlugin: Plugin = async (ctx: PluginInput) => {
     "tool.execute.after": async (input, output) => {
       const toolInput = input as { tool: string; sessionID: string; callID: string; agent?: string };
       const toolOutput = output as { title: string; output: string; metadata: any; args?: Record<string, unknown> };
-      const session = await loadSession(toolInput.sessionID, toolInput.agent);
+
+      // Determine if this is a subagent - skip expensive session loading for subagents
+      const agentName = toolInput.agent?.toLowerCase() || "";
+      const isSubagent = Boolean(agentName && agentName !== "orxa" && agentName !== "plan");
+
+      // Skip session loading for subagents - they don't need ORXA session data
+      const session = await loadSession(toolInput.sessionID, toolInput.agent, isSubagent);
       const context = {
         toolName: toolInput.tool,
         tool: { name: toolInput.tool },

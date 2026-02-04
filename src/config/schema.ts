@@ -51,6 +51,11 @@ export interface OrxaConfig {
     planWriteAllowlist: string[];
     blockMobileTools: boolean;
   };
+  plan: {
+    model: string;
+    allowedTools: string[];
+    blockedTools: string[];
+  };
   governance: {
     onlyOrxaCanDelegate: boolean;
     blockSupermemoryAddForSubagents: boolean;
@@ -61,8 +66,6 @@ export interface OrxaConfig {
       requireSameSessionId: boolean;
       contextHygiene: {
         maxToolOutputChars: number;
-        summaryHeader: string;
-        requireSummary: boolean;
       };
     };
   };
@@ -266,6 +269,11 @@ export const orxaConfigSchema: z.ZodType<OrxaConfig> = z.object({
     planWriteAllowlist: z.array(z.string()),
     blockMobileTools: z.boolean(),
   }),
+  plan: z.object({
+    model: z.string(),
+    allowedTools: z.array(z.string()),
+    blockedTools: z.array(z.string()),
+  }),
   governance: z.object({
     onlyOrxaCanDelegate: z.boolean(),
     blockSupermemoryAddForSubagents: z.boolean(),
@@ -276,8 +284,6 @@ export const orxaConfigSchema: z.ZodType<OrxaConfig> = z.object({
       requireSameSessionId: z.boolean(),
       contextHygiene: z.object({
         maxToolOutputChars: z.number().int().nonnegative(),
-        summaryHeader: z.string(),
-        requireSummary: z.boolean(),
       }),
     }),
   }),

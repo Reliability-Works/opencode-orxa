@@ -13,6 +13,7 @@
     "agents",
     "mcps",
     "skills",
+    ".opencode",
     "postinstall.mjs"
   ],
   "scripts": {

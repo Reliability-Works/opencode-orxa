@@ -171,18 +171,18 @@ Background info
   });
 
   describe('Plan-Only Write Gate', () => {
-    it('allows orxa to write to plan files', () => {
+    it('allows orxa to write to .orxa files', () => {
       const context = createContext({
         toolName: 'write',
         tool: { name: 'write' },
-        args: { filePath: '.orxa/plans/test.md' },
+        args: { filePath: '.orxa/test.md' },
         agent: 'orxa'
       });
       const result = enforceDelegation(context);
       expect(result.allow).toBe(true);
     });
 
-    it('blocks orxa from writing outside plan files', () => {
+    it('blocks orxa from writing outside .orxa files', () => {
       const context = createContext({
         toolName: 'write',
         tool: { name: 'write' },
@@ -191,6 +191,7 @@ Background info
       });
       const result = enforceDelegation(context);
       expect(result.allow).toBe(false);
+      expect(result.reason).toContain('.orxa/**/*.md and .orxa/**/*.json');
     });
   });
 
@@ -227,7 +228,7 @@ Background info
   });
 
   describe('resolvePrompt - null/undefined args', () => {
-    it('returns empty string when args is null', () => {
+    it('allows delegation when args is null (6-section validation is warning only)', () => {
       const context = createContext({
         toolName: "task",
         tool: { name: "task" },
@@ -235,11 +236,11 @@ Background info
         agent: 'orxa',
       });
       const result = enforceDelegation(context);
-      expect(result.allow).toBe(false);
-      expect(result.metadata?.missingSections).toBeDefined();
+      // 6-section validation is now warning-only, so delegation is allowed
+      expect(result.allow).toBe(true);
     });
 
-    it('returns empty string when args is undefined', () => {
+    it('allows delegation when args is undefined (6-section validation is warning only)', () => {
       const context = createContext({
         toolName: "task",
         tool: { name: "task" },
@@ -247,11 +248,11 @@ Background info
         agent: 'orxa',
       });
       const result = enforceDelegation(context);
-      expect(result.allow).toBe(false);
-      expect(result.metadata?.missingSections).toBeDefined();
+      // 6-section validation is now warning-only, so delegation is allowed
+      expect(result.allow).toBe(true);
     });
 
-    it('returns empty string when args is a primitive (string)', () => {
+    it('allows delegation when args is a primitive (string) (6-section validation is warning only)', () => {
       const context = createContext({
         toolName: "task",
         tool: { name: "task" },
@@ -259,11 +260,11 @@ Background info
         agent: 'orxa',
       });
       const result = enforceDelegation(context);
-      expect(result.allow).toBe(false);
-      expect(result.metadata?.missingSections).toBeDefined();
+      // 6-section validation is now warning-only, so delegation is allowed
+      expect(result.allow).toBe(true);
     });
 
-    it('returns empty string when args is a primitive (number)', () => {
+    it('allows delegation when args is a primitive (number) (6-section validation is warning only)', () => {
       const context = createContext({
         toolName: "task",
         tool: { name: "task" },
@@ -271,8 +272,8 @@ Background info
         agent: 'orxa',
       });
       const result = enforceDelegation(context);
-      expect(result.allow).toBe(false);
-      expect(result.metadata?.missingSections).toBeDefined();
+      // 6-section validation is now warning-only, so delegation is allowed
+      expect(result.allow).toBe(true);
     });
   });
 
@@ -417,7 +418,7 @@ Test context
       expect(result.allow).toBe(true);
     });
 
-    it('returns empty string when nested object has no prompt field', () => {
+    it('allows delegation when nested object has no prompt field (6-section validation is warning only)', () => {
       const context = createContext({
         toolName: "task",
         tool: { name: "task" },
@@ -427,11 +428,11 @@ Test context
         agent: 'orxa',
       });
       const result = enforceDelegation(context);
-      expect(result.allow).toBe(false);
-      expect(result.metadata?.missingSections).toBeDefined();
+      // 6-section validation is now warning-only, so delegation is allowed
+      expect(result.allow).toBe(true);
     });
 
-    it('returns empty string when nested prompt is not a string', () => {
+    it('allows delegation when nested prompt is not a string (6-section validation is warning only)', () => {
       const context = createContext({
         toolName: "task",
         tool: { name: "task" },
@@ -441,8 +442,8 @@ Test context
         agent: 'orxa',
       });
       const result = enforceDelegation(context);
-      expect(result.allow).toBe(false);
-      expect(result.metadata?.missingSections).toBeDefined();
+      // 6-section validation is now warning-only, so delegation is allowed
+      expect(result.allow).toBe(true);
     });
 
     it('prefers direct prompt string over nested object', () => {

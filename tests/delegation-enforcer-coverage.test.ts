@@ -331,7 +331,7 @@ describe('Delegation Enforcer - Coverage Tests', () => {
       });
       const result = enforceDelegation(context);
       expect(result.allow).toBe(false);
-      expect(result.reason).toContain('Plan agent writes are limited to plan allowlist paths');
+      expect(result.reason).toContain('Write access is restricted to .orxa/**/*.md and .orxa/**/*.json.');
       expect(result.recommendedAgent).toBe('plan');
       expect(result.metadata?.targets).toContain('src/main.ts');
     });
@@ -345,7 +345,7 @@ describe('Delegation Enforcer - Coverage Tests', () => {
       });
       const result = enforceDelegation(context);
       expect(result.allow).toBe(false);
-      expect(result.reason).toContain('Plan agent writes are limited to plan allowlist paths');
+      expect(result.reason).toContain('Write access is restricted to .orxa/**/*.md and .orxa/**/*.json.');
     });
 
     it('allows plan agent to write to allowlist paths', () => {

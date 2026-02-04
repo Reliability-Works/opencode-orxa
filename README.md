@@ -802,7 +802,7 @@ Orxa Orchestration Mode enables **parallel multi-agent execution** for complex t
 
 ### What is Orxa Orchestration?
 
-When you prefix your request with `orxa`, the conductor:
+When you type `/orchestrate` before your request, the conductor:
 
 1. **Analyzes** your request using the strategist agent
 2. **Breaks** it into independent workstreams with dependency graphs
@@ -816,22 +816,22 @@ When you prefix your request with `orxa`, the conductor:
 
 ```bash
 # Parallel authentication implementation
-orxa implement authentication with login, signup, oauth
+/orchestrate implement authentication with login, signup, oauth
 
 # Parallel API development
-orxa create REST API for users, posts, and comments with full CRUD
+/orchestrate create REST API for users, posts, and comments with full CRUD
 
 # Parallel UI components
-orxa build dashboard with sidebar, header, charts, and data tables
+/orchestrate build dashboard with sidebar, header, charts, and data tables
 
 # Parallel feature implementation
-orxa add search, filtering, and pagination to the product list
+/orchestrate add search, filtering, and pagination to the product list
 ```
 
 ### How It Works
 
 ```
-User Request: "orxa implement auth with login, signup, oauth"
+User Request: "/orchestrate implement auth with login, signup, oauth"
                     ↓
 ┌─────────────────────────────────────────────────────────────┐
 │  STRATEGIST AGENT                                           │

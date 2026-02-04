@@ -12,6 +12,8 @@ const CONFIG_DIR = path.join(os.homedir(), ".config", "opencode", "orxa");
 const OPENCODE_CONFIG_PATH = path.join(os.homedir(), ".config", "opencode", "opencode.json");
 const BUNDLED_SKILLS_DIR = path.join(__dirname, "skills");
 const USER_SKILL_DIR = path.join(os.homedir(), ".config", "opencode", "skill");
+const BUNDLED_COMMANDS_DIR = path.join(__dirname, ".opencode", "command");
+const USER_COMMAND_DIR = path.join(os.homedir(), ".config", "opencode", "command");
 
 const isGlobalInstall = () => {
   // Check if we're in a global npm/bun directory or being run via npm install/link
@@ -106,13 +108,12 @@ const createDefaultConfig = (currentVersion) => {
         apply_patch: "edit",
         write_to_file: "write",
         replace_file_content: "write",
-        multi_replace_file_content: "write",
-        task: "delegate_task"
+        multi_replace_file_content: "write"
       }
     },
     orxa: {
       model: "opencode/kimi-k2.5",
-      allowedTools: ["read", "delegate_task", "todowrite", "todoread", "supermemory"],
+      allowedTools: ["read", "task", "todowrite", "todoread", "supermemory"],
       blockedTools: ["grep", "glob", "bash", "skill"],
       enforcement: {
         delegation: "strict",
@@ -126,6 +127,11 @@ const createDefaultConfig = (currentVersion) => {
       planWriteAllowlist: [".orxa/plans/*.md"],
       blockMobileTools: true
     },
+    plan: {
+      model: "opencode/kimi-k2.5",
+      allowedTools: ["read", "task", "todowrite", "todoread", "supermemory"],
+      blockedTools: ["grep", "glob", "bash", "skill"]
+    },
     governance: {
       onlyOrxaCanDelegate: true,
       blockSupermemoryAddForSubagents: true,
@@ -135,9 +141,7 @@ const createDefaultConfig = (currentVersion) => {
         maxImages: 10,
         requireSameSessionId: true,
         contextHygiene: {
-          maxToolOutputChars: 4000,
-          summaryHeader: "Summary",
-          requireSummary: true
+          maxToolOutputChars: 4000
         }
       }
     },
@@ -147,12 +151,7 @@ const createDefaultConfig = (currentVersion) => {
         timeout: 120000,
         maxRetries: 2
       },
-      overrides: {
-        build: { model: "opencode/gpt-5.2-codex", timeout: 300000 },
-        architect: { model: "opencode/gpt-5.2-codex", timeout: 300000 },
-        frontend: { model: "opencode/gemini-3-pro" },
-        multimodal: { model: "opencode/gemini-3-pro" }
-      },
+      overrides: {},
       custom: []
     },
     memory: {
@@ -234,9 +233,12 @@ const registerPlugin = () => {
   }
 };
 
+const PRIMARY_AGENTS = ["orxa", "plan"];
+
 const copySubagentFiles = ({ force = false } = {}) => {
   const sourceSubagentsDir = path.join(__dirname, "agents", "subagents");
   const targetSubagentsDir = path.join(CONFIG_DIR, "agents", "subagents");
+  const overridesDir = path.join(CONFIG_DIR, "agents", "overrides");
 
   if (!fs.existsSync(sourceSubagentsDir)) {
     console.log("⚠ Source subagents directory not found, skipping subagent file copy");
@@ -251,6 +253,12 @@ const copySubagentFiles = ({ force = false } = {}) => {
     const subagentFiles = fs.readdirSync(sourceSubagentsDir).filter(f => f.endsWith(".yaml") || f.endsWith(".yml"));
 
     for (const filename of subagentFiles) {
+      // Skip primary agent YAMLs in subagents directory (they're documentation only)
+      const agentName = filename.replace(/\.ya?ml$/, "");
+      if (PRIMARY_AGENTS.includes(agentName)) {
+        continue;
+      }
+
       const sourcePath = path.join(sourceSubagentsDir, filename);
       const targetPath = path.join(targetSubagentsDir, filename);
 
@@ -271,8 +279,108 @@ const copySubagentFiles = ({ force = false } = {}) => {
     console.log(
       `✓ Subagent files: ${copiedCount} copied, ${skippedCount} skipped (already exist), ${overwrittenCount} overwritten`
     );
+
+    // Copy to overrides if overrides directory is empty
+    const overridesFiles = fs.existsSync(overridesDir) 
+      ? fs.readdirSync(overridesDir).filter(f => f.endsWith(".yaml") || f.endsWith(".yml"))
+      : [];
+    
+    if (overridesFiles.length === 0) {
+      let overridesCopiedCount = 0;
+      for (const filename of subagentFiles) {
+        // Skip primary agent YAMLs
+        const agentName = filename.replace(/\.ya?ml$/, "");
+        if (PRIMARY_AGENTS.includes(agentName)) {
+          continue;
+        }
+
+        const sourcePath = path.join(sourceSubagentsDir, filename);
+        const overridePath = path.join(overridesDir, filename);
+        
+        if (!fs.existsSync(overridePath)) {
+          fs.copyFileSync(sourcePath, overridePath);
+          overridesCopiedCount++;
+        }
+      }
+      if (overridesCopiedCount > 0) {
+        console.log(`✓ Copied ${overridesCopiedCount} subagent files to overrides/ as starting point`);
+      }
+    }
   } catch (error) {
     console.error("⚠ Failed to copy subagent files:", error.message);
+  }
+};
+
+const copyPrimaryAgentFiles = ({ force = false } = {}) => {
+  // Copy documentation versions from agents/docs/ (not the full definitions from agents/)
+  const sourceDocsDir = path.join(__dirname, "agents", "docs");
+  const targetAgentsDir = path.join(CONFIG_DIR, "agents");
+
+  let copiedCount = 0;
+  let skippedCount = 0;
+
+  try {
+    for (const agentName of PRIMARY_AGENTS) {
+      const yamlFile = `${agentName}.yaml`;
+      const sourcePath = path.join(sourceDocsDir, yamlFile);
+      const targetPath = path.join(targetAgentsDir, yamlFile);
+
+      if (!fs.existsSync(sourcePath)) {
+        console.log(`  ⚠ Documentation file not found: docs/${yamlFile}`);
+        continue;
+      }
+
+      if (fs.existsSync(targetPath) && !force) {
+        skippedCount++;
+        continue;
+      }
+
+      fs.copyFileSync(sourcePath, targetPath);
+      copiedCount++;
+      console.log(`  ✓ Copied ${yamlFile} (documentation)`);
+    }
+
+    if (copiedCount > 0 || skippedCount > 0) {
+      console.log(
+        `✓ Primary agent files: ${copiedCount} copied, ${skippedCount} skipped (already exist)`
+      );
+    }
+  } catch (error) {
+    console.error("⚠ Failed to copy primary agent files:", error.message);
+  }
+};
+
+const copyReadmeFiles = ({ force = false } = {}) => {
+  const agentDirs = ["subagents", "overrides", "custom"];
+  let copiedCount = 0;
+  let skippedCount = 0;
+
+  try {
+    for (const dir of agentDirs) {
+      const sourcePath = path.join(__dirname, "agents", dir, "README.md");
+      const targetPath = path.join(CONFIG_DIR, "agents", dir, "README.md");
+
+      if (!fs.existsSync(sourcePath)) {
+        continue;
+      }
+
+      if (fs.existsSync(targetPath) && !force) {
+        skippedCount++;
+        continue;
+      }
+
+      fs.copyFileSync(sourcePath, targetPath);
+      copiedCount++;
+      console.log(`  ✓ Copied agents/${dir}/README.md`);
+    }
+
+    if (copiedCount > 0 || skippedCount > 0) {
+      console.log(
+        `✓ README files: ${copiedCount} copied, ${skippedCount} skipped (already exist)`
+      );
+    }
+  } catch (error) {
+    console.error("⚠ Failed to copy README files:", error.message);
   }
 };
 
@@ -319,6 +427,49 @@ const copyBundledSkills = ({ force = false } = {}) => {
     );
   } catch (error) {
     console.error("⚠ Failed to copy bundled skills:", error.message);
+  }
+};
+
+const copyBundledCommands = ({ force = false } = {}) => {
+  if (!fs.existsSync(BUNDLED_COMMANDS_DIR)) {
+    console.log("⚠ Bundled commands directory not found, skipping command copy");
+    return;
+  }
+
+  let copiedCount = 0;
+  let skippedCount = 0;
+  let overwrittenCount = 0;
+
+  try {
+    const commandFiles = fs
+      .readdirSync(BUNDLED_COMMANDS_DIR)
+      .filter((f) => f.endsWith(".md"));
+
+    for (const filename of commandFiles) {
+      const targetPath = path.join(USER_COMMAND_DIR, filename);
+
+      if (fs.existsSync(targetPath) && !force) {
+        skippedCount++;
+        continue;
+      }
+
+      fs.mkdirSync(USER_COMMAND_DIR, { recursive: true });
+      const sourcePath = path.join(BUNDLED_COMMANDS_DIR, filename);
+
+      if (fs.existsSync(targetPath) && force) {
+        overwrittenCount++;
+      }
+
+      fs.copyFileSync(sourcePath, targetPath);
+      copiedCount++;
+      console.log(`  ✓ Copied command: ${filename}`);
+    }
+
+    console.log(
+      `✓ Commands: ${copiedCount} copied, ${skippedCount} skipped (already exist), ${overwrittenCount} overwritten`
+    );
+  } catch (error) {
+    console.error("⚠ Failed to copy bundled commands:", error.message);
   }
 };
 
@@ -408,10 +559,8 @@ const deepMergeConfigs = (userConfig, defaultConfig) => {
 };
 
 /**
- * Migrate user config to new version by:
- * 1. Preserving all user customizations
- * 2. Adding any new fields from defaults that are missing
- * 3. Updating pluginVersion to current version
+ * Migrate user config to new version by completely replacing orxa.json
+ * while preserving only the agent_overrides field.
  * 
  * @param {string} configPath - Path to the config file
  * @param {object} userConfig - The user's existing configuration
@@ -456,12 +605,11 @@ const migrateConfig = (configPath, userConfig, currentVersion) => {
           apply_patch: "edit",
           write_to_file: "write",
           replace_file_content: "write",
-          multi_replace_file_content: "write",
-          task: "delegate_task"
+          multi_replace_file_content: "write"
         }
       },
       orxa: {
-        allowedTools: ["read", "delegate_task", "todowrite", "todoread", "supermemory"],
+        allowedTools: ["read", "task", "todowrite", "todoread", "supermemory"],
         blockedTools: ["grep", "glob", "bash", "skill"],
         enforcement: {
           delegation: "strict",
@@ -475,6 +623,10 @@ const migrateConfig = (configPath, userConfig, currentVersion) => {
         planWriteAllowlist: [".orxa/plans/*.md"],
         blockMobileTools: true
       },
+      plan: {
+        allowedTools: ["read", "task", "todowrite", "todoread", "supermemory"],
+        blockedTools: ["grep", "glob", "bash", "skill"]
+      },
       governance: {
         onlyOrxaCanDelegate: true,
         blockSupermemoryAddForSubagents: true,
@@ -484,9 +636,7 @@ const migrateConfig = (configPath, userConfig, currentVersion) => {
           maxImages: 10,
           requireSameSessionId: true,
           contextHygiene: {
-            maxToolOutputChars: 4000,
-            summaryHeader: "Summary",
-            requireSummary: true
+            maxToolOutputChars: 4000
           }
         }
       },
@@ -546,27 +696,53 @@ const migrateConfig = (configPath, userConfig, currentVersion) => {
       }
     };
 
-    // Perform deep merge: user values win, missing fields added from defaults
-    const mergedConfig = deepMergeConfigs(userConfig, defaultConfig);
+    // Replace config completely, but preserve user customizations
+    const newConfig = { ...defaultConfig };
+    
+    // Preserve user's agent_overrides if they have any
+    if (userConfig.agent_overrides && Object.keys(userConfig.agent_overrides).length > 0) {
+      newConfig.agent_overrides = userConfig.agent_overrides;
+      console.log("✓ Preserved agent_overrides from existing config");
+    }
+    
+    // Preserve user's orxa.model if set
+    if (userConfig.orxa?.model) {
+      newConfig.orxa.model = userConfig.orxa.model;
+      console.log(`✓ Preserved orxa.model: ${userConfig.orxa.model}`);
+    }
+    
+    // Preserve user's plan.model if set
+    if (userConfig.plan?.model) {
+      newConfig.plan.model = userConfig.plan.model;
+      console.log(`✓ Preserved plan.model: ${userConfig.plan.model}`);
+    }
+    
+    // Preserve other orxa settings that user may have customized
+    if (userConfig.orxa) {
+      // Preserve enforcement settings
+      if (userConfig.orxa.enforcement) {
+        Object.assign(newConfig.orxa.enforcement, userConfig.orxa.enforcement);
+      }
+      // Preserve other orxa settings
+      const orxaSettingsToPreserve = [
+        'maxManualEditsPerSession', 'requireTodoList', 'autoUpdateTodos', 
+        'planWriteAllowlist', 'blockMobileTools'
+      ];
+      for (const setting of orxaSettingsToPreserve) {
+        if (userConfig.orxa[setting] !== undefined) {
+          newConfig.orxa[setting] = userConfig.orxa[setting];
+        }
+      }
+    }
     
     // Always update pluginVersion to current version
-    mergedConfig.pluginVersion = currentVersion || "unknown";
+    newConfig.pluginVersion = currentVersion || "unknown";
     
-    // Write the migrated config
-    fs.writeFileSync(configPath, JSON.stringify(mergedConfig, null, 2));
+    // Write the new config
+    fs.writeFileSync(configPath, JSON.stringify(newConfig, null, 2));
     
-    // Report what changed
-    const userKeys = new Set(Object.keys(userConfig));
-    const defaultKeys = new Set(Object.keys(defaultConfig));
-    const newFields = [...defaultKeys].filter(k => !userKeys.has(k));
-    
-    if (newFields.length > 0) {
-      console.log(`✓ Migrated config: added ${newFields.length} new field(s)`);
-      console.log(`  New fields: ${newFields.join(", ")}`);
-    } else {
-      console.log("✓ Config is up to date (no new fields to add)");
-    }
-    console.log(`✓ Updated pluginVersion to v${currentVersion || "unknown"}`);
+    console.log(`✓ Updated orxa.json to v${currentVersion || "unknown"}`);
+    console.log(`✓ Preserved user customizations`);
     
   } catch (error) {
     console.error("⚠ Failed to migrate orxa.json:", error.message);
@@ -592,8 +768,11 @@ const main = () => {
     console.log(`📦 Updating from v${lastVersion || "unknown"} to v${currentVersion || "unknown"}...`);
   }
 
+  copyPrimaryAgentFiles({ force: needsUpdate });
   copySubagentFiles({ force: needsUpdate });
+  copyReadmeFiles({ force: needsUpdate });
   copyBundledSkills({ force: needsUpdate });
+  copyBundledCommands({ force: needsUpdate });
   createDefaultConfig(currentVersion);
 
   if (userConfig && needsUpdate) {

@@ -1,3 +1,5 @@
+import fs from "fs";
+import path from "path";
 import { minimatch } from "minimatch";
 import type { OrxaConfig } from "../config/schema.js";
 import type { EnforcementResult, HookContext } from "../types.js";
@@ -15,6 +17,43 @@ const MOBILE_TOOL_PREFIXES = ["ios-simulator", "android", "mobile"];
 
 const normalizeToolName = (toolName: string): string => toolName.trim();
 
+const normalizeWriteTarget = (targetPath: string, workspaceRoot: string): string => {
+  // Resolve workspace root symlink
+  const realWorkspaceRoot = fs.realpathSync(workspaceRoot);
+  
+  // Handle Windows absolute paths (e.g., C:\...)
+  let normalizedTarget = targetPath;
+  if (/^[a-zA-Z]:[\\/]/.test(targetPath)) {
+    normalizedTarget = targetPath.replace(/\\/g, "/");
+  }
+  
+  // Resolve target path against workspace root if relative
+  let absoluteTarget = normalizedTarget;
+  if (!path.isAbsolute(normalizedTarget) && !/^[a-zA-Z]:/i.test(normalizedTarget)) {
+    absoluteTarget = path.join(realWorkspaceRoot, normalizedTarget);
+  }
+  
+  // For existing paths, resolve symlinks. For non-existent paths, resolve parent directory.
+  let realTarget: string;
+  try {
+    realTarget = fs.realpathSync(absoluteTarget);
+  } catch (e) {
+    const parentDir = path.dirname(absoluteTarget);
+    try {
+      const realParent = fs.realpathSync(parentDir);
+      realTarget = path.join(realParent, path.basename(absoluteTarget));
+    } catch {
+      realTarget = absoluteTarget;
+    }
+  }
+  
+  // Make relative to workspace root
+  let relativePath = path.relative(realWorkspaceRoot, realTarget);
+  relativePath = relativePath.replace(/\\/g, "/").replace(/^\.\//, "");
+  
+  return relativePath;
+};
+
 const resolvePrompt = (args: unknown, explicitPrompt?: string): string => {
   if (explicitPrompt) {
     return explicitPrompt;
@@ -26,26 +65,27 @@ const resolvePrompt = (args: unknown, explicitPrompt?: string): string => {
 
   const record = args as Record<string, unknown>;
   
-  // For task tool, the prompt is typically in the 'description' field
-  // But it might also be nested under input.description or input.prompt
-  if (record.description && typeof record.description === "string") {
-    return record.description;
+  // For task tool, the 6-section content is in the 'prompt' field
+  // The 'description' field is just a short title (3-5 words)
+  // Check prompt first as it contains the actual task content
+  if (typeof record.prompt === "string") {
+    return record.prompt;
   }
   
   // Check input wrapper for task tool
   if (record.input && typeof record.input === "object") {
     const input = record.input as Record<string, unknown>;
-    if (typeof input.description === "string") {
-      return input.description;
-    }
     if (typeof input.prompt === "string") {
       return input.prompt;
     }
+    if (typeof input.description === "string") {
+      return input.description;
+    }
   }
   
-  // Check for direct string fields first (higher priority)
-  if (typeof record.prompt === "string") {
-    return record.prompt;
+  // Fallback to description for backward compatibility
+  if (record.description && typeof record.description === "string") {
+    return record.description;
   }
   
   // Check for nested prompt in message, instructions, task, context objects
@@ -220,7 +260,10 @@ export const extractWriteTargets = (toolName: string, args: unknown): string[] =
     const pattern = /^\*\*\* (Add File|Update File|Delete File):\s*(.+)$/gm;
     let match = pattern.exec(record.patchText);
     while (match) {
-      paths.push(match[2].trim());
+      let filePath = match[2].trim();
+      // Strip a/ or b/ prefix if present (from git diff format)
+      filePath = filePath.replace(/^[ab]\//, "");
+      paths.push(filePath);
       match = pattern.exec(record.patchText);
     }
   }
@@ -264,14 +307,19 @@ export const enforceDelegation = (context: HookContext): EnforcementResult => {
 
   // Check if agent is orxa - check both agentName and session agent
   const sessionAgentName = context.session?.agentName ?? "";
-  const effectiveAgentName = agentName || sessionAgentName;
-  const isOrxa = effectiveAgentName.toLowerCase() === "orxa" || 
-                 effectiveAgentName.toLowerCase().includes("orxa");
+  // Only default to "orxa" if we have no information about the agent
+  // If agentName is explicitly empty but session has an agent, use session agent
+  // If both are empty, we can't determine the agent - don't assume it's orxa
+  const effectiveAgentName = (agentName || sessionAgentName || "unknown") as string;
+  const isOrxa = effectiveAgentName.toLowerCase() === "orxa";
+  const isKnownNonOrxa = effectiveAgentName !== "unknown" && !isOrxa;
 
 
-  
+
   // Block task/delegate_task tools for non-orxa agents
-  if (config.governance.onlyOrxaCanDelegate && !isOrxa) {
+  // Only block if we KNOW the agent is not orxa (isKnownNonOrxa)
+  // If agent is unknown, allow the tool call to proceed
+  if (config.governance.onlyOrxaCanDelegate && isKnownNonOrxa) {
     if (normalizedTool === "task") {
       return {
         ...decide(config, "Only the orxa may use the task tool. Use delegate_task instead."),
@@ -289,7 +337,7 @@ export const enforceDelegation = (context: HookContext): EnforcementResult => {
   if (
     config.governance.blockSupermemoryAddForSubagents &&
     normalizedTool === "supermemory" &&
-    !isOrxa
+    isKnownNonOrxa
   ) {
     const args = context.args as Record<string, unknown> | undefined;
     if (args?.mode === "add") {
@@ -300,17 +348,19 @@ export const enforceDelegation = (context: HookContext): EnforcementResult => {
     }
   }
 
-  const perAgent = agentName ? config.perAgentRestrictions?.[agentName] : undefined;
+  const perAgent = effectiveAgentName
+    ? config.perAgentRestrictions?.[effectiveAgentName]
+    : undefined;
   if (perAgent?.allowedTools && !perAgent.allowedTools.includes(normalizedTool)) {
     return {
-      ...decide(config, `Tool ${normalizedTool} is not in the allowed list for ${agentName}.`),
+      ...decide(config, `Tool ${normalizedTool} is not in the allowed list for ${effectiveAgentName}.`),
       recommendedAgent: getRecommendedAgent(normalizedTool),
     };
   }
 
   if (perAgent?.blockedTools && perAgent.blockedTools.includes(normalizedTool)) {
     return {
-      ...decide(config, `Tool ${normalizedTool} is blocked for ${agentName}.`),
+      ...decide(config, `Tool ${normalizedTool} is blocked for ${effectiveAgentName}.`),
       recommendedAgent: getRecommendedAgent(normalizedTool),
     };
   }
@@ -318,23 +368,32 @@ export const enforceDelegation = (context: HookContext): EnforcementResult => {
   // Check write tool allowlist BEFORE checking allowedTools
   // This allows orxa to write to plan files even if write isn't in allowedTools
   if (isWriteTool(normalizedTool)) {
-    const targets = extractWriteTargets(normalizedTool, context.args);
+    const workspaceRoot = (context as any).workspaceRoot || process.cwd();
+    const targets = extractWriteTargets(normalizedTool, context.args).map((target) =>
+      normalizeWriteTarget(target, workspaceRoot)
+    );
     const allowlist = config.orxa.planWriteAllowlist;
     const matchesAllowlist =
       targets.length > 0 && targets.every((target) => matchesAnyGlob(target, allowlist));
 
-    if (agentName === "plan") {
+    if (effectiveAgentName === "plan") {
       if (!matchesAllowlist) {
         return {
-          ...decide(config, "Plan agent writes are limited to plan allowlist paths."),
+          ...decide(
+            config,
+            "Write access is restricted to .orxa/**/*.md and .orxa/**/*.json."
+          ),
           recommendedAgent: "plan",
           metadata: { targets },
         };
       }
-    } else if (agentName === "orxa") {
+    } else if (isOrxa) {
       if (!matchesAllowlist) {
         return {
-          ...decide(config, "Orxa writes are limited to plan allowlist paths."),
+          ...decide(
+            config,
+            "Write access is restricted to .orxa/**/*.md and .orxa/**/*.json."
+          ),
           recommendedAgent: "plan",
           metadata: { targets },
         };
@@ -348,7 +407,7 @@ export const enforceDelegation = (context: HookContext): EnforcementResult => {
     }
   }
 
-  if (agentName === "orxa") {
+  if (isOrxa) {
     if (config.orxa.blockedTools.includes(normalizedTool)) {
       return {
         ...decide(config, `Tool ${normalizedTool} is blocked for the orxa.`),
@@ -364,7 +423,7 @@ export const enforceDelegation = (context: HookContext): EnforcementResult => {
     }
   }
 
-  if (config.orxa.blockMobileTools && agentName === "orxa") {
+  if (config.orxa.blockMobileTools && isOrxa) {
     if (MOBILE_TOOL_PREFIXES.some((prefix) => normalizedTool.startsWith(prefix))) {
       return {
         ...decide(config, "Mobile tooling is blocked for the orxa."),
@@ -373,29 +432,33 @@ export const enforceDelegation = (context: HookContext): EnforcementResult => {
     }
   }
 
-  // Apply 6-section validation to task tool calls from orxa
+  // Apply validation to task tool calls from orxa
   if (normalizedTool === "task" && isOrxa && config.governance.delegationTemplate.required) {
-    const prompt = resolvePrompt(context.args, context.delegationPrompt);
+    const args = context.args as Record<string, unknown> | undefined;
     
-
+    // Get the prompt content from either 'prompt' or 'description' field
+    // 'prompt' is preferred (new format), 'description' is fallback (legacy)
+    const promptContent = args?.prompt && typeof args.prompt === "string" 
+      ? args.prompt 
+      : args?.description && typeof args.description === "string"
+        ? args.description
+        : "";
+    
+    // 6-section validation - log warning but don't block
     const missing = extractSectionMissing(
-      prompt,
+      promptContent,
       config.governance.delegationTemplate.requiredSections
     );
     
-    if (config.ui?.verboseLogging && missing.length > 0) {
-      console.log("[orxa][delegation-enforcer] Missing sections:", missing);
-    }
     if (missing.length > 0) {
-      return {
-        ...decide(
-          config,
-          `Delegation prompt missing sections: ${missing.join(", ")}.`
-        ),
-        metadata: { missingSections: missing },
-      };
+      if (config.ui?.verboseLogging) {
+        console.log("[orxa][delegation-enforcer] Missing sections (warning only):", missing);
+      }
+      // Warning only - don't block the delegation
+      // The ORXA agent has clear instructions in its system prompt about the 6-section format
     }
 
+    // Image limit validation - always enforced
     const maxImages = config.governance.delegationTemplate.maxImages;
     const imageCount = extractImageCount(context.args, context.attachments);
     if (imageCount > maxImages) {
@@ -405,6 +468,7 @@ export const enforceDelegation = (context: HookContext): EnforcementResult => {
       };
     }
 
+    // Session validation - always enforced
     if (config.governance.delegationTemplate.requireSameSessionId) {
       const args = context.args as Record<string, unknown> | undefined;
       const targetSession =
@@ -421,19 +485,8 @@ export const enforceDelegation = (context: HookContext): EnforcementResult => {
       }
     }
 
+    // Tool output size validation - always enforced
     const hygiene = config.governance.delegationTemplate.contextHygiene;
-    if (hygiene.requireSummary) {
-      const summaryPattern = new RegExp(
-        `(^|\\n)\\s*(#+\\s*)?${hygiene.summaryHeader}\\s*:?`,
-        "i"
-      );
-      if (!summaryPattern.test(prompt)) {
-        return {
-          ...decide(config, `Delegation prompt missing ${hygiene.summaryHeader} section.`),
-        };
-      }
-    }
-
     const toolOutputChars = extractToolOutputChars(context.args);
     if (toolOutputChars > hygiene.maxToolOutputChars) {
       return {

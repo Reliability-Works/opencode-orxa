@@ -5,7 +5,6 @@
  */
 
 import {
-  detectOrxaKeyword,
   shouldTriggerOrxa,
   stripOrxaKeyword,
   getOrxaSystemPrompt,
@@ -16,125 +15,56 @@ import type { HookContext } from '../../src/types';
 import { defaultConfig } from '../../src/config/default-config';
 
 describe('Orxa Detector Hook', () => {
-  describe('detectOrxaKeyword', () => {
-    it('should detect "orxa" keyword at start of message', () => {
-      const result = detectOrxaKeyword('orxa implement authentication');
-      expect(result.triggered).toBe(true);
-      expect(result.cleaned_message).toBe('implement authentication');
-      expect(result.keyword_variant).toBe('orxa');
-    });
-
-    it('should detect "orxa" keyword in middle of message', () => {
-      const result = detectOrxaKeyword('Please orxa implement authentication');
-      expect(result.triggered).toBe(true);
-      expect(result.cleaned_message).toBe('Please implement authentication');
-    });
-
-    it('should detect "orxa" keyword at end of message', () => {
-      const result = detectOrxaKeyword('implement authentication orxa');
-      expect(result.triggered).toBe(true);
-      expect(result.cleaned_message).toBe('implement authentication');
-    });
-
-    it('should detect uppercase ORXA', () => {
-      const result = detectOrxaKeyword('ORXA implement authentication');
-      expect(result.triggered).toBe(true);
-      expect(result.cleaned_message).toBe('implement authentication');
-      expect(result.keyword_variant).toBe('ORXA');
-    });
-
-    it('should detect mixed case OrXa', () => {
-      const result = detectOrxaKeyword('OrXa implement authentication');
-      expect(result.triggered).toBe(true);
-      expect(result.cleaned_message).toBe('implement authentication');
-    });
-
-    it('should not trigger on partial matches', () => {
-      const result = detectOrxaKeyword('orxanize this code');
-      expect(result.triggered).toBe(false);
-      expect(result.cleaned_message).toBe('orxanize this code');
-    });
-
-    it('should not trigger on substring within word', () => {
-      const result = detectOrxaKeyword('worxable solution');
-      expect(result.triggered).toBe(false);
-      expect(result.cleaned_message).toBe('worxable solution');
-    });
-
-    it('should handle multiple orxa keywords', () => {
-      const result = detectOrxaKeyword('orxa orxa implement authentication');
-      expect(result.triggered).toBe(true);
-      expect(result.cleaned_message).toBe('implement authentication');
-    });
-
-    it('should handle empty message', () => {
-      const result = detectOrxaKeyword('');
-      expect(result.triggered).toBe(false);
-      expect(result.cleaned_message).toBe('');
-    });
-
-    it('should handle whitespace-only message', () => {
-      const result = detectOrxaKeyword('   ');
-      expect(result.triggered).toBe(false);
-      // Whitespace-only messages remain as-is when no keyword detected
-      expect(result.cleaned_message).toBe('   ');
-    });
-
-    it('should preserve task description', () => {
-      const result = detectOrxaKeyword('orxa build a REST API with users and posts');
-      expect(result.triggered).toBe(true);
-      expect(result.task_description).toBe('build a REST API with users and posts');
-    });
-  });
-
   describe('shouldTriggerOrxa', () => {
-    it('should return true for messages containing orxa', () => {
-      expect(shouldTriggerOrxa('orxa do something')).toBe(true);
+    it('should return true for messages containing /orchestrate', () => {
+      expect(shouldTriggerOrxa('/orchestrate do something')).toBe(true);
     });
 
-    it('should return true for uppercase ORXA', () => {
-      expect(shouldTriggerOrxa('ORXA do something')).toBe(true);
+    it('should return true for uppercase /ORCHESTRATE', () => {
+      expect(shouldTriggerOrxa('/ORCHESTRATE do something')).toBe(true);
     });
 
-    it('should return true for mixed case OrXa', () => {
-      expect(shouldTriggerOrxa('OrXa do something')).toBe(true);
+    it('should return true for mixed case /OrChEsTrAtE', () => {
+      expect(shouldTriggerOrxa('/OrChEsTrAtE do something')).toBe(true);
     });
 
-    it('should return false for messages without orxa', () => {
+    it('should return false for messages without /orchestrate', () => {
       expect(shouldTriggerOrxa('do something')).toBe(false);
       expect(shouldTriggerOrxa('organize this')).toBe(false);
       expect(shouldTriggerOrxa('')).toBe(false);
     });
 
-    it('should return false for partial matches', () => {
-      expect(shouldTriggerOrxa('worxable')).toBe(false);
-      expect(shouldTriggerOrxa('orxanize')).toBe(false);
+    it('should return false for orchestrate without leading slash', () => {
+      expect(shouldTriggerOrxa('orchestrate do something')).toBe(false);
+      expect(shouldTriggerOrxa('reorchestrate')).toBe(false);
+      expect(shouldTriggerOrxa('orchestrated')).toBe(false);
     });
   });
 
   describe('stripOrxaKeyword', () => {
-    it('should strip lowercase orxa', () => {
-      expect(stripOrxaKeyword('orxa implement auth')).toBe('implement auth');
+    it('should strip lowercase /orchestrate', () => {
+      expect(stripOrxaKeyword('/orchestrate implement auth')).toBe('implement auth');
     });
 
-    it('should strip uppercase ORXA', () => {
-      expect(stripOrxaKeyword('ORXA implement auth')).toBe('implement auth');
+    it('should strip uppercase /ORCHESTRATE', () => {
+      expect(stripOrxaKeyword('/ORCHESTRATE implement auth')).toBe('implement auth');
     });
 
-    it('should strip mixed case OrXa', () => {
-      expect(stripOrxaKeyword('OrXa implement auth')).toBe('implement auth');
+    it('should strip mixed case /OrChEsTrAtE', () => {
+      expect(stripOrxaKeyword('/OrChEsTrAtE implement auth')).toBe('implement auth');
     });
 
-    it('should handle multiple orxa occurrences', () => {
-      expect(stripOrxaKeyword('orxa orxa implement auth')).toBe('implement auth');
+    it('should handle multiple /orchestrate occurrences', () => {
+      expect(stripOrxaKeyword('/orchestrate /orchestrate implement auth')).toBe('implement auth');
     });
 
     it('should normalize whitespace after stripping', () => {
-      expect(stripOrxaKeyword('orxa   implement   auth')).toBe('implement auth');
+      expect(stripOrxaKeyword('/orchestrate   implement   auth')).toBe('implement auth');
     });
 
-    it('should return original message if no orxa keyword', () => {
+    it('should return original message if no /orchestrate command', () => {
       expect(stripOrxaKeyword('implement auth')).toBe('implement auth');
+      expect(stripOrxaKeyword('orchestrate implement auth')).toBe('orchestrate implement auth');
     });
 
     it('should handle empty string', () => {
@@ -269,7 +199,7 @@ describe('Orxa Detector Hook', () => {
       expect(result.metadata).toBeUndefined();
     });
 
-    it('should detect orxa keyword in user message', async () => {
+    it('should always allow and skip detection', async () => {
       const context = createContext({
         session: {
           id: 'session-1',
@@ -277,72 +207,7 @@ describe('Orxa Detector Hook', () => {
           manualEdits: 0,
           todos: [],
           messages: [
-            { role: 'user', content: 'orxa implement authentication' },
-          ],
-          agentAttempts: {},
-          messageCount: 1,
-          recentMessages: [],
-          memoryQueue: [],
-        },
-      });
-
-      const result = await orxaDetector(context);
-      expect(result.allow).toBe(true);
-      expect(result.metadata?.orxa_triggered).toBe(true);
-      expect(result.metadata?.cleaned_message).toBe('implement authentication');
-    });
-
-    it('should inject system prompt when orxa triggered', async () => {
-      const context = createContext({
-        session: {
-          id: 'session-1',
-          agentName: 'orxa',
-          manualEdits: 0,
-          todos: [],
-          messages: [
-            { role: 'user', content: 'orxa build API' },
-          ],
-          agentAttempts: {},
-          messageCount: 1,
-          recentMessages: [],
-          memoryQueue: [],
-        },
-      });
-
-      const result = await orxaDetector(context);
-      expect(result.metadata?.inject_system_prompt).toContain('ORXA ORCHESTRATION MODE');
-    });
-
-    it('should return activation message when triggered', async () => {
-      const context = createContext({
-        session: {
-          id: 'session-1',
-          agentName: 'orxa',
-          manualEdits: 0,
-          todos: [],
-          messages: [
-            { role: 'user', content: 'orxa build API' },
-          ],
-          agentAttempts: {},
-          messageCount: 1,
-          recentMessages: [],
-          memoryQueue: [],
-        },
-      });
-
-      const result = await orxaDetector(context);
-      expect(result.message).toContain('ORXA MODE ACTIVATED');
-    });
-
-    it('should not trigger on non-orxa messages', async () => {
-      const context = createContext({
-        session: {
-          id: 'session-1',
-          agentName: 'orxa',
-          manualEdits: 0,
-          todos: [],
-          messages: [
-            { role: 'user', content: 'implement authentication' },
+            { role: 'user', content: '/orchestrate build API' },
           ],
           agentAttempts: {},
           messageCount: 1,
@@ -354,6 +219,7 @@ describe('Orxa Detector Hook', () => {
       const result = await orxaDetector(context);
       expect(result.allow).toBe(true);
       expect(result.metadata).toBeUndefined();
+      expect(result.message).toBeUndefined();
     });
 
     it('should handle empty message', async () => {
@@ -384,7 +250,7 @@ describe('Orxa Detector Hook', () => {
       expect(result.allow).toBe(true);
     });
 
-    it('should detect orxa in multi-line message', async () => {
+    it('should allow multi-line messages without triggering', async () => {
       const context = createContext({
         session: {
           id: 'session-1',
@@ -392,7 +258,7 @@ describe('Orxa Detector Hook', () => {
           manualEdits: 0,
           todos: [],
           messages: [
-            { role: 'user', content: 'Hello\n\norxa implement feature\n\nThanks' },
+            { role: 'user', content: 'Hello\n\n/orchestrate implement feature\n\nThanks' },
           ],
           agentAttempts: {},
           messageCount: 1,
@@ -402,7 +268,8 @@ describe('Orxa Detector Hook', () => {
       });
 
       const result = await orxaDetector(context);
-      expect(result.metadata?.orxa_triggered).toBe(true);
+      expect(result.allow).toBe(true);
+      expect(result.metadata).toBeUndefined();
     });
   });
 });

@@ -51,6 +51,7 @@ export interface HookContext {
     name?: string;
     size?: number;
   }>;
+  workspaceRoot?: string;
   delegationPrompt?: string;
   response?: string;
   todo?: Todo;
