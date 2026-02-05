@@ -2,7 +2,7 @@ import type { Plugin, PluginInput } from "@opencode-ai/plugin";
 import { configHandler, loadEnabledAgents, loadAgentByName } from "./config-handler.js";
 import { loadOrxaConfig } from "./config/loader.js";
 import { createWelcomeToastHandler } from "./hooks/welcome-toast.js";
-import { createOrxaDetector } from "./hooks/orxa-detector.js";
+import { createOrxaDetector, getOrxaSessionActive } from "./hooks/orxa-detector.js";
 import { preToolExecution } from "./hooks/pre-tool-execution.js";
 import { postSubagentResponse } from "./hooks/post-subagent-response.js";
 import { todoContinuationEnforcer } from "./hooks/todo-continuation-enforcer.js";
@@ -11,6 +11,7 @@ import {
   isStoppingResponse,
   getPendingTodos,
   buildTodoContinuationMessage,
+  buildTodoContinuationToastMessage,
 } from "./middleware/todo-guardian.js";
 import { slashcommand } from "./tools/slashcommand.js";
 import type { Message, Session } from "./types.js";
@@ -20,6 +21,8 @@ const orxaPlugin: Plugin = async (ctx: PluginInput) => {
   const welcomeToastHandler = createWelcomeToastHandler(ctx, orxaConfig);
   const orxaDetector = createOrxaDetector(ctx);
   const sessionCache = new Map<string, Session>();
+  const idleNotificationCache = new Map<string, number>();
+  const IDLE_NOTIFICATION_COOLDOWN_MS = 30_000;
 
   const extractMessageText = (parts?: Array<{ type?: string; text?: string }>): string => {
     if (!parts) {
@@ -33,7 +36,12 @@ const orxaPlugin: Plugin = async (ctx: PluginInput) => {
       .trim();
   };
 
-  const loadSession = async (sessionID?: string, agentName?: string, skipFetch = false): Promise<Session | undefined> => {
+  const loadSession = async (
+    sessionID?: string,
+    agentName?: string,
+    skipFetch = false,
+    forceRefresh = false
+  ): Promise<Session | undefined> => {
     if (!sessionID) {
       return undefined;
     }
@@ -60,7 +68,7 @@ const orxaPlugin: Plugin = async (ctx: PluginInput) => {
     }
 
     // Use cached data if available to avoid API calls
-    if (cached) {
+    if (cached && !forceRefresh) {
       return cached;
     }
 
@@ -135,6 +143,16 @@ const orxaPlugin: Plugin = async (ctx: PluginInput) => {
     }
 
     return "";
+  };
+
+  const shouldNotifyIdle = (sessionID: string): boolean => {
+    const now = Date.now();
+    const lastNotifiedAt = idleNotificationCache.get(sessionID) ?? 0;
+    if (now - lastNotifiedAt < IDLE_NOTIFICATION_COOLDOWN_MS) {
+      return false;
+    }
+    idleNotificationCache.set(sessionID, now);
+    return true;
   };
 
   return {
@@ -296,6 +314,75 @@ const orxaPlugin: Plugin = async (ctx: PluginInput) => {
     },
     event: async (input) => {
       await welcomeToastHandler(input);
+
+      const { event } = input as { event?: { type?: string; properties?: unknown } };
+      if (event?.type !== "session.idle") {
+        return;
+      }
+
+      if (orxaConfig.orxa.enforcement.todoCompletion === "off") {
+        return;
+      }
+
+      const props = event.properties as { sessionID?: string } | undefined;
+      const sessionID = props?.sessionID;
+      if (!sessionID || !shouldNotifyIdle(sessionID)) {
+        return;
+      }
+
+      const cachedSession = sessionCache.get(sessionID);
+      const cachedAgentName = cachedSession?.agentName?.toLowerCase();
+      const isOrxaSession =
+        cachedAgentName === "orxa" || getOrxaSessionActive(sessionID, cachedSession);
+      if (!isOrxaSession) {
+        return;
+      }
+
+      const session = await loadSession(
+        sessionID,
+        cachedSession?.agentName ?? "orxa",
+        false,
+        true
+      );
+
+      if (!session) {
+        return;
+      }
+
+      const pendingTodos = getPendingTodos(session);
+      if (pendingTodos.length === 0) {
+        return;
+      }
+
+      const message = buildTodoContinuationToastMessage(pendingTodos);
+      ctx.client.tui
+        .showToast({
+          body: {
+            title: "TODO Continuation Required",
+            message,
+            variant: "warning" as const,
+            duration: 6000,
+          },
+        })
+        .catch(() => {});
+
+      // Inject continuation prompt to make the agent continue working
+      const agentName = session.agentName;
+      const promptText =
+        "You have pending TODOs that need to be completed. Continue working on the next pending task without asking for permission. Mark each task complete when finished. Do not stop until all tasks are done.";
+
+      try {
+        await ctx.client.session.prompt({
+          path: { id: sessionID },
+          body: {
+            agent: agentName,
+            parts: [{ type: "text", text: promptText }],
+          },
+          query: { directory: ctx.directory },
+        });
+      } catch (error) {
+        console.error("[orxa] Failed to send TODO continuation prompt:", error);
+      }
     },
     middleware: {
       initialize: (context: unknown) => context,

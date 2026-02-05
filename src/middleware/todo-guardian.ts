@@ -109,6 +109,22 @@ export const buildTodoContinuationMessage = (pendingTodos: Todo[]): string => {
   );
 };
 
+export const buildTodoContinuationToastMessage = (
+  pendingTodos: Todo[],
+  maxItems = 3
+): string => {
+  const displayTodos = pendingTodos.slice(0, Math.max(1, maxItems));
+  const todoList = displayTodos.map((todo) => `• ${todo.text}`).join("\n");
+  const remaining = pendingTodos.length - displayTodos.length;
+  const suffix =
+    remaining > 0 ? `\n…plus ${remaining} more.` : "";
+
+  return (
+    `Session idle with ${pendingTodos.length} pending TODO(s).\n` +
+    `Continue working on:\n${todoList}${suffix}`
+  );
+};
+
 export const validateTodoCompletion = async (
   todo: Todo,
   config: OrxaConfig
