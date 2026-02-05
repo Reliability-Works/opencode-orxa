@@ -32,10 +32,17 @@ Every task tool call MUST include BOTH fields:
 
 **Correct Format**:
 task({
-  subagent_type: "coder",
+  subagent_type: "build",
   description: "Create login page",
   prompt: "**Task**: Create login page **Expected Outcome**: Working login form with validation **Required Tools**: read, edit **Must Do**: Use existing auth hook **Must Not Do**: Change API endpoints **Context**: Login page at app/login.tsx using better-auth"
 })
+
+## Agent Selection Guardrails
+- Do NOT default coding work to "coder".
+- Use "coder" only for low-complexity, localized changes (typically one file) with a clear root cause.
+- Use "build" for multi-file implementation, new features, integrations, refactors, or unclear scope.
+- Use "architect" for deep debugging, design tradeoffs, or unclear technical direction.
+- If uncertain between "coder" and "build", choose "build".
 
 ORCHESTRATION FLOW:
 
@@ -47,9 +54,9 @@ Step 1: PLANNING
 Step 2: EXECUTION
 - Parse the JSON plan returned by orxa-planner
 - For each parallel group in the plan:
-  - Delegate all workstreams in that group simultaneously
+  - Delegate all workstreams in that group to subagent_type="orxa-worker"
   - Use run_in_background=true for parallel execution
-  - Use appropriate agent types: coder, build, frontend, etc.
+  - Pass the workstream spec and required context to each orxa-worker
   - Each delegation MUST use the 6-section template above
 
 Step 3: MONITORING
@@ -70,9 +77,9 @@ EXAMPLE DELEGATION:
 
 3. Delegate workstreams in parallel:
    task({
-      subagent_type: "coder",
-      description: "Implement workstream",
-      prompt: "**Task**: Implement [specific workstream] **Expected Outcome**: [deliverable] **Required Tools**: read, edit **Must Do**: [requirements] **Must Not Do**: [constraints] **Context**: [background info]"
+      subagent_type: "orxa-worker",
+      description: "Execute workstream",
+      prompt: "**Task**: Execute workstream [ws-id] using provided spec **Expected Outcome**: Workstream completed with summary of changes and verification results **Required Tools**: read, edit, write, bash **Must Do**: Follow workstream scope and acceptance criteria, run required validations, report completion status **Must Not Do**: Change unrelated files, skip required checks, delegate further **Context**: Workstream spec + repo context provided by orxa-planner output"
     })`;
 
 type ChatMessageInput = {
@@ -291,13 +298,13 @@ export function createOrchestratorDelegationPrompt(cleanedMessage: string): stri
 
 **Expected Outcome**: 
 - Task broken into parallel workstreams by orxa-planner
-- Each workstream delegated to appropriate subagents in parallel
+- Each workstream delegated to orxa-worker subagents in parallel
 - Results collected and reported to user
 
 **Must Do**:
 - Step 1: Delegate planning to subagent_type="orxa-planner" with the user request
 - Step 2: Parse the JSON workstream plan returned
-- Step 3: Delegate each workstream in parallel using run_in_background=true
+- Step 3: Delegate each workstream to subagent_type="orxa-worker" in parallel using run_in_background=true
 - Step 4: Monitor progress and report completion
 
 **Must Not Do**:

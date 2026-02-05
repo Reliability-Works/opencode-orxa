@@ -65,7 +65,7 @@ The Orxa cannot be customized via YAML (it's enforced by the plugin). Configurat
 ### Plan (`plan.yaml`)
 
 **Role**: Strategic Planning Consultant / Product Manager  
-**Model**: `opencode/gpt-5.2-codex`  
+**Model**: `opencode/gpt-5.3-codex`  
 **Mode**: Primary
 
 The Plan agent creates comprehensive work plans before any code is written. It interviews the user, researches the codebase, and generates executable plans.
@@ -114,7 +114,7 @@ The `~/.config/opencode/orxa/agents/custom/` directory is for **your own custom 
 name: security-auditor
 description: Security audit specialist. Finds vulnerabilities and suggests fixes.
 mode: subagent
-model: opencode/gpt-5.2-codex
+model: opencode/gpt-5.3-codex
 temperature: 0.1
 system_prompt: |
   You are a security specialist. Your job is to find vulnerabilities.
@@ -178,7 +178,7 @@ Primary agents (`orxa`, `plan`) only accept `model` overrides. Subagents can be 
 {
   "agent_overrides": {
     "orxa": {
-      "model": "opencode/gpt-5.2-codex"
+      "model": "opencode/gpt-5.3-codex"
     },
     "strategist": {
       "model": "anthropic/claude-opus",

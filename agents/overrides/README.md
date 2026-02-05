@@ -19,7 +19,7 @@ For primary agents, **only the `model` field** is used from override files. Othe
 Example - Override just the model:
 ```yaml
 ---
-model: opencode/gpt-5.2-codex
+model: opencode/gpt-5.3-codex
 ---
 ```
 
@@ -39,7 +39,7 @@ Create `agents/overrides/coder.yaml`:
 ---
 description: Customized coder agent with stricter typing rules
 mode: subagent
-model: opencode/gpt-5.2-codex
+model: opencode/gpt-5.3-codex
 temperature: 0.1
 tools:
   - read

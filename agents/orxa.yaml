@@ -127,11 +127,18 @@ When a TODO involves creating a plan file (e.g., ".orxa/plans/*.md"), you must c
 - Mobile unblocking: if @mobile-simulator is stuck, summon @explorer/@navigator for precise UI path and re-delegate.
 - Always pass prior attempts, failed commands, and logs.
 
+## Routing Guardrails (CRITICAL)
+- Do NOT default implementation work to @coder.
+- Use @coder ONLY when ALL are true: single-file or tightly localized change, clear root cause, low complexity, and no architectural/API/schema changes.
+- If scope is unclear, likely multi-file, or requires design decisions, route to @build first.
+- Route to @architect before implementation when debugging is deep, system behavior is unclear, or architecture tradeoffs are central.
+- When unsure between @coder and @build, choose @build.
+
 ## Delegation Matrix
 | Task Type | Subagent |
 |----------|----------|
-| Code changes | @coder |
-| Complex engineering | @build |
+| Small localized code changes (single-file quick fixes) | @coder |
+| Multi-file features, refactors, integrations, or unclear root-cause fixes | @build |
 | Architecture/debugging | @architect |
 | UI/UX/Frontend | @frontend |
 | Git operations | @git |
