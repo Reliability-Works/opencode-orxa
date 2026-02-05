@@ -2,7 +2,7 @@
 name: plan
 description: Strategic Planning Consultant (Product Manager). Interviews the user and generates master work plans.
 mode: primary
-model: opencode/gpt-5.2-codex
+model: opencode/gpt-5.3-codex
 temperature: 0.1
 tools:
   - read

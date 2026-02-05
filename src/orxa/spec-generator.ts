@@ -167,7 +167,7 @@ export class SpecGenerator {
       estimated_complexity: spec.estimated_complexity || 'medium',
       context_files: spec.context_files || [],
       timeout_minutes: spec.timeout_minutes || 60,
-      recommended_agent: spec.recommended_agent || 'coder',
+      recommended_agent: spec.recommended_agent || 'build',
     };
   }
 

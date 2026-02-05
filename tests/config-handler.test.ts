@@ -58,7 +58,7 @@ describe("Config Handler", () => {
       expect(plan.name).toBe("plan");
       expect(plan.description).toContain("Strategic Planning Consultant");
       expect(plan.mode).toBe("primary");
-      expect(plan.model).toBe("opencode/gpt-5.2-codex");
+      expect(plan.model).toBe("opencode/gpt-5.3-codex");
     });
 
     it("parses subagent correctly", () => {

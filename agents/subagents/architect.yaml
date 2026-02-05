@@ -1,7 +1,7 @@
 ---
 description: High-IQ reasoning specialist. Architecture design and deep debugging.
 mode: subagent
-model: opencode/gpt-5.2-codex
+model: opencode/gpt-5.3-codex
 tools:
   - read
   - grep

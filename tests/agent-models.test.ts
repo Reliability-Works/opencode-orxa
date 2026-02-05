@@ -21,7 +21,7 @@ describe("Agent Models Parser", () => {
       // Should have 4 unique models (opencode/ provider only)
       expect(config.uniqueModels).toHaveLength(4);
       expect(config.uniqueModels).toContain("opencode/kimi-k2.5");
-      expect(config.uniqueModels).toContain("opencode/gpt-5.2-codex");
+      expect(config.uniqueModels).toContain("opencode/gpt-5.3-codex");
       expect(config.uniqueModels).toContain("opencode/gemini-3-pro");
       expect(config.uniqueModels).toContain("opencode/gemini-3-flash");
     });
@@ -45,8 +45,8 @@ describe("Agent Models Parser", () => {
       expect(kimiGroup).toBeDefined();
       expect(kimiGroup!.count).toBe(9); // orxa + 8 subagents
       
-      // Find gpt-5.2-codex group
-      const gptGroup = config.models.find((m) => m.model === "opencode/gpt-5.2-codex");
+      // Find gpt-5.3-codex group
+      const gptGroup = config.models.find((m) => m.model === "opencode/gpt-5.3-codex");
       expect(gptGroup).toBeDefined();
       expect(gptGroup!.count).toBe(6); // plan + 5 subagents
     });
@@ -65,7 +65,7 @@ describe("Agent Models Parser", () => {
       
       const plan = config.agents.find((a) => a.name === "plan");
       expect(plan).toBeDefined();
-      expect(plan!.model).toBe("opencode/gpt-5.2-codex");
+      expect(plan!.model).toBe("opencode/gpt-5.3-codex");
       expect(plan!.mode).toBe("primary");
     });
 
