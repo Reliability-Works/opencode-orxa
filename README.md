@@ -113,11 +113,11 @@ npm install -g @reliabilityworks/opencode-orxa --foreground-scripts
 #### Installing a Specific Version
 
 ```bash
-# Install a specific version (e.g., v1.0.39)
-npm install -g @reliabilityworks/opencode-orxa@1.0.39
+# Install a specific version
+npm install -g @reliabilityworks/opencode-orxa@<version>
 
 # Install using bun
-bun install -g @reliabilityworks/opencode-orxa@1.0.39
+bun install -g @reliabilityworks/opencode-orxa@<version>
 ```
 
 ### What the Postinstall Script Does
@@ -453,7 +453,7 @@ opencode
 
 **Expected output:**
 ```
-🎼 OpenCode Orxa v1.0.39
+🎼 OpenCode Orxa
    Orxa agents loaded: 17
    Default agent: orxa
 ```
@@ -617,7 +617,7 @@ npm update -g agent-browser
 
 ## Migration from MCP-based Versions
 
-If you're upgrading from a version prior to v1.0.39 that used MCPs (Model Context Protocol):
+If you're upgrading from an older version that used MCPs (Model Context Protocol):
 
 ### What Changed
 

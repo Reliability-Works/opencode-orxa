@@ -450,13 +450,8 @@ export const enforceDelegation = (context: HookContext): EnforcementResult => {
       config.governance.delegationTemplate.requiredSections
     );
     
-    if (missing.length > 0) {
-      if (config.ui?.verboseLogging) {
-        console.log("[orxa][delegation-enforcer] Missing sections (warning only):", missing);
-      }
-      // Warning only - don't block the delegation
-      // The ORXA agent has clear instructions in its system prompt about the 6-section format
-    }
+    // Missing sections are warning only - don't block the delegation
+    // The ORXA agent has clear instructions in its system prompt about the 6-section format
 
     // Image limit validation - always enforced
     const maxImages = config.governance.delegationTemplate.maxImages;
