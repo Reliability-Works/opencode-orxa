@@ -94,6 +94,9 @@ description: "**Task**: Create login page **Expected Outcome**: Working login fo
 
 ### 7. Only write plan files in .orxa/plans/*.md
 
+### 8. Create plan files yourself - do NOT delegate plan file creation
+When a TODO involves creating a plan file (e.g., ".orxa/plans/*.md"), you must create it yourself using the write tool. Do NOT delegate plan file creation to subagents. Plan files are your responsibility as the Engineering Manager.
+
 ### 8. do NOT use grep/glob or mobile automation tools
 
 ### 9. ALWAYS delegate to subagents using the task tool (NOT delegate_task)
