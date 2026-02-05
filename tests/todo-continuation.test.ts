@@ -10,6 +10,7 @@ import {
   isCompletionSignal,
   extractQuestionText,
   buildTodoContinuationMessage,
+  buildTodoContinuationToastMessage,
   validateTodoCompletion,
 } from "../src/middleware/todo-guardian";
 import type { OrxaConfig } from "../src/config/schema";
@@ -363,6 +364,34 @@ describe("Todo Guardian", () => {
       expect(result).toContain("2 pending TODO");
       expect(result).toContain("Task 1");
       expect(result).toContain("Task 2");
+    });
+  });
+
+  describe("buildTodoContinuationToastMessage", () => {
+    it("summarizes pending todos with default limit", () => {
+      const todos = [
+        { id: "1", text: "Task 1", completed: false },
+        { id: "2", text: "Task 2", completed: false },
+        { id: "3", text: "Task 3", completed: false },
+        { id: "4", text: "Task 4", completed: false },
+      ];
+      const result = buildTodoContinuationToastMessage(todos);
+      expect(result).toContain("4 pending TODO");
+      expect(result).toContain("Task 1");
+      expect(result).toContain("Task 2");
+      expect(result).toContain("Task 3");
+      expect(result).toContain("plus 1 more");
+    });
+
+    it("respects maxItems override", () => {
+      const todos = [
+        { id: "1", text: "Task 1", completed: false },
+        { id: "2", text: "Task 2", completed: false },
+      ];
+      const result = buildTodoContinuationToastMessage(todos, 1);
+      expect(result).toContain("2 pending TODO");
+      expect(result).toContain("Task 1");
+      expect(result).toContain("plus 1 more");
     });
   });
 

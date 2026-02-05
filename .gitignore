@@ -33,6 +33,9 @@ coverage/
 # OpenCode
 .opencode/
 
+# Orxa plans directory (user-created plans)
+.orxa/
+
 # Local config (don't commit user configs)
 orxa.jsonc
 supermemory.jsonc
