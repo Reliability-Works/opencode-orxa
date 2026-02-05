@@ -7,6 +7,11 @@ import { preToolExecution } from "./hooks/pre-tool-execution.js";
 import { postSubagentResponse } from "./hooks/post-subagent-response.js";
 import { todoContinuationEnforcer } from "./hooks/todo-continuation-enforcer.js";
 import { orxaIndicator } from "./hooks/orxa-indicator.js";
+import {
+  isStoppingResponse,
+  getPendingTodos,
+  buildTodoContinuationMessage,
+} from "./middleware/todo-guardian.js";
 import { slashcommand } from "./tools/slashcommand.js";
 import type { Message, Session } from "./types.js";
 
@@ -139,6 +144,69 @@ const orxaPlugin: Plugin = async (ctx: PluginInput) => {
     },
     "chat.message": async (input, output) => {
       await orxaDetector(input, output);
+
+      // Check for todo continuation when agent pauses without tool execution
+      const messageInput = input as { agent?: string; sessionID?: string };
+      const agentName = messageInput.agent?.toLowerCase() || "";
+
+      // Only apply to ORXA agent and when enforcement is enabled
+      if (
+        agentName === "orxa" &&
+        orxaConfig.orxa.enforcement.todoCompletion !== "off"
+      ) {
+        const session = await loadSession(
+          messageInput.sessionID,
+          messageInput.agent,
+          false
+        );
+
+        if (session) {
+          const pendingTodos = getPendingTodos(session);
+
+          if (pendingTodos.length > 0) {
+            // Extract message text from output parts
+            const messageText = extractMessageText(
+              (output as { parts?: Array<{ type?: string; text?: string }> })?.parts
+            );
+
+            // Check if this is a stopping response
+            if (isStoppingResponse(messageText)) {
+              // Inject continuation message into output parts
+              const continuationMessage =
+                buildTodoContinuationMessage(pendingTodos);
+              const messageOutput = output as {
+                parts?: Array<{ type?: string; text?: string }>;
+              };
+
+              if (messageOutput.parts && Array.isArray(messageOutput.parts)) {
+                const textPartIndex = messageOutput.parts.findIndex(
+                  (part) => part.type === "text" && typeof part.text === "string"
+                );
+
+                if (textPartIndex !== -1) {
+                  const originalText = messageOutput.parts[textPartIndex].text || "";
+                  messageOutput.parts[textPartIndex].text =
+                    `${originalText}\n\n${continuationMessage}`;
+                }
+              }
+
+              // Show toast in strict mode
+              if (orxaConfig.orxa.enforcement.todoCompletion === "strict") {
+                ctx.client.tui
+                  .showToast({
+                    body: {
+                      title: "TODO Continuation Required",
+                      message: `${pendingTodos.length} pending TODO(s) must be completed before stopping.`,
+                      variant: "warning" as const,
+                      duration: 5000,
+                    },
+                  })
+                  .catch(() => {});
+              }
+            }
+          }
+        }
+      }
     },
     "tool.execute.before": async (input, output) => {
       const toolInput = input as { tool: string; sessionID: string; callID: string; agent?: string; attachments?: Array<{ type: string; mimeType?: string; name?: string; size?: number }> };
