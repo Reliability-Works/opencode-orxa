@@ -42,16 +42,5 @@ jobs:
           fi
           echo "✓ Versions match: $PKG_VERSION"
       
-      - name: Sync version numbers in documentation
-        run: node scripts/sync-versions.mjs
-      
-      - name: Commit version sync changes
-        run: |
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
-          git add README.md docs/
-          git diff --staged --quiet || git commit -m "docs: sync version numbers to ${PKG_VERSION} [skip ci]"
-          git push
-      
       - name: Publish to NPM with provenance
         run: npm publish --provenance --access public
