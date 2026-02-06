@@ -314,6 +314,8 @@ const orxaPlugin: Plugin = async (ctx: PluginInput) => {
       ) {
         const state = getReviewState(toolInput.sessionID);
         if (state.requiresReview && isTodoCompletionAttempt(toolOutput?.args ?? {}, session.todos)) {
+          // Intentionally strict: manager review is mandatory before TODO completion, even if
+          // general todoCompletion enforcement is configured as "warn".
           throw new Error(TODO_REVIEW_BLOCK_MESSAGE);
         }
       }
