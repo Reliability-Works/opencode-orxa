@@ -52,14 +52,6 @@ Don't break things
 Background info
   `;
 
-  const visualDelegationPrompt = `
-## Task
-Implement visual UI updates for the landing page hero section with responsive styling and animation polish.
-
-## Expected Outcome
-Updated UI design matches the visual direction and is responsive.
-  `;
-
   describe('Tool Alias Resolution', () => {
     it('resolves apply_patch to edit', () => {
       const result = resolveToolAlias('apply_patch', defaultConfig.toolAliases?.resolve || {});
@@ -141,109 +133,6 @@ Updated UI design matches the visual direction and is responsive.
       expect(result.allow).toBe(true);
     });
 
-    it('blocks visual task delegation to non-frontend agent', () => {
-      const context = createContext({
-        toolName: "task",
-        tool: { name: "task" },
-        args: {
-          subagent_type: "build",
-          prompt: visualDelegationPrompt,
-        },
-        agent: 'orxa'
-      });
-      const result = enforceDelegation(context);
-      expect(result.allow).toBe(false);
-      expect(result.reason).toContain('must be delegated to frontend');
-      expect(result.recommendedAgent).toBe('frontend');
-    });
-
-    it('allows visual task delegation to frontend agent', () => {
-      const context = createContext({
-        toolName: "task",
-        tool: { name: "task" },
-        args: {
-          subagent_type: "frontend",
-          prompt: visualDelegationPrompt,
-        },
-        agent: 'orxa'
-      });
-      const result = enforceDelegation(context);
-      expect(result.allow).toBe(true);
-    });
-
-    it('applies visual routing gate for plan when delegation is enabled', () => {
-      const context = createContext({
-        toolName: "task",
-        tool: { name: "task" },
-        args: {
-          subagent_type: "coder",
-          prompt: visualDelegationPrompt,
-        },
-        agent: 'plan',
-        config: {
-          ...defaultConfig,
-          governance: {
-            ...defaultConfig.governance,
-            onlyOrxaCanDelegate: false,
-          },
-        },
-      });
-      const result = enforceDelegation(context);
-      expect(result.allow).toBe(false);
-      expect(result.reason).toContain('must be delegated to frontend');
-      expect(result.recommendedAgent).toBe('frontend');
-    });
-
-    it('enforces visual routing even when delegation template requirement is disabled', () => {
-      const context = createContext({
-        toolName: "task",
-        tool: { name: "task" },
-        args: {
-          subagent_type: "build",
-          prompt: visualDelegationPrompt,
-        },
-        agent: "orxa",
-        config: {
-          ...defaultConfig,
-          governance: {
-            ...defaultConfig.governance,
-            delegationTemplate: {
-              ...defaultConfig.governance.delegationTemplate,
-              required: false,
-            },
-          },
-        },
-      });
-
-      const result = enforceDelegation(context);
-      expect(result.allow).toBe(false);
-      expect(result.reason).toContain("must be delegated to frontend");
-      expect(result.recommendedAgent).toBe("frontend");
-    });
-
-    it('enforces visual routing for delegate_task calls too', () => {
-      const context = createContext({
-        toolName: "delegate_task",
-        tool: { name: "delegate_task" },
-        args: {
-          subagent_type: "build",
-          prompt: visualDelegationPrompt,
-        },
-        agent: "orxa",
-        config: {
-          ...defaultConfig,
-          orxa: {
-            ...defaultConfig.orxa,
-            allowedTools: [...defaultConfig.orxa.allowedTools, "delegate_task"],
-          },
-        },
-      });
-
-      const result = enforceDelegation(context);
-      expect(result.allow).toBe(false);
-      expect(result.reason).toContain("must be delegated to frontend");
-      expect(result.recommendedAgent).toBe("frontend");
-    });
   });
 
   describe('Memory Gate', () => {

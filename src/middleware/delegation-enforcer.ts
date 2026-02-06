@@ -211,59 +211,6 @@ const extractToolOutputChars = (args: unknown): number => {
   return 0;
 };
 
-const extractDelegationAgent = (args: unknown): string => {
-  if (!args || typeof args !== "object") {
-    return "";
-  }
-
-  const record = args as Record<string, unknown>;
-  if (typeof record.subagent_type === "string") {
-    return record.subagent_type.trim().toLowerCase();
-  }
-  if (typeof record.agent === "string") {
-    return record.agent.trim().toLowerCase();
-  }
-  if (record.input && typeof record.input === "object") {
-    const input = record.input as Record<string, unknown>;
-    if (typeof input.subagent_type === "string") {
-      return input.subagent_type.trim().toLowerCase();
-    }
-    if (typeof input.agent === "string") {
-      return input.agent.trim().toLowerCase();
-    }
-  }
-
-  return "";
-};
-
-const VISUAL_DELEGATION_PATTERNS = [
-  /\bui\b/i,
-  /\bux\b/i,
-  /\bvisual\b/i,
-  /\bfront[-\s]?end\b/i,
-  /\bdesign\b/i,
-  /\bstyling\b/i,
-  /\bstyle\b/i,
-  /\bcss\b/i,
-  /\btailwind\b/i,
-  /\blayout\b/i,
-  /\banimation\b/i,
-  /\btypography\b/i,
-  /\bcolor\b/i,
-  /\bresponsive\b/i,
-  /\bcomponent(s)?\b/i,
-  /\bpixel[-\s]?perfect\b/i,
-  /\bhero section\b/i,
-  /\blanding page\b/i,
-];
-
-const hasVisualTaskIntent = (prompt: string): boolean => {
-  if (!prompt) {
-    return false;
-  }
-  return VISUAL_DELEGATION_PATTERNS.some((pattern) => pattern.test(prompt));
-};
-
 const decide = (
   config: OrxaConfig,
   reason: string,
@@ -490,21 +437,6 @@ export const enforceDelegation = (context: HookContext): EnforcementResult => {
   if (delegationTool === "delegate_task" && (isOrxa || isPlan)) {
     const args = context.args as Record<string, unknown> | undefined;
     const promptContent = resolvePrompt(args);
-
-    // Visual routing is policy-level enforcement and must not depend on
-    // delegation template validation settings.
-    const delegatedAgent = extractDelegationAgent(context.args);
-    const visualTaskIntent = hasVisualTaskIntent(promptContent);
-    if (visualTaskIntent && delegatedAgent && delegatedAgent !== "frontend") {
-      return {
-        ...decide(
-          config,
-          `Visual UI/UX/styling/design tasks must be delegated to frontend. Received "${delegatedAgent}".`
-        ),
-        recommendedAgent: "frontend",
-        metadata: { delegatedAgent },
-      };
-    }
 
     if (!config.governance.delegationTemplate.required) {
       return { allow: true };
