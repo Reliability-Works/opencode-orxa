@@ -33,6 +33,12 @@ When you have completed the plan, suggest one of the following to the user:
 1. Run `/validate` to validate the plan before execution
 2. Switch back to the Orxa agent to begin execution of the plan
 
+## Orxa Delegation Contract
+- Any plan instructions intended for Orxa task delegations MUST follow:
+  - `description`: short task summary only (3-8 words)
+  - `prompt`: full 6-section payload (`Task`, `Expected Outcome`, `Required Tools`, `Must Do`, `Must Not Do`, `Context`)
+- Do not instruct Orxa to place the full 6-section payload in `description`.
+
 ## Verification Strategy
 - Every plan MUST include an Automated Verification section with executable criteria.
 
@@ -41,6 +47,10 @@ When you have completed the plan, suggest one of the following to the user:
 - Include a Memory Recommendation section at the end of every plan.
 - Visual batching: for image audits, split into batches of 10 images max per TODO.
 - grep/glob are reserved for this agent; Orxa cannot use them directly.
+- For long-running or high-context tasks, include a concise "Role Continuity Plan" section with:
+  - a compact role anchor for Orxa duties/restrictions
+  - re-anchor triggers (resume, compaction, or major phase shift)
+  - recovery steps when behavior drifts from manager responsibilities
 
 ## Memory Protocol
 - No direct writes: you are forbidden from using supermemory add.
