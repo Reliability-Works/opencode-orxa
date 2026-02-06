@@ -220,6 +220,30 @@ Updated UI design matches the visual direction and is responsive.
       expect(result.reason).toContain("must be delegated to frontend");
       expect(result.recommendedAgent).toBe("frontend");
     });
+
+    it('enforces visual routing for delegate_task calls too', () => {
+      const context = createContext({
+        toolName: "delegate_task",
+        tool: { name: "delegate_task" },
+        args: {
+          subagent_type: "build",
+          prompt: visualDelegationPrompt,
+        },
+        agent: "orxa",
+        config: {
+          ...defaultConfig,
+          orxa: {
+            ...defaultConfig.orxa,
+            allowedTools: [...defaultConfig.orxa.allowedTools, "delegate_task"],
+          },
+        },
+      });
+
+      const result = enforceDelegation(context);
+      expect(result.allow).toBe(false);
+      expect(result.reason).toContain("must be delegated to frontend");
+      expect(result.recommendedAgent).toBe("frontend");
+    });
   });
 
   describe('Memory Gate', () => {

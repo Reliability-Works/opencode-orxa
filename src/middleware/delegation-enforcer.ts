@@ -485,9 +485,9 @@ export const enforceDelegation = (context: HookContext): EnforcementResult => {
     }
   }
 
-  // Apply task delegation validation to orxa/plan
+  // Apply delegation validation to orxa/plan
   const isPlan = effectiveAgentName.toLowerCase() === "plan";
-  if (normalizedTool === "task" && (isOrxa || isPlan)) {
+  if (delegationTool === "delegate_task" && (isOrxa || isPlan)) {
     const args = context.args as Record<string, unknown> | undefined;
     const promptContent = resolvePrompt(args);
 
