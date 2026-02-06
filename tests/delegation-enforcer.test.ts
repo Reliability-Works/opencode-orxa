@@ -132,6 +132,7 @@ Background info
       const result = enforceDelegation(context);
       expect(result.allow).toBe(true);
     });
+
   });
 
   describe('Memory Gate', () => {

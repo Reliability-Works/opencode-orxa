@@ -432,17 +432,15 @@ export const enforceDelegation = (context: HookContext): EnforcementResult => {
     }
   }
 
-  // Apply validation to task tool calls from orxa
-  if (normalizedTool === "task" && isOrxa && config.governance.delegationTemplate.required) {
+  // Apply delegation validation to orxa/plan
+  const isPlan = effectiveAgentName.toLowerCase() === "plan";
+  if (delegationTool === "delegate_task" && (isOrxa || isPlan)) {
     const args = context.args as Record<string, unknown> | undefined;
-    
-    // Get the prompt content from either 'prompt' or 'description' field
-    // 'prompt' is preferred (new format), 'description' is fallback (legacy)
-    const promptContent = args?.prompt && typeof args.prompt === "string" 
-      ? args.prompt 
-      : args?.description && typeof args.description === "string"
-        ? args.description
-        : "";
+    const promptContent = resolvePrompt(args);
+
+    if (!config.governance.delegationTemplate.required) {
+      return { allow: true };
+    }
     
     // 6-section validation - log warning but don't block
     const missing = extractSectionMissing(

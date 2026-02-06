@@ -8,6 +8,15 @@ import { postSubagentResponse } from "./hooks/post-subagent-response.js";
 import { todoContinuationEnforcer } from "./hooks/todo-continuation-enforcer.js";
 import { orxaIndicator } from "./hooks/orxa-indicator.js";
 import {
+  isManagerAgent,
+  isReviewEvidenceTool,
+  isTodoCompletionAttempt,
+  markDelegationNeedingReview,
+  markReviewCompleted,
+  shouldTrackDelegationForReview,
+  type ReviewGateSessionState,
+} from "./hooks/subagent-review-gate.js";
+import {
   isStoppingResponse,
   getPendingTodos,
   buildTodoContinuationMessage,
@@ -21,8 +30,11 @@ const orxaPlugin: Plugin = async (ctx: PluginInput) => {
   const welcomeToastHandler = createWelcomeToastHandler(ctx, orxaConfig);
   const orxaDetector = createOrxaDetector(ctx);
   const sessionCache = new Map<string, Session>();
+  const reviewGateState = new Map<string, ReviewGateSessionState>();
   const idleNotificationCache = new Map<string, number>();
   const IDLE_NOTIFICATION_COOLDOWN_MS = 30_000;
+  const TODO_REVIEW_BLOCK_MESSAGE =
+    "You must review subagent results before marking TODOs complete. Run a verification step (for example: read changed files, inspect outputs, or delegate to reviewer/strategist) and then update TODO completion.";
 
   const extractMessageText = (parts?: Array<{ type?: string; text?: string }>): string => {
     if (!parts) {
@@ -155,6 +167,9 @@ const orxaPlugin: Plugin = async (ctx: PluginInput) => {
     return true;
   };
 
+  const getReviewState = (sessionID: string): ReviewGateSessionState =>
+    reviewGateState.get(sessionID) ?? { requiresReview: false, pendingDelegations: 0 };
+
   return {
     config: configHandler,
     tool: {
@@ -175,7 +190,8 @@ const orxaPlugin: Plugin = async (ctx: PluginInput) => {
         const session = await loadSession(
           messageInput.sessionID,
           messageInput.agent,
-          false
+          false,
+          true
         );
 
         if (session) {
@@ -245,7 +261,16 @@ const orxaPlugin: Plugin = async (ctx: PluginInput) => {
       }
 
       // Skip session loading for subagents - they don't need ORXA session data
-      const session = await loadSession(toolInput.sessionID, toolInput.agent, isSubagent);
+      const forceRefreshSession =
+        !isSubagent &&
+        orxaConfig.orxa.enforcement.todoCompletion !== "off" &&
+        (toolInput.tool === "question" || toolInput.tool === "todowrite");
+      const session = await loadSession(
+        toolInput.sessionID,
+        toolInput.agent,
+        isSubagent,
+        forceRefreshSession
+      );
       const context = {
         toolName: toolInput.tool,
         tool: { name: toolInput.tool },
@@ -277,6 +302,23 @@ const orxaPlugin: Plugin = async (ctx: PluginInput) => {
       if (result.block || result.allow === false) {
         throw new Error(result.message ?? result.reason ?? "Tool execution blocked.");
       }
+
+      const managerAgent = isManagerAgent(toolInput.agent);
+      const todoEnforcementEnabled = orxaConfig.orxa.enforcement.todoCompletion !== "off";
+      if (
+        managerAgent &&
+        todoEnforcementEnabled &&
+        toolInput.tool === "todowrite" &&
+        toolInput.sessionID &&
+        session
+      ) {
+        const state = getReviewState(toolInput.sessionID);
+        if (state.requiresReview && isTodoCompletionAttempt(toolOutput?.args ?? {}, session.todos)) {
+          // Intentionally strict: manager review is mandatory before TODO completion, even if
+          // general todoCompletion enforcement is configured as "warn".
+          throw new Error(TODO_REVIEW_BLOCK_MESSAGE);
+        }
+      }
     },
     "tool.execute.after": async (input, output) => {
       const toolInput = input as { tool: string; sessionID: string; callID: string; agent?: string };
@@ -287,7 +329,14 @@ const orxaPlugin: Plugin = async (ctx: PluginInput) => {
       const isSubagent = Boolean(agentName && agentName !== "orxa" && agentName !== "plan");
 
       // Skip session loading for subagents - they don't need ORXA session data
-      const session = await loadSession(toolInput.sessionID, toolInput.agent, isSubagent);
+      const forceRefreshSession =
+        !isSubagent && orxaConfig.orxa.enforcement.todoCompletion !== "off";
+      const session = await loadSession(
+        toolInput.sessionID,
+        toolInput.agent,
+        isSubagent,
+        forceRefreshSession
+      );
       const context = {
         toolName: toolInput.tool,
         tool: { name: toolInput.tool },
@@ -310,12 +359,35 @@ const orxaPlugin: Plugin = async (ctx: PluginInput) => {
         output.output = `${output.output}\n\n${continuationResult.injectMessage}`;
       }
 
+      if (toolInput.sessionID && isManagerAgent(toolInput.agent)) {
+        let state = getReviewState(toolInput.sessionID);
+        if (shouldTrackDelegationForReview(toolInput.tool, toolInput.agent)) {
+          state = markDelegationNeedingReview(state);
+        }
+        if (state.requiresReview && isReviewEvidenceTool(toolInput.tool, toolOutput?.args ?? {}, toolInput.agent)) {
+          state = markReviewCompleted(state);
+        }
+        reviewGateState.set(toolInput.sessionID, state);
+      }
+
       await orxaIndicator(context);
     },
     event: async (input) => {
       await welcomeToastHandler(input);
 
       const { event } = input as { event?: { type?: string; properties?: unknown } };
+      const props = event?.properties as { sessionID?: string; info?: { id?: string } } | undefined;
+      const lifecycleSessionId = props?.sessionID ?? props?.info?.id;
+
+      if (
+        lifecycleSessionId &&
+        (event?.type === "session.deleted" || event?.type === "session.compacted")
+      ) {
+        sessionCache.delete(lifecycleSessionId);
+        idleNotificationCache.delete(lifecycleSessionId);
+        reviewGateState.delete(lifecycleSessionId);
+      }
+
       if (event?.type !== "session.idle") {
         return;
       }
@@ -324,7 +396,6 @@ const orxaPlugin: Plugin = async (ctx: PluginInput) => {
         return;
       }
 
-      const props = event.properties as { sessionID?: string } | undefined;
       const sessionID = props?.sessionID;
       if (!sessionID || !shouldNotifyIdle(sessionID)) {
         return;

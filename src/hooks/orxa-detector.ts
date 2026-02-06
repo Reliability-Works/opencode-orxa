@@ -43,6 +43,9 @@ task({
 - Use "build" for multi-file implementation, new features, integrations, refactors, or unclear scope.
 - Use "architect" for deep debugging, design tradeoffs, or unclear technical direction.
 - If uncertain between "coder" and "build", choose "build".
+- For any visual UI/UX/styling/design task, use "frontend" only.
+- Do NOT assign visual UI/UX/styling/design work to "coder", "build", or "architect".
+- If work includes both visual UI and backend/logic changes, split into separate delegations and route visual workstreams to "frontend".
 
 ORCHESTRATION FLOW:
 

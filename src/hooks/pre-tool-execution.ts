@@ -17,8 +17,6 @@ export const preToolExecution = async (context: HookContext): Promise<Enforcemen
   );
   const agentName = context.agent ?? context.agentName ?? "";
 
-
-
   const result = enforceDelegation({
     ...context,
     toolName,
@@ -31,6 +29,8 @@ export const preToolExecution = async (context: HookContext): Promise<Enforcemen
   if (!result.allow) {
     return result;
   }
+
+  let nextResult = result;
 
   // Only block/nudge when agent tries to stop with pending TODOs
   if (session && config.orxa.enforcement.todoCompletion !== "off") {
@@ -59,8 +59,6 @@ export const preToolExecution = async (context: HookContext): Promise<Enforcemen
       }
     }
   }
-
-  let nextResult = result;
 
   if (toolName === "read" || toolName === "read_file") {
     const injection = await agentsMdInjector({
