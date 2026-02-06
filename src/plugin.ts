@@ -8,10 +8,6 @@ import { postSubagentResponse } from "./hooks/post-subagent-response.js";
 import { todoContinuationEnforcer } from "./hooks/todo-continuation-enforcer.js";
 import { orxaIndicator } from "./hooks/orxa-indicator.js";
 import {
-  delegationDriftReminder,
-  clearDelegationDriftState,
-} from "./hooks/delegation-drift-reminder.js";
-import {
   isStoppingResponse,
   getPendingTodos,
   buildTodoContinuationMessage,
@@ -331,11 +327,6 @@ const orxaPlugin: Plugin = async (ctx: PluginInput) => {
         output.output = `${output.output}\n\n${continuationResult.injectMessage}`;
       }
 
-      const delegationReminderResult = delegationDriftReminder(context);
-      if (delegationReminderResult.injectMessage && typeof output?.output === "string") {
-        output.output = `${output.output}\n\n${delegationReminderResult.injectMessage}`;
-      }
-
       await orxaIndicator(context);
     },
     event: async (input) => {
@@ -343,13 +334,6 @@ const orxaPlugin: Plugin = async (ctx: PluginInput) => {
 
       const { event } = input as { event?: { type?: string; properties?: unknown } };
       const props = event?.properties as { sessionID?: string; info?: { id?: string } } | undefined;
-      const lifecycleSessionId = props?.sessionID ?? props?.info?.id;
-      if (
-        lifecycleSessionId &&
-        (event?.type === "session.deleted" || event?.type === "session.compacted")
-      ) {
-        clearDelegationDriftState(lifecycleSessionId);
-      }
 
       if (event?.type !== "session.idle") {
         return;
