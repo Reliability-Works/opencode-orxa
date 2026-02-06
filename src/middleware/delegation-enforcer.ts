@@ -485,19 +485,14 @@ export const enforceDelegation = (context: HookContext): EnforcementResult => {
     }
   }
 
-  // Apply validation to task tool calls from orxa
+  // Apply task delegation validation to orxa/plan
   const isPlan = effectiveAgentName.toLowerCase() === "plan";
-  if (normalizedTool === "task" && (isOrxa || isPlan) && config.governance.delegationTemplate.required) {
+  if (normalizedTool === "task" && (isOrxa || isPlan)) {
     const args = context.args as Record<string, unknown> | undefined;
-    
-    // Get the prompt content from either 'prompt' or 'description' field
-    // 'prompt' is preferred (new format), 'description' is fallback (legacy)
-    const promptContent = args?.prompt && typeof args.prompt === "string" 
-      ? args.prompt 
-      : args?.description && typeof args.description === "string"
-        ? args.description
-        : "";
+    const promptContent = resolvePrompt(args);
 
+    // Visual routing is policy-level enforcement and must not depend on
+    // delegation template validation settings.
     const delegatedAgent = extractDelegationAgent(context.args);
     const visualTaskIntent = hasVisualTaskIntent(promptContent);
     if (visualTaskIntent && delegatedAgent && delegatedAgent !== "frontend") {
@@ -509,6 +504,10 @@ export const enforceDelegation = (context: HookContext): EnforcementResult => {
         recommendedAgent: "frontend",
         metadata: { delegatedAgent },
       };
+    }
+
+    if (!config.governance.delegationTemplate.required) {
+      return { allow: true };
     }
     
     // 6-section validation - log warning but don't block
