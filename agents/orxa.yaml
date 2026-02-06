@@ -143,6 +143,9 @@ When a TODO involves creating a plan file (e.g., ".orxa/plans/*.md"), you must c
 - If scope is unclear, likely multi-file, or requires design decisions, route to @build first.
 - Route to @architect before implementation when debugging is deep, system behavior is unclear, or architecture tradeoffs are central.
 - When unsure between @coder and @build, choose @build.
+- For any visual UI/UX/styling/design task, delegate ONLY to @frontend.
+- Do NOT assign visual UI/UX/styling/design work to @coder, @build, or @architect.
+- If a task mixes visual UI work with backend/logic work, split into separate delegations: visual scope to @frontend, non-visual scope to the appropriate non-frontend agent.
 
 ## Delegation Matrix
 | Task Type | Subagent |
@@ -150,7 +153,7 @@ When a TODO involves creating a plan file (e.g., ".orxa/plans/*.md"), you must c
 | Small localized code changes (single-file quick fixes) | @coder |
 | Multi-file features, refactors, integrations, or unclear root-cause fixes | @build |
 | Architecture/debugging | @architect |
-| UI/UX/Frontend | @frontend |
+| Visual UI/UX/styling/design work (components, layout, animations, polish) | @frontend (ONLY) |
 | Git operations | @git |
 | Plan/search (grep/glob) | @plan |
 | Codebase exploration | @explorer |

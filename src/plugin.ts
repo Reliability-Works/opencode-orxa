@@ -8,6 +8,10 @@ import { postSubagentResponse } from "./hooks/post-subagent-response.js";
 import { todoContinuationEnforcer } from "./hooks/todo-continuation-enforcer.js";
 import { orxaIndicator } from "./hooks/orxa-indicator.js";
 import {
+  delegationDriftReminder,
+  clearDelegationDriftState,
+} from "./hooks/delegation-drift-reminder.js";
+import {
   isStoppingResponse,
   getPendingTodos,
   buildTodoContinuationMessage,
@@ -175,7 +179,8 @@ const orxaPlugin: Plugin = async (ctx: PluginInput) => {
         const session = await loadSession(
           messageInput.sessionID,
           messageInput.agent,
-          false
+          false,
+          true
         );
 
         if (session) {
@@ -245,7 +250,16 @@ const orxaPlugin: Plugin = async (ctx: PluginInput) => {
       }
 
       // Skip session loading for subagents - they don't need ORXA session data
-      const session = await loadSession(toolInput.sessionID, toolInput.agent, isSubagent);
+      const forceRefreshSession =
+        !isSubagent &&
+        orxaConfig.orxa.enforcement.todoCompletion !== "off" &&
+        toolInput.tool === "question";
+      const session = await loadSession(
+        toolInput.sessionID,
+        toolInput.agent,
+        isSubagent,
+        forceRefreshSession
+      );
       const context = {
         toolName: toolInput.tool,
         tool: { name: toolInput.tool },
@@ -287,7 +301,14 @@ const orxaPlugin: Plugin = async (ctx: PluginInput) => {
       const isSubagent = Boolean(agentName && agentName !== "orxa" && agentName !== "plan");
 
       // Skip session loading for subagents - they don't need ORXA session data
-      const session = await loadSession(toolInput.sessionID, toolInput.agent, isSubagent);
+      const forceRefreshSession =
+        !isSubagent && orxaConfig.orxa.enforcement.todoCompletion !== "off";
+      const session = await loadSession(
+        toolInput.sessionID,
+        toolInput.agent,
+        isSubagent,
+        forceRefreshSession
+      );
       const context = {
         toolName: toolInput.tool,
         tool: { name: toolInput.tool },
@@ -310,12 +331,26 @@ const orxaPlugin: Plugin = async (ctx: PluginInput) => {
         output.output = `${output.output}\n\n${continuationResult.injectMessage}`;
       }
 
+      const delegationReminderResult = delegationDriftReminder(context);
+      if (delegationReminderResult.injectMessage && typeof output?.output === "string") {
+        output.output = `${output.output}\n\n${delegationReminderResult.injectMessage}`;
+      }
+
       await orxaIndicator(context);
     },
     event: async (input) => {
       await welcomeToastHandler(input);
 
       const { event } = input as { event?: { type?: string; properties?: unknown } };
+      const props = event?.properties as { sessionID?: string; info?: { id?: string } } | undefined;
+      const lifecycleSessionId = props?.sessionID ?? props?.info?.id;
+      if (
+        lifecycleSessionId &&
+        (event?.type === "session.deleted" || event?.type === "session.compacted")
+      ) {
+        clearDelegationDriftState(lifecycleSessionId);
+      }
+
       if (event?.type !== "session.idle") {
         return;
       }
@@ -324,7 +359,6 @@ const orxaPlugin: Plugin = async (ctx: PluginInput) => {
         return;
       }
 
-      const props = event.properties as { sessionID?: string } | undefined;
       const sessionID = props?.sessionID;
       if (!sessionID || !shouldNotifyIdle(sessionID)) {
         return;
