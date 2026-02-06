@@ -112,6 +112,15 @@ const resolveAgentFile = (agentName: string): string | null => {
 };
 
 /**
+ * Check if a subagent has a YAML override file in the overrides directory.
+ * When present, that file should take precedence over agent_overrides.
+ */
+const hasSubagentYamlOverride = (agentName: string): boolean => {
+  const overridePath = findAgentFileInDir(getOverridesAgentsDir(), agentName);
+  return overridePath !== null;
+};
+
+/**
  * Get all agent names from builtin directory
  */
 const getAllBuiltinAgentNames = (): string[] => {
@@ -481,6 +490,12 @@ export const createConfigHandler = () => {
     for (const [agentName, override] of Object.entries(agentOverrides)) {
       if (orxaAgents[agentName]) {
         const isPrimaryAgent = primaryAgentSet.has(agentName);
+        const hasYamlOverride = !isPrimaryAgent && hasSubagentYamlOverride(agentName);
+
+        // YAML overrides are full-agent overrides and should win for subagents.
+        if (hasYamlOverride) {
+          continue;
+        }
 
         if (isPrimaryAgent) {
           // Primary agents: only allow model override

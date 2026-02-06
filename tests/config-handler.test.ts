@@ -2,6 +2,8 @@ import { loadOrxaAgents, createConfigHandler, clearAgentCache } from "../src/con
 import path from "path";
 import fs from "fs";
 import yaml from "js-yaml";
+import os from "os";
+import * as loader from "../src/config/loader";
 
 describe("Config Handler", () => {
   describe("loadOrxaAgents (integration)", () => {
@@ -140,6 +142,51 @@ describe("Config Handler", () => {
       const toolAliases = config.toolAliases as Record<string, Record<string, string>>;
       expect(toolAliases.resolve.task).toBeUndefined();
       expect(toolAliases.resolve.apply_patch).toBe("edit"); // other aliases preserved
+    });
+
+    it("prefers subagent YAML override file over agent_overrides model", async () => {
+      const handler = createConfigHandler();
+      const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), "orxa-override-test-"));
+      const customDir = path.join(tmpRoot, "custom");
+      const overridesDir = path.join(tmpRoot, "overrides");
+      fs.mkdirSync(customDir, { recursive: true });
+      fs.mkdirSync(overridesDir, { recursive: true });
+
+      const buildOverridePath = path.join(overridesDir, "build.yaml");
+      fs.writeFileSync(
+        buildOverridePath,
+        [
+          "---",
+          "name: build",
+          "description: test build override",
+          "mode: subagent",
+          "model: opencode/test-build-override",
+          "---",
+          "",
+          "Override prompt body",
+          "",
+        ].join("\n"),
+        "utf-8"
+      );
+
+      const customSpy = jest.spyOn(loader, "getCustomAgentsDir").mockReturnValue(customDir);
+      const overridesSpy = jest.spyOn(loader, "getOverridesAgentsDir").mockReturnValue(overridesDir);
+
+      const config: Record<string, unknown> = { agent: {} };
+
+      try {
+        clearAgentCache();
+        await handler(config);
+        const agents = config.agent as Record<string, { model?: string; prompt?: string }>;
+        expect(agents.build).toBeDefined();
+        expect(agents.build.model).toBe("opencode/test-build-override");
+        expect(agents.build.prompt).toContain("Override prompt body");
+      } finally {
+        customSpy.mockRestore();
+        overridesSpy.mockRestore();
+        clearAgentCache();
+        fs.rmSync(tmpRoot, { recursive: true, force: true });
+      }
     });
   });
 
